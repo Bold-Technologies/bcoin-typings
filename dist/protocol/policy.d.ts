@@ -1,0 +1,27 @@
+export var MAX_TX_VERSION: number;
+export var MAX_TX_SIZE: number;
+export var MAX_TX_WEIGHT: number;
+export var MAX_TX_SIGOPS: number;
+export var MAX_TX_SIGOPS_COST: number;
+export var BYTES_PER_SIGOP: number;
+export var MIN_RELAY: number;
+export var BARE_MULTISIG: boolean;
+export var FREE_THRESHOLD: number;
+export var MAX_P2SH_SIGOPS: number;
+export var MAX_OP_RETURN_BYTES: number;
+export var MAX_OP_RETURN: number;
+export var MAX_P2WSH_STACK: number;
+export var MAX_P2WSH_PUSH: number;
+export var MAX_P2WSH_SIZE: number;
+export var MEMPOOL_MAX_ANCESTORS: number;
+export var MEMPOOL_MAX_SIZE: number;
+export var MEMPOOL_EXPIRY_TIME: number;
+export var MEMPOOL_MAX_ORPHANS: number;
+export var MIN_BLOCK_WEIGHT: number;
+export var MAX_BLOCK_WEIGHT: number;
+export var BLOCK_PRIORITY_WEIGHT: number;
+export { FREE_THRESHOLD as BLOCK_PRIORITY_THRESHOLD };
+export function getMinFee(size: number | null, rate: Rate | null): SatoshiAmount;
+export function getRoundFee(size: number | null, rate: Rate | null): SatoshiAmount;
+export function getRate(size: number, fee: SatoshiAmount): Rate;
+//# sourceMappingURL=policy.d.ts.map
