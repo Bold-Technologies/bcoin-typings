@@ -1,10 +1,12 @@
 {
-    "include": ["lib/**/*"],
+    "include": ["lib"],
+    "exclude": ["node_modules", "dist"],
     "compilerOptions": {
       "allowJs": true,
       "declaration": true,
-      "emitDeclarationOnly": true,
+      "emitDeclarationOnly": false,
       "declarationMap": true,
+      "rootDir": "lib",
       "outDir": "dist"
     }
   }
