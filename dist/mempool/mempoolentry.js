@@ -28,7 +28,7 @@ var MempoolEntry = /** @class */ (function () {
      * @param {Number} options.height - Entry height.
      * @param {Number} options.priority - Entry priority.
      * @param {Number} options.time - Entry time.
-     * @param {Amount} options.value - Value of on-chain coins.
+     * @param {SatoshiAmount} options.value - Value of on-chain coins.
      */
     function MempoolEntry(options) {
         this.tx = null;
@@ -154,14 +154,14 @@ var MempoolEntry = /** @class */ (function () {
     };
     /**
      * Get fee.
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
     MempoolEntry.prototype.getFee = function () {
         return this.fee;
     };
     /**
      * Get delta fee.
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
     MempoolEntry.prototype.getDeltaFee = function () {
         return this.deltaFee;

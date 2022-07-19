@@ -45,18 +45,18 @@ declare class PolicyEstimator {
     removeTX(hash: Hash): void;
     /**
      * Test whether a fee should be used for calculation.
-     * @param {Amount} fee
+     * @param {SatoshiAmount} fee
      * @param {Number} priority
      * @returns {Boolean}
      */
-    isFeePoint(fee: Amount, priority: number): boolean;
+    isFeePoint(fee: SatoshiAmount, priority: number): boolean;
     /**
      * Test whether a priority should be used for calculation.
-     * @param {Amount} fee
+     * @param {SatoshiAmount} fee
      * @param {Number} priority
      * @returns {Boolean}
      */
-    isPriPoint(fee: Amount, priority: number): boolean;
+    isPriPoint(fee: SatoshiAmount, priority: number): boolean;
     /**
      * Process a mempool entry.
      * @param {MempoolEntry} entry

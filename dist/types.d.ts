@@ -48,11 +48,11 @@ type SighashType = string | number;
  * less than MAX_MONEY in various
  * functions.
  */
-type Amount = number;
+type SatoshiAmount = number;
 /**
  * Rate of satoshis per kB.
  */
-type Rate = Amount;
+type Rate = SatoshiAmount;
 /**
  * A big number (bn.js)
  */

@@ -27,6 +27,6 @@ export var ZERO_HASH: any;
 export function fromCompact(compact: number): BN;
 export function toCompact(num: BN): number;
 export function verifyPOW(hash: Hash, bits: number): boolean;
-export function getReward(height: number, interval: any): Amount;
+export function getReward(height: number, interval: any): SatoshiAmount;
 export function hasBit(version: number, bit: number): boolean;
 //# sourceMappingURL=consensus.d.ts.map

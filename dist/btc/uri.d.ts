@@ -4,7 +4,7 @@ export = URI;
  * Represents a bitcoin URI.
  * @alias module:btc.URI
  * @property {Address} address
- * @property {Amount} amount
+ * @property {SatoshiAmount} amount
  * @property {String|null} label
  * @property {String|null} message
  * @property {String|null} request

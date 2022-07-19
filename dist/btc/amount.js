@@ -11,7 +11,7 @@ var inspectSymbol = require('../utils').inspectSymbol;
  * Amount
  * Represents a bitcoin amount (satoshis internally).
  * @alias module:btc.Amount
- * @property {Amount} value
+ * @property {SatoshiAmount} value
  */
 var Amount = /** @class */ (function () {
     /**
@@ -30,7 +30,7 @@ var Amount = /** @class */ (function () {
      * @private
      * @param {(String|Number)?} value
      * @param {String?} unit
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
     Amount.prototype.fromOptions = function (value, unit) {
         if (typeof unit === 'string')
@@ -41,7 +41,7 @@ var Amount = /** @class */ (function () {
     };
     /**
      * Get satoshi value.
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
     Amount.prototype.toValue = function () {
         return this.value;
@@ -49,7 +49,7 @@ var Amount = /** @class */ (function () {
     /**
      * Get satoshi string or value.
      * @param {Boolean?} num
-     * @returns {String|Amount}
+     * @returns {String|SatoshiAmount}
      */
     Amount.prototype.toSatoshis = function (num) {
         if (num)
@@ -59,7 +59,7 @@ var Amount = /** @class */ (function () {
     /**
      * Get bits string or value.
      * @param {Boolean?} num
-     * @returns {String|Amount}
+     * @returns {String|SatoshiAmount}
      */
     Amount.prototype.toBits = function (num) {
         return Amount.encode(this.value, 2, num);
@@ -67,7 +67,7 @@ var Amount = /** @class */ (function () {
     /**
      * Get mbtc string or value.
      * @param {Boolean?} num
-     * @returns {String|Amount}
+     * @returns {String|SatoshiAmount}
      */
     Amount.prototype.toMBTC = function (num) {
         return Amount.encode(this.value, 5, num);
@@ -75,7 +75,7 @@ var Amount = /** @class */ (function () {
     /**
      * Get btc string or value.
      * @param {Boolean?} num
-     * @returns {String|Amount}
+     * @returns {String|SatoshiAmount}
      */
     Amount.prototype.toBTC = function (num) {
         return Amount.encode(this.value, 8, num);
@@ -85,7 +85,7 @@ var Amount = /** @class */ (function () {
      * @param {String} unit - Can be `sat`,
      * `ubtc`, `bits`, `mbtc`, or `btc`.
      * @param {Boolean?} num
-     * @returns {String|Amount}
+     * @returns {String|SatoshiAmount}
      */
     Amount.prototype.to = function (unit, num) {
         switch (unit) {
@@ -111,8 +111,8 @@ var Amount = /** @class */ (function () {
     /**
      * Inject properties from value.
      * @private
-     * @param {Amount} value
-     * @returns {Amount}
+     * @param {SatoshiAmount} value
+     * @returns {SatoshiAmount}
      */
     Amount.prototype.fromValue = function (value) {
         assert(Number.isSafeInteger(value) && value >= 0, 'Value must be an int64.');
@@ -123,7 +123,7 @@ var Amount = /** @class */ (function () {
      * Inject properties from satoshis.
      * @private
      * @param {Number|String} value
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
     Amount.prototype.fromSatoshis = function (value) {
         this.value = Amount.decode(value, 0);
@@ -133,7 +133,7 @@ var Amount = /** @class */ (function () {
      * Inject properties from bits.
      * @private
      * @param {Number|String} value
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
     Amount.prototype.fromBits = function (value) {
         this.value = Amount.decode(value, 2);
@@ -143,7 +143,7 @@ var Amount = /** @class */ (function () {
      * Inject properties from mbtc.
      * @private
      * @param {Number|String} value
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
     Amount.prototype.fromMBTC = function (value) {
         this.value = Amount.decode(value, 5);
@@ -153,7 +153,7 @@ var Amount = /** @class */ (function () {
      * Inject properties from btc.
      * @private
      * @param {Number|String} value
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
     Amount.prototype.fromBTC = function (value) {
         this.value = Amount.decode(value, 8);
@@ -164,7 +164,7 @@ var Amount = /** @class */ (function () {
      * @private
      * @param {String} unit
      * @param {Number|String} value
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
     Amount.prototype.from = function (unit, value) {
         switch (unit) {
@@ -184,7 +184,7 @@ var Amount = /** @class */ (function () {
      * Instantiate amount from options.
      * @param {(String|Number)?} value
      * @param {String?} unit
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
     Amount.fromOptions = function (value, unit) {
         return new this().fromOptions(value, unit);
@@ -192,8 +192,8 @@ var Amount = /** @class */ (function () {
     /**
      * Instantiate amount from value.
      * @private
-     * @param {Amount} value
-     * @returns {Amount}
+     * @param {SatoshiAmount} value
+     * @returns {SatoshiAmount}
      */
     Amount.fromValue = function (value) {
         return new this().fromValue(value);
@@ -201,7 +201,7 @@ var Amount = /** @class */ (function () {
     /**
      * Instantiate amount from satoshis.
      * @param {Number|String} value
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
     Amount.fromSatoshis = function (value) {
         return new this().fromSatoshis(value);
@@ -209,7 +209,7 @@ var Amount = /** @class */ (function () {
     /**
      * Instantiate amount from bits.
      * @param {Number|String} value
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
     Amount.fromBits = function (value) {
         return new this().fromBits(value);
@@ -217,7 +217,7 @@ var Amount = /** @class */ (function () {
     /**
      * Instantiate amount from mbtc.
      * @param {Number|String} value
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
     Amount.fromMBTC = function (value) {
         return new this().fromMBTC(value);
@@ -225,7 +225,7 @@ var Amount = /** @class */ (function () {
     /**
      * Instantiate amount from btc.
      * @param {Number|String} value
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
     Amount.fromBTC = function (value) {
         return new this().fromBTC(value);
@@ -234,7 +234,7 @@ var Amount = /** @class */ (function () {
      * Instantiate amount from unit.
      * @param {String} unit
      * @param {Number|String} value
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
     Amount.from = function (unit, value) {
         return new this().from(unit, value);
@@ -250,7 +250,7 @@ var Amount = /** @class */ (function () {
      * Safely convert satoshis to a BTC string.
      * This function explicitly avoids any
      * floating point arithmetic.
-     * @param {Amount} value - Satoshis.
+     * @param {SatoshiAmount} value - Satoshis.
      * @returns {String} BTC string.
      */
     Amount.btc = function (value, num) {
@@ -261,7 +261,7 @@ var Amount = /** @class */ (function () {
     /**
      * Safely convert a BTC string to satoshis.
      * @param {String} str - BTC
-     * @returns {Amount} Satoshis.
+     * @returns {SatoshiAmount} Satoshis.
      * @throws on parse error
      */
     Amount.value = function (str) {
@@ -271,7 +271,7 @@ var Amount = /** @class */ (function () {
     };
     /**
      * Safely convert satoshis to a BTC string.
-     * @param {Amount} value
+     * @param {SatoshiAmount} value
      * @param {Number} exp - Exponent.
      * @param {Boolean} num - Return a number.
      * @returns {String|Number}
@@ -285,7 +285,7 @@ var Amount = /** @class */ (function () {
      * Safely convert a BTC string to satoshis.
      * @param {String|Number} value - BTC
      * @param {Number} exp - Exponent.
-     * @returns {Amount} Satoshis.
+     * @returns {SatoshiAmount} Satoshis.
      * @throws on parse error
      */
     Amount.decode = function (value, exp) {

@@ -183,7 +183,7 @@ var BlockTemplate = /** @class */ (function () {
     };
     /**
      * Calculate the block reward.
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
     BlockTemplate.prototype.getReward = function () {
         var reward = consensus.getReward(this.height, this.interval);

@@ -251,7 +251,7 @@ exports.verifyPOW = function verifyPOW(hash, bits) {
 /**
  * Calculate block subsidy.
  * @param {Number} height - Reward era by height.
- * @returns {Amount}
+ * @returns {SatoshiAmount}
  */
 exports.getReward = function getReward(height, interval) {
     assert(height >= 0, 'Bad height for reward.');

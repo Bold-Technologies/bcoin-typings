@@ -65,9 +65,9 @@ export class BlockTemplate {
     setTarget(target: Buffer): void;
     /**
      * Calculate the block reward.
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
-    getReward(): Amount;
+    getReward(): SatoshiAmount;
     /**
      * Initialize the default coinbase.
      * @param {Buffer} hash - Witness commitment hash.

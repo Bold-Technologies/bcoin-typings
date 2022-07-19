@@ -1292,7 +1292,7 @@ var Mempool = /** @class */ (function (_super) {
     /**
      * Return the full balance of all unspents in the mempool
      * (not very useful in practice, only used for testing).
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
     Mempool.prototype.getBalance = function () {
         var total = 0;
@@ -1771,7 +1771,7 @@ var Mempool = /** @class */ (function (_super) {
      * Prioritise transaction.
      * @param {MempoolEntry} entry
      * @param {Number} pri
-     * @param {Amount} fee
+     * @param {SatoshiAmount} fee
      */
     Mempool.prototype.prioritise = function (entry, pri, fee) {
         if (-pri > entry.priority)

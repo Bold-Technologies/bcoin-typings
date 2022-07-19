@@ -390,9 +390,9 @@ declare class Mempool {
     /**
      * Return the full balance of all unspents in the mempool
      * (not very useful in practice, only used for testing).
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
-    getBalance(): Amount;
+    getBalance(): SatoshiAmount;
     /**
      * Retrieve _all_ transactions from the mempool.
      * @returns {TX[]}
@@ -539,9 +539,9 @@ declare class Mempool {
      * Prioritise transaction.
      * @param {MempoolEntry} entry
      * @param {Number} pri
-     * @param {Amount} fee
+     * @param {SatoshiAmount} fee
      */
-    prioritise(entry: MempoolEntry, pri: number, fee: Amount): void;
+    prioritise(entry: MempoolEntry, pri: number, fee: SatoshiAmount): void;
 }
 /**
  * Mempool Options

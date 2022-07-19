@@ -413,7 +413,7 @@ var Block = /** @class */ (function (_super) {
     };
     /**
      * Get the "claimed" reward by the coinbase.
-     * @returns {Amount} claimed
+     * @returns {SatoshiAmount} claimed
      */
     Block.prototype.getClaimed = function () {
         assert(this.txs.length > 0);

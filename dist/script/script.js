@@ -417,7 +417,7 @@ var Script = /** @class */ (function () {
      * @param {Number?} flags - Script standard flags.
      * @param {TX?} tx - Transaction being verified.
      * @param {Number?} index - Index of input being verified.
-     * @param {Amount?} value - Previous output value.
+     * @param {SatoshiAmount?} value - Previous output value.
      * @param {Number?} version - Signature hash version (0=legacy, 1=segwit).
      * @throws {ScriptError} Will be thrown on VERIFY failures.
      */
@@ -2427,7 +2427,7 @@ var Script = /** @class */ (function () {
      * @param {Script} output
      * @param {TX} tx
      * @param {Number} index
-     * @param {Amount} value
+     * @param {SatoshiAmount} value
      * @param {VerifyFlags} flags
      * @throws {ScriptError}
      */
@@ -2513,7 +2513,7 @@ var Script = /** @class */ (function () {
      * @param {VerifyFlags} flags
      * @param {TX} tx
      * @param {Number} index
-     * @param {Amount} value
+     * @param {SatoshiAmount} value
      * @throws {ScriptError}
      */
     Script.verifyProgram = function (witness, output, flags, tx, index, value) {

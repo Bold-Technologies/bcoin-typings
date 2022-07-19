@@ -206,12 +206,12 @@ declare class WalletClient {
      * @param {Number} id
      * @param {Object} options
      * @param {String} options.address
-     * @param {Amount} options.value
+     * @param {SatoshiAmount} options.value
      * @returns {Promise}
      */
     send(id: number, options: {
         address: string;
-        value: Amount;
+        value: SatoshiAmount;
     }): Promise<any>;
     /**
      * Sign a transaction.
@@ -508,12 +508,12 @@ declare class Wallet {
      * Create a transaction, fill, sign, and broadcast.
      * @param {Object} options
      * @param {String} options.address
-     * @param {Amount} options.value
+     * @param {SatoshiAmount} options.value
      * @returns {Promise}
      */
     send(options: {
         address: string;
-        value: Amount;
+        value: SatoshiAmount;
     }): Promise<any>;
     /**
      * Sign a transaction.

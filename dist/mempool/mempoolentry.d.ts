@@ -37,14 +37,14 @@ declare class MempoolEntry {
      * @param {Number} options.height - Entry height.
      * @param {Number} options.priority - Entry priority.
      * @param {Number} options.time - Entry time.
-     * @param {Amount} options.value - Value of on-chain coins.
+     * @param {SatoshiAmount} options.value - Value of on-chain coins.
      */
     constructor(options: {
         tx: TX;
         height: number;
         priority: number;
         time: number;
-        value: Amount;
+        value: SatoshiAmount;
     });
     tx: any;
     height: number;
@@ -93,14 +93,14 @@ declare class MempoolEntry {
     getPriority(height: number): number;
     /**
      * Get fee.
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
-    getFee(): Amount;
+    getFee(): SatoshiAmount;
     /**
      * Get delta fee.
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
-    getDeltaFee(): Amount;
+    getDeltaFee(): SatoshiAmount;
     /**
      * Calculate fee rate.
      * @returns {Rate}

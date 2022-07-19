@@ -185,9 +185,9 @@ declare class Block extends AbstractBlock {
     getCoinbaseHeight(): number;
     /**
      * Get the "claimed" reward by the coinbase.
-     * @returns {Amount} claimed
+     * @returns {SatoshiAmount} claimed
      */
-    getClaimed(): Amount;
+    getClaimed(): SatoshiAmount;
     /**
      * Get all unique outpoint hashes in the
      * block. Coinbases are ignored.

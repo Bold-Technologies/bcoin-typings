@@ -396,7 +396,7 @@ declare class Wallet {
      * @param {Boolean} options.confirmed - Select only confirmed coins.
      * @param {Boolean} options.free - Do not apply a fee if the
      * transaction priority is high enough to be considered free.
-     * @param {Amount?} options.hardFee - Use a hard fee rather than
+     * @param {SatoshiAmount?} options.hardFee - Use a hard fee rather than
      * calculating one.
      * @param {Number|Boolean} options.subtractFee - Whether to subtract the
      * fee from existing outputs rather than adding more inputs.

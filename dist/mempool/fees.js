@@ -400,7 +400,7 @@ var PolicyEstimator = /** @class */ (function () {
     };
     /**
      * Test whether a fee should be used for calculation.
-     * @param {Amount} fee
+     * @param {SatoshiAmount} fee
      * @param {Number} priority
      * @returns {Boolean}
      */
@@ -413,7 +413,7 @@ var PolicyEstimator = /** @class */ (function () {
     };
     /**
      * Test whether a priority should be used for calculation.
-     * @param {Amount} fee
+     * @param {SatoshiAmount} fee
      * @param {Number} priority
      * @returns {Boolean}
      */

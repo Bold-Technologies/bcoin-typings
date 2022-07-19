@@ -3,85 +3,85 @@ export = Amount;
  * Amount
  * Represents a bitcoin amount (satoshis internally).
  * @alias module:btc.Amount
- * @property {Amount} value
+ * @property {SatoshiAmount} value
  */
 declare class Amount {
     /**
      * Instantiate amount from options.
      * @param {(String|Number)?} value
      * @param {String?} unit
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
-    static fromOptions(value: (string | number) | null, unit: string | null): Amount;
+    static fromOptions(value: (string | number) | null, unit: string | null): SatoshiAmount;
     /**
      * Instantiate amount from value.
      * @private
-     * @param {Amount} value
-     * @returns {Amount}
+     * @param {SatoshiAmount} value
+     * @returns {SatoshiAmount}
      */
     private static fromValue;
     /**
      * Instantiate amount from satoshis.
      * @param {Number|String} value
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
-    static fromSatoshis(value: number | string): Amount;
+    static fromSatoshis(value: number | string): SatoshiAmount;
     /**
      * Instantiate amount from bits.
      * @param {Number|String} value
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
-    static fromBits(value: number | string): Amount;
+    static fromBits(value: number | string): SatoshiAmount;
     /**
      * Instantiate amount from mbtc.
      * @param {Number|String} value
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
-    static fromMBTC(value: number | string): Amount;
+    static fromMBTC(value: number | string): SatoshiAmount;
     /**
      * Instantiate amount from btc.
      * @param {Number|String} value
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
-    static fromBTC(value: number | string): Amount;
+    static fromBTC(value: number | string): SatoshiAmount;
     /**
      * Instantiate amount from unit.
      * @param {String} unit
      * @param {Number|String} value
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
-    static from(unit: string, value: number | string): Amount;
+    static from(unit: string, value: number | string): SatoshiAmount;
     /**
      * Safely convert satoshis to a BTC string.
      * This function explicitly avoids any
      * floating point arithmetic.
-     * @param {Amount} value - Satoshis.
+     * @param {SatoshiAmount} value - Satoshis.
      * @returns {String} BTC string.
      */
-    static btc(value: Amount, num: any): string;
+    static btc(value: SatoshiAmount, num: any): string;
     /**
      * Safely convert a BTC string to satoshis.
      * @param {String} str - BTC
-     * @returns {Amount} Satoshis.
+     * @returns {SatoshiAmount} Satoshis.
      * @throws on parse error
      */
-    static value(str: string): Amount;
+    static value(str: string): SatoshiAmount;
     /**
      * Safely convert satoshis to a BTC string.
-     * @param {Amount} value
+     * @param {SatoshiAmount} value
      * @param {Number} exp - Exponent.
      * @param {Boolean} num - Return a number.
      * @returns {String|Number}
      */
-    static encode(value: Amount, exp: number, num: boolean): string | number;
+    static encode(value: SatoshiAmount, exp: number, num: boolean): string | number;
     /**
      * Safely convert a BTC string to satoshis.
      * @param {String|Number} value - BTC
      * @param {Number} exp - Exponent.
-     * @returns {Amount} Satoshis.
+     * @returns {SatoshiAmount} Satoshis.
      * @throws on parse error
      */
-    static decode(value: string | number, exp: number): Amount;
+    static decode(value: string | number, exp: number): SatoshiAmount;
     /**
      * Create an amount.
      * @constructor
@@ -95,46 +95,46 @@ declare class Amount {
      * @private
      * @param {(String|Number)?} value
      * @param {String?} unit
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
     private fromOptions;
     /**
      * Get satoshi value.
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
-    toValue(): Amount;
+    toValue(): SatoshiAmount;
     /**
      * Get satoshi string or value.
      * @param {Boolean?} num
-     * @returns {String|Amount}
+     * @returns {String|SatoshiAmount}
      */
-    toSatoshis(num: boolean | null): string | Amount;
+    toSatoshis(num: boolean | null): string | SatoshiAmount;
     /**
      * Get bits string or value.
      * @param {Boolean?} num
-     * @returns {String|Amount}
+     * @returns {String|SatoshiAmount}
      */
-    toBits(num: boolean | null): string | Amount;
+    toBits(num: boolean | null): string | SatoshiAmount;
     /**
      * Get mbtc string or value.
      * @param {Boolean?} num
-     * @returns {String|Amount}
+     * @returns {String|SatoshiAmount}
      */
-    toMBTC(num: boolean | null): string | Amount;
+    toMBTC(num: boolean | null): string | SatoshiAmount;
     /**
      * Get btc string or value.
      * @param {Boolean?} num
-     * @returns {String|Amount}
+     * @returns {String|SatoshiAmount}
      */
-    toBTC(num: boolean | null): string | Amount;
+    toBTC(num: boolean | null): string | SatoshiAmount;
     /**
      * Get unit string or value.
      * @param {String} unit - Can be `sat`,
      * `ubtc`, `bits`, `mbtc`, or `btc`.
      * @param {Boolean?} num
-     * @returns {String|Amount}
+     * @returns {String|SatoshiAmount}
      */
-    to(unit: string, num: boolean | null): string | Amount;
+    to(unit: string, num: boolean | null): string | SatoshiAmount;
     /**
      * Convert amount to bitcoin string.
      * @returns {String}
@@ -143,36 +143,36 @@ declare class Amount {
     /**
      * Inject properties from value.
      * @private
-     * @param {Amount} value
-     * @returns {Amount}
+     * @param {SatoshiAmount} value
+     * @returns {SatoshiAmount}
      */
     private fromValue;
     /**
      * Inject properties from satoshis.
      * @private
      * @param {Number|String} value
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
     private fromSatoshis;
     /**
      * Inject properties from bits.
      * @private
      * @param {Number|String} value
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
     private fromBits;
     /**
      * Inject properties from mbtc.
      * @private
      * @param {Number|String} value
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
     private fromMBTC;
     /**
      * Inject properties from btc.
      * @private
      * @param {Number|String} value
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
     private fromBTC;
     /**
@@ -180,7 +180,7 @@ declare class Amount {
      * @private
      * @param {String} unit
      * @param {Number|String} value
-     * @returns {Amount}
+     * @returns {SatoshiAmount}
      */
     private from;
 }

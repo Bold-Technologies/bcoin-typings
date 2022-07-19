@@ -163,7 +163,7 @@ exports.BLOCK_PRIORITY_THRESHOLD = exports.FREE_THRESHOLD;
  * Calculate minimum fee based on rate and size.
  * @param {Number?} size
  * @param {Rate?} rate - Rate of satoshi per kB.
- * @returns {Amount} fee
+ * @returns {SatoshiAmount} fee
  */
 exports.getMinFee = function getMinFee(size, rate) {
     if (rate == null)
@@ -183,7 +183,7 @@ exports.getMinFee = function getMinFee(size, rate) {
  * when taking into account size.
  * @param {Number?} size
  * @param {Rate?} rate - Rate of satoshi per kB.
- * @returns {Amount} fee
+ * @returns {SatoshiAmount} fee
  */
 exports.getRoundFee = function getRoundFee(size, rate) {
     if (rate == null)
@@ -200,7 +200,7 @@ exports.getRoundFee = function getRoundFee(size, rate) {
 /**
  * Calculate a fee rate based on size and fees.
  * @param {Number} size
- * @param {Amount} fee
+ * @param {SatoshiAmount} fee
  * @returns {Rate}
  */
 exports.getRate = function getRate(size, fee) {

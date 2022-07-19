@@ -393,7 +393,7 @@ var WalletClient = /** @class */ (function (_super) {
      * @param {Number} id
      * @param {Object} options
      * @param {String} options.address
-     * @param {Amount} options.value
+     * @param {SatoshiAmount} options.value
      * @returns {Promise}
      */
     WalletClient.prototype.send = function (id, options) {
@@ -802,7 +802,7 @@ var Wallet = /** @class */ (function (_super) {
      * Create a transaction, fill, sign, and broadcast.
      * @param {Object} options
      * @param {String} options.address
-     * @param {Amount} options.value
+     * @param {SatoshiAmount} options.value
      * @returns {Promise}
      */
     Wallet.prototype.send = function (options) {

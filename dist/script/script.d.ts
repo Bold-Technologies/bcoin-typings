@@ -112,11 +112,11 @@ declare class Script {
      * @param {Script} output
      * @param {TX} tx
      * @param {Number} index
-     * @param {Amount} value
+     * @param {SatoshiAmount} value
      * @param {VerifyFlags} flags
      * @throws {ScriptError}
      */
-    static verify(input: Script, witness: Witness, output: Script, tx: TX, index: number, value: Amount, flags: VerifyFlags): void;
+    static verify(input: Script, witness: Witness, output: Script, tx: TX, index: number, value: SatoshiAmount, flags: VerifyFlags): void;
     /**
      * Verify a witness program. This runs after regular script
      * execution if a witness program is present. It will convert
@@ -126,10 +126,10 @@ declare class Script {
      * @param {VerifyFlags} flags
      * @param {TX} tx
      * @param {Number} index
-     * @param {Amount} value
+     * @param {SatoshiAmount} value
      * @throws {ScriptError}
      */
-    static verifyProgram(witness: Witness, output: Script, flags: VerifyFlags, tx: TX, index: number, value: Amount): void;
+    static verifyProgram(witness: Witness, output: Script, flags: VerifyFlags, tx: TX, index: number, value: SatoshiAmount): void;
     /**
      * Create a script from buffer reader.
      * @param {BufferReader} br
@@ -312,11 +312,11 @@ declare class Script {
      * @param {Number?} flags - Script standard flags.
      * @param {TX?} tx - Transaction being verified.
      * @param {Number?} index - Index of input being verified.
-     * @param {Amount?} value - Previous output value.
+     * @param {SatoshiAmount?} value - Previous output value.
      * @param {Number?} version - Signature hash version (0=legacy, 1=segwit).
      * @throws {ScriptError} Will be thrown on VERIFY failures.
      */
-    execute(stack: Stack, flags: number | null, tx: TX, index: number | null, value: Amount | null, version: number | null): void;
+    execute(stack: Stack, flags: number | null, tx: TX, index: number | null, value: SatoshiAmount | null, version: number | null): void;
     /**
      * Remove all matched data elements from
      * a script's code (used to remove signatures

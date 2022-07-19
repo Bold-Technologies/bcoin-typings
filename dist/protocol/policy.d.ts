@@ -21,7 +21,7 @@ export var MIN_BLOCK_WEIGHT: number;
 export var MAX_BLOCK_WEIGHT: number;
 export var BLOCK_PRIORITY_WEIGHT: number;
 export { FREE_THRESHOLD as BLOCK_PRIORITY_THRESHOLD };
-export function getMinFee(size: number | null, rate: Rate | null): Amount;
-export function getRoundFee(size: number | null, rate: Rate | null): Amount;
-export function getRate(size: number, fee: Amount): Rate;
+export function getMinFee(size: number | null, rate: Rate | null): SatoshiAmount;
+export function getRoundFee(size: number | null, rate: Rate | null): SatoshiAmount;
+export function getRate(size: number, fee: SatoshiAmount): Rate;
 //# sourceMappingURL=policy.d.ts.map
