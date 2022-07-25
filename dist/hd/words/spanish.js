@@ -2049,3 +2049,4 @@ module.exports = [
     'zumo',
     'zurdo'
 ];
+//# sourceMappingURL=spanish.js.map

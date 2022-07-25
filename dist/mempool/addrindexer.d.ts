@@ -53,7 +53,7 @@ declare class AddrIndexer {
         limit: number;
         reverse: number;
         after: Buffer;
-    }): any;
+    }): any[];
     insert(entry: any, view: any): void;
     remove(hash: any): void;
 }

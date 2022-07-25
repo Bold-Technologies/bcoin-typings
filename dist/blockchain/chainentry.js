@@ -5,19 +5,19 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var assert = require('bsert');
-var bio = require('bufio');
-var BN = require('bcrypto/lib/bn.js');
-var consensus = require('../protocol/consensus');
-var hash256 = require('bcrypto/lib/hash256');
-var util = require('../utils/util');
-var Headers = require('../primitives/headers');
-var InvItem = require('../primitives/invitem');
-var inspectSymbol = require('../utils').inspectSymbol;
+const assert = require('bsert');
+const bio = require('bufio');
+const BN = require('bcrypto/lib/bn.js');
+const consensus = require('../protocol/consensus');
+const hash256 = require('bcrypto/lib/hash256');
+const util = require('../utils/util');
+const Headers = require('../primitives/headers');
+const InvItem = require('../primitives/invitem');
+const { inspectSymbol } = require('../utils');
 /*
  * Constants
  */
-var ZERO = new BN(0);
+const ZERO = new BN(0);
 /**
  * Chain Entry
  * Represents an entry in the chain. Unlike
@@ -37,13 +37,13 @@ var ZERO = new BN(0);
  * @property {BN} chainwork
  * @property {Hash} rhash
  */
-var ChainEntry = /** @class */ (function () {
+class ChainEntry {
     /**
      * Create a chain entry.
      * @constructor
      * @param {Object?} options
      */
-    function ChainEntry(options) {
+    constructor(options) {
         this.hash = consensus.ZERO_HASH;
         this.version = 1;
         this.prevBlock = consensus.ZERO_HASH;
@@ -61,7 +61,7 @@ var ChainEntry = /** @class */ (function () {
      * @private
      * @param {Object} options
      */
-    ChainEntry.prototype.fromOptions = function (options) {
+    fromOptions(options) {
         assert(options, 'Block data is required.');
         assert(Buffer.isBuffer(options.hash));
         assert((options.version >>> 0) === options.version);
@@ -82,66 +82,66 @@ var ChainEntry = /** @class */ (function () {
         this.height = options.height;
         this.chainwork = options.chainwork || ZERO;
         return this;
-    };
+    }
     /**
      * Instantiate chainentry from options.
      * @param {Object} options
      * @param {ChainEntry} prev - Previous entry.
      * @returns {ChainEntry}
      */
-    ChainEntry.fromOptions = function (options, prev) {
+    static fromOptions(options, prev) {
         return new this().fromOptions(options, prev);
-    };
+    }
     /**
      * Calculate the proof: (1 << 256) / (target + 1)
      * @returns {BN} proof
      */
-    ChainEntry.prototype.getProof = function () {
-        var target = consensus.fromCompact(this.bits);
+    getProof() {
+        const target = consensus.fromCompact(this.bits);
         if (target.isNeg() || target.isZero())
             return new BN(0);
         return ChainEntry.MAX_CHAINWORK.div(target.iaddn(1));
-    };
+    }
     /**
      * Calculate the chainwork by
      * adding proof to previous chainwork.
      * @returns {BN} chainwork
      */
-    ChainEntry.prototype.getChainwork = function (prev) {
-        var proof = this.getProof();
+    getChainwork(prev) {
+        const proof = this.getProof();
         if (!prev)
             return proof;
         return proof.iadd(prev.chainwork);
-    };
+    }
     /**
      * Test against the genesis block.
      * @returns {Boolean}
      */
-    ChainEntry.prototype.isGenesis = function () {
+    isGenesis() {
         return this.height === 0;
-    };
+    }
     /**
      * Test whether the entry contains a version bit.
      * @param {Number} bit
      * @returns {Boolean}
      */
-    ChainEntry.prototype.hasBit = function (bit) {
+    hasBit(bit) {
         return consensus.hasBit(this.version, bit);
-    };
+    }
     /**
      * Get little-endian block hash.
      * @returns {Hash}
      */
-    ChainEntry.prototype.rhash = function () {
+    rhash() {
         return util.revHex(this.hash);
-    };
+    }
     /**
      * Inject properties from block.
      * @private
      * @param {Block|MerkleBlock} block
      * @param {ChainEntry} prev - Previous entry.
      */
-    ChainEntry.prototype.fromBlock = function (block, prev) {
+    fromBlock(block, prev) {
         this.hash = block.hash();
         this.version = block.version;
         this.prevBlock = block.prevBlock;
@@ -152,22 +152,22 @@ var ChainEntry = /** @class */ (function () {
         this.height = prev ? prev.height + 1 : 0;
         this.chainwork = this.getChainwork(prev);
         return this;
-    };
+    }
     /**
      * Instantiate chainentry from block.
      * @param {Block|MerkleBlock} block
      * @param {ChainEntry} prev - Previous entry.
      * @returns {ChainEntry}
      */
-    ChainEntry.fromBlock = function (block, prev) {
+    static fromBlock(block, prev) {
         return new this().fromBlock(block, prev);
-    };
+    }
     /**
      * Serialize the entry to internal database format.
      * @returns {Buffer}
      */
-    ChainEntry.prototype.toRaw = function () {
-        var bw = bio.write(116);
+    toRaw() {
+        const bw = bio.write(116);
         bw.writeU32(this.version);
         bw.writeHash(this.prevBlock);
         bw.writeHash(this.merkleRoot);
@@ -177,15 +177,15 @@ var ChainEntry = /** @class */ (function () {
         bw.writeU32(this.height);
         bw.writeBytes(this.chainwork.toArrayLike(Buffer, 'le', 32));
         return bw.render();
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    ChainEntry.prototype.fromRaw = function (data) {
-        var br = bio.read(data, true);
-        var hash = hash256.digest(br.readBytes(80));
+    fromRaw(data) {
+        const br = bio.read(data, true);
+        const hash = hash256.digest(br.readBytes(80));
         br.seek(-80);
         this.hash = hash;
         this.version = br.readU32();
@@ -197,21 +197,21 @@ var ChainEntry = /** @class */ (function () {
         this.height = br.readU32();
         this.chainwork = new BN(br.readBytes(32), 'le');
         return this;
-    };
+    }
     /**
      * Deserialize the entry.
      * @param {Buffer} data
      * @returns {ChainEntry}
      */
-    ChainEntry.fromRaw = function (data) {
+    static fromRaw(data) {
         return new this().fromRaw(data);
-    };
+    }
     /**
      * Serialize the entry to an object more
      * suitable for JSON serialization.
      * @returns {Object}
      */
-    ChainEntry.prototype.toJSON = function () {
+    toJSON() {
         return {
             hash: util.revHex(this.hash),
             version: this.version,
@@ -223,13 +223,13 @@ var ChainEntry = /** @class */ (function () {
             height: this.height,
             chainwork: this.chainwork.toString('hex', 64)
         };
-    };
+    }
     /**
      * Inject properties from json object.
      * @private
      * @param {Object} json
      */
-    ChainEntry.prototype.fromJSON = function (json) {
+    fromJSON(json) {
         assert(json, 'Block data is required.');
         assert(typeof json.hash === 'string');
         assert((json.version >>> 0) === json.version);
@@ -249,48 +249,47 @@ var ChainEntry = /** @class */ (function () {
         this.height = json.height;
         this.chainwork = new BN(json.chainwork, 'hex');
         return this;
-    };
+    }
     /**
      * Instantiate block from jsonified object.
      * @param {Object} json
      * @returns {ChainEntry}
      */
-    ChainEntry.fromJSON = function (json) {
+    static fromJSON(json) {
         return new this().fromJSON(json);
-    };
+    }
     /**
      * Convert the entry to a headers object.
      * @returns {Headers}
      */
-    ChainEntry.prototype.toHeaders = function () {
+    toHeaders() {
         return Headers.fromEntry(this);
-    };
+    }
     /**
      * Convert the entry to an inv item.
      * @returns {InvItem}
      */
-    ChainEntry.prototype.toInv = function () {
+    toInv() {
         return new InvItem(InvItem.types.BLOCK, this.hash);
-    };
+    }
     /**
      * Return a more user-friendly object.
      * @returns {Object}
      */
-    ChainEntry.prototype[inspectSymbol] = function () {
-        var json = this.toJSON();
+    [inspectSymbol]() {
+        const json = this.toJSON();
         json.version = json.version.toString(16);
         return json;
-    };
+    }
     /**
      * Test whether an object is a {@link ChainEntry}.
      * @param {Object} obj
      * @returns {Boolean}
      */
-    ChainEntry.isChainEntry = function (obj) {
+    static isChainEntry(obj) {
         return obj instanceof ChainEntry;
-    };
-    return ChainEntry;
-}());
+    }
+}
 /**
  * The max chainwork (1 << 256).
  * @const {BN}
@@ -300,3 +299,4 @@ ChainEntry.MAX_CHAINWORK = new BN(1).ushln(256);
  * Expose
  */
 module.exports = ChainEntry;
+//# sourceMappingURL=chainentry.js.map

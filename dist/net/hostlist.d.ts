@@ -24,14 +24,14 @@ declare class HostList {
     resolve: any;
     dnsSeeds: any[];
     dnsNodes: any[];
-    map: any;
+    map: Map<any, any>;
     fresh: any[];
     totalFresh: number;
     used: any[];
     totalUsed: number;
     nodes: any[];
-    local: any;
-    banned: any;
+    local: Map<any, any>;
+    banned: Map<any, any>;
     timer: number;
     needsFlush: boolean;
     flushing: boolean;
@@ -142,7 +142,7 @@ declare class HostList {
      * Evict a host from fresh bucket.
      * @param {Map} bucket
      */
-    evictFresh(bucket: Map): void;
+    evictFresh(bucket: Map<any, any>): void;
     /**
      * Test whether a host is evictable.
      * @param {HostEntry} entry

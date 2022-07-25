@@ -8,8 +8,8 @@
 /**
  * @module protocol/policy
  */
-var assert = require('bsert');
-var consensus = require('./consensus');
+const assert = require('bsert');
+const consensus = require('./consensus');
 /**
  * Maximum transaction version (policy).
  * @const {Number}
@@ -172,7 +172,7 @@ exports.getMinFee = function getMinFee(size, rate) {
     assert(rate >= 0);
     if (size === 0)
         return 0;
-    var fee = Math.floor(rate * size / 1000);
+    let fee = Math.floor(rate * size / 1000);
     if (fee === 0 && rate > 0)
         fee = rate;
     return fee;
@@ -192,7 +192,7 @@ exports.getRoundFee = function getRoundFee(size, rate) {
     assert(rate >= 0);
     if (size === 0)
         return 0;
-    var fee = rate * Math.ceil(size / 1000);
+    let fee = rate * Math.ceil(size / 1000);
     if (fee === 0 && rate > 0)
         fee = rate;
     return fee;
@@ -210,3 +210,4 @@ exports.getRate = function getRate(size, fee) {
         return 0;
     return Math.floor(fee * 1000 / size);
 };
+//# sourceMappingURL=policy.js.map

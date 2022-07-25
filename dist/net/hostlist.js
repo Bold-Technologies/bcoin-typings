@@ -4,72 +4,36 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-var assert = require('bsert');
-var path = require('path');
-var fs = require('bfile');
-var IP = require('binet');
-var dns = require('bdns');
-var Logger = require('blgr');
-var murmur3 = require('bcrypto/lib/murmur3');
-var List = require('blst');
-var randomRange = require('bcrypto/lib/random').randomRange;
-var util = require('../utils/util');
-var Network = require('../protocol/network');
-var NetAddress = require('./netaddress');
-var common = require('./common');
-var seeds = require('./seeds');
-var inspectSymbol = require('../utils').inspectSymbol;
+const assert = require('bsert');
+const path = require('path');
+const fs = require('bfile');
+const IP = require('binet');
+const dns = require('bdns');
+const Logger = require('blgr');
+const murmur3 = require('bcrypto/lib/murmur3');
+const List = require('blst');
+const { randomRange } = require('bcrypto/lib/random');
+const util = require('../utils/util');
+const Network = require('../protocol/network');
+const NetAddress = require('./netaddress');
+const common = require('./common');
+const seeds = require('./seeds');
+const { inspectSymbol } = require('../utils');
 /*
  * Constants
  */
-var POOL32 = Buffer.allocUnsafe(32);
+const POOL32 = Buffer.allocUnsafe(32);
 /**
  * Host List
  * @alias module:net.HostList
  */
-var HostList = /** @class */ (function () {
+class HostList {
     /**
      * Create a host list.
      * @constructor
      * @param {Object} options
      */
-    function HostList(options) {
+    constructor(options) {
         this.options = new HostListOptions(options);
         this.network = this.options.network;
         this.logger = this.options.logger.context('hostlist');
@@ -94,93 +58,65 @@ var HostList = /** @class */ (function () {
      * Initialize list.
      * @private
      */
-    HostList.prototype.init = function () {
-        var options = this.options;
-        var scores = HostList.scores;
-        for (var i = 0; i < options.maxBuckets; i++)
+    init() {
+        const options = this.options;
+        const scores = HostList.scores;
+        for (let i = 0; i < options.maxBuckets; i++)
             this.fresh.push(new Map());
-        for (var i = 0; i < options.maxBuckets; i++)
+        for (let i = 0; i < options.maxBuckets; i++)
             this.used.push(new List());
         this.setSeeds(options.seeds);
         this.setNodes(options.nodes);
         this.pushLocal(this.address, scores.MANUAL);
         this.addLocal(options.host, options.port, scores.BIND);
-        var hosts = IP.getPublic();
-        var port = this.address.port;
-        for (var _i = 0, hosts_1 = hosts; _i < hosts_1.length; _i++) {
-            var host = hosts_1[_i];
+        const hosts = IP.getPublic();
+        const port = this.address.port;
+        for (const host of hosts)
             this.addLocal(host, port, scores.IF);
-        }
-    };
+    }
     /**
      * Open hostlist and read hosts file.
      * @method
      * @returns {Promise}
      */
-    HostList.prototype.open = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var e_1;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        _a.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, this.loadFile()];
-                    case 1:
-                        _a.sent();
-                        return [3 /*break*/, 3];
-                    case 2:
-                        e_1 = _a.sent();
-                        this.logger.warning('Hosts deserialization failed.');
-                        this.logger.error(e_1);
-                        return [3 /*break*/, 3];
-                    case 3:
-                        if (this.size() === 0)
-                            this.injectSeeds();
-                        return [4 /*yield*/, this.discoverNodes()];
-                    case 4:
-                        _a.sent();
-                        this.start();
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async open() {
+        try {
+            await this.loadFile();
+        }
+        catch (e) {
+            this.logger.warning('Hosts deserialization failed.');
+            this.logger.error(e);
+        }
+        if (this.size() === 0)
+            this.injectSeeds();
+        await this.discoverNodes();
+        this.start();
+    }
     /**
      * Close hostlist.
      * @method
      * @returns {Promise}
      */
-    HostList.prototype.close = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        this.stop();
-                        return [4 /*yield*/, this.flush()];
-                    case 1:
-                        _a.sent();
-                        this.reset();
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async close() {
+        this.stop();
+        await this.flush();
+        this.reset();
+    }
     /**
      * Start flush interval.
      */
-    HostList.prototype.start = function () {
-        var _this = this;
+    start() {
         if (this.options.memory)
             return;
         if (!this.options.filename)
             return;
         assert(this.timer == null);
-        this.timer = setInterval(function () { return _this.flush(); }, this.options.flushInterval);
-    };
+        this.timer = setInterval(() => this.flush(), this.options.flushInterval);
+    }
     /**
      * Stop flush interval.
      */
-    HostList.prototype.stop = function () {
+    stop() {
         if (this.options.memory)
             return;
         if (!this.options.filename)
@@ -188,17 +124,16 @@ var HostList = /** @class */ (function () {
         assert(this.timer != null);
         clearInterval(this.timer);
         this.timer = null;
-    };
+    }
     /**
      * Read and initialize from hosts file.
      * @method
      * @returns {Promise}
      */
-    HostList.prototype.injectSeeds = function () {
-        var nodes = seeds.get(this.network.type);
-        for (var _i = 0, nodes_1 = nodes; _i < nodes_1.length; _i++) {
-            var node = nodes_1[_i];
-            var addr = NetAddress.fromHostname(node, this.network);
+    injectSeeds() {
+        const nodes = seeds.get(this.network.type);
+        for (const node of nodes) {
+            const addr = NetAddress.fromHostname(node, this.network);
             if (!addr.isRoutable())
                 continue;
             if (!this.options.onion && addr.isOnion())
@@ -207,164 +142,132 @@ var HostList = /** @class */ (function () {
                 continue;
             this.add(addr);
         }
-    };
+    }
     /**
      * Read and initialize from hosts file.
      * @method
      * @returns {Promise}
      */
-    HostList.prototype.loadFile = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var filename, data, e_2, json;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        filename = this.options.filename;
-                        if (fs.unsupported)
-                            return [2 /*return*/];
-                        if (this.options.memory)
-                            return [2 /*return*/];
-                        if (!filename)
-                            return [2 /*return*/];
-                        _a.label = 1;
-                    case 1:
-                        _a.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, fs.readFile(filename, 'utf8')];
-                    case 2:
-                        data = _a.sent();
-                        return [3 /*break*/, 4];
-                    case 3:
-                        e_2 = _a.sent();
-                        if (e_2.code === 'ENOENT')
-                            return [2 /*return*/];
-                        throw e_2;
-                    case 4:
-                        json = JSON.parse(data);
-                        this.fromJSON(json);
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async loadFile() {
+        const filename = this.options.filename;
+        if (fs.unsupported)
+            return;
+        if (this.options.memory)
+            return;
+        if (!filename)
+            return;
+        let data;
+        try {
+            data = await fs.readFile(filename, 'utf8');
+        }
+        catch (e) {
+            if (e.code === 'ENOENT')
+                return;
+            throw e;
+        }
+        const json = JSON.parse(data);
+        this.fromJSON(json);
+    }
     /**
      * Flush addrs to hosts file.
      * @method
      * @returns {Promise}
      */
-    HostList.prototype.flush = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var filename, json, data, e_3;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        filename = this.options.filename;
-                        if (fs.unsupported)
-                            return [2 /*return*/];
-                        if (this.options.memory)
-                            return [2 /*return*/];
-                        if (!filename)
-                            return [2 /*return*/];
-                        if (!this.needsFlush)
-                            return [2 /*return*/];
-                        if (this.flushing)
-                            return [2 /*return*/];
-                        this.needsFlush = false;
-                        this.logger.debug('Writing hosts to %s.', filename);
-                        json = this.toJSON();
-                        data = JSON.stringify(json);
-                        this.flushing = true;
-                        _a.label = 1;
-                    case 1:
-                        _a.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, fs.writeFile(filename, data, 'utf8')];
-                    case 2:
-                        _a.sent();
-                        return [3 /*break*/, 4];
-                    case 3:
-                        e_3 = _a.sent();
-                        this.logger.warning('Writing hosts failed.');
-                        this.logger.error(e_3);
-                        return [3 /*break*/, 4];
-                    case 4:
-                        this.flushing = false;
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async flush() {
+        const filename = this.options.filename;
+        if (fs.unsupported)
+            return;
+        if (this.options.memory)
+            return;
+        if (!filename)
+            return;
+        if (!this.needsFlush)
+            return;
+        if (this.flushing)
+            return;
+        this.needsFlush = false;
+        this.logger.debug('Writing hosts to %s.', filename);
+        const json = this.toJSON();
+        const data = JSON.stringify(json);
+        this.flushing = true;
+        try {
+            await fs.writeFile(filename, data, 'utf8');
+        }
+        catch (e) {
+            this.logger.warning('Writing hosts failed.');
+            this.logger.error(e);
+        }
+        this.flushing = false;
+    }
     /**
      * Get list size.
      * @returns {Number}
      */
-    HostList.prototype.size = function () {
+    size() {
         return this.totalFresh + this.totalUsed;
-    };
+    }
     /**
      * Test whether the host list is full.
      * @returns {Boolean}
      */
-    HostList.prototype.isFull = function () {
-        var max = this.options.maxBuckets * this.options.maxEntries;
+    isFull() {
+        const max = this.options.maxBuckets * this.options.maxEntries;
         return this.size() >= max;
-    };
+    }
     /**
      * Reset host list.
      */
-    HostList.prototype.reset = function () {
+    reset() {
         this.map.clear();
-        for (var _i = 0, _a = this.fresh; _i < _a.length; _i++) {
-            var bucket = _a[_i];
+        for (const bucket of this.fresh)
             bucket.clear();
-        }
-        for (var _b = 0, _c = this.used; _b < _c.length; _b++) {
-            var bucket = _c[_b];
+        for (const bucket of this.used)
             bucket.reset();
-        }
         this.totalFresh = 0;
         this.totalUsed = 0;
         this.nodes.length = 0;
-    };
+    }
     /**
      * Mark a peer as banned.
      * @param {String} host
      */
-    HostList.prototype.ban = function (host) {
+    ban(host) {
         this.banned.set(host, util.now());
-    };
+    }
     /**
      * Unban host.
      * @param {String} host
      */
-    HostList.prototype.unban = function (host) {
-        this.banned["delete"](host);
-    };
+    unban(host) {
+        this.banned.delete(host);
+    }
     /**
      * Clear banned hosts.
      */
-    HostList.prototype.clearBanned = function () {
+    clearBanned() {
         this.banned.clear();
-    };
+    }
     /**
      * Test whether the host is banned.
      * @param {String} host
      * @returns {Boolean}
      */
-    HostList.prototype.isBanned = function (host) {
-        var time = this.banned.get(host);
+    isBanned(host) {
+        const time = this.banned.get(host);
         if (time == null)
             return false;
         if (util.now() > time + this.options.banTime) {
-            this.banned["delete"](host);
+            this.banned.delete(host);
             return false;
         }
         return true;
-    };
+    }
     /**
      * Allocate a new host.
      * @returns {HostEntry}
      */
-    HostList.prototype.getHost = function () {
-        var buckets = null;
+    getHost() {
+        let buckets = null;
         if (this.totalFresh > 0)
             buckets = this.fresh;
         if (this.totalUsed > 0) {
@@ -373,72 +276,71 @@ var HostList = /** @class */ (function () {
         }
         if (!buckets)
             return null;
-        var now = this.network.now();
-        var factor = 1;
+        const now = this.network.now();
+        let factor = 1;
         for (;;) {
-            var i = random(buckets.length);
-            var bucket = buckets[i];
+            const i = random(buckets.length);
+            const bucket = buckets[i];
             if (bucket.size === 0)
                 continue;
-            var index = random(bucket.size);
-            var entry = void 0;
+            let index = random(bucket.size);
+            let entry;
             if (buckets === this.used) {
                 entry = bucket.head;
                 while (index--)
                     entry = entry.next;
             }
             else {
-                for (var _i = 0, _a = bucket.values(); _i < _a.length; _i++) {
-                    entry = _a[_i];
+                for (entry of bucket.values()) {
                     if (index === 0)
                         break;
                     index -= 1;
                 }
             }
-            var num = random(1 << 30);
+            const num = random(1 << 30);
             if (num < factor * entry.chance(now) * (1 << 30))
                 return entry;
             factor *= 1.2;
         }
-    };
+    }
     /**
      * Get fresh bucket for host.
      * @private
      * @param {HostEntry} entry
      * @returns {Map}
      */
-    HostList.prototype.freshBucket = function (entry) {
-        var addr = entry.addr;
-        var src = entry.src;
-        var data = concat32(addr.raw, src.raw);
-        var hash = murmur3.sum(data, 0xfba4c795);
-        var index = hash % this.fresh.length;
+    freshBucket(entry) {
+        const addr = entry.addr;
+        const src = entry.src;
+        const data = concat32(addr.raw, src.raw);
+        const hash = murmur3.sum(data, 0xfba4c795);
+        const index = hash % this.fresh.length;
         return this.fresh[index];
-    };
+    }
     /**
      * Get used bucket for host.
      * @private
      * @param {HostEntry} entry
      * @returns {List}
      */
-    HostList.prototype.usedBucket = function (entry) {
-        var addr = entry.addr;
-        var hash = murmur3.sum(addr.raw, 0xfba4c795);
-        var index = hash % this.used.length;
+    usedBucket(entry) {
+        const addr = entry.addr;
+        const hash = murmur3.sum(addr.raw, 0xfba4c795);
+        const index = hash % this.used.length;
         return this.used[index];
-    };
+    }
     /**
      * Add host to host list.
      * @param {NetAddress} addr
      * @param {NetAddress?} src
      * @returns {Boolean}
      */
-    HostList.prototype.add = function (addr, src) {
+    add(addr, src) {
         assert(addr.port !== 0);
-        var entry = this.map.get(addr.hostname);
+        let entry = this.map.get(addr.hostname);
         if (entry) {
-            var penalty = 2 * 60 * 60;
-            var interval = 24 * 60 * 60;
+            let penalty = 2 * 60 * 60;
+            let interval = 24 * 60 * 60;
             // No source means we're inserting
             // this ourselves. No penalty.
             if (!src)
@@ -447,7 +349,7 @@ var HostList = /** @class */ (function () {
             entry.addr.services |= addr.services;
             entry.addr.services >>>= 0;
             // Online?
-            var now = this.network.now();
+            const now = this.network.now();
             if (now - addr.time < 24 * 60 * 60)
                 interval = 60 * 60;
             // Periodically update time.
@@ -471,8 +373,8 @@ var HostList = /** @class */ (function () {
             assert(entry.refCount < HostList.MAX_REFS);
             // Stochastic test: previous refCount
             // N: 2^N times harder to increase it.
-            var factor = 1;
-            for (var i = 0; i < entry.refCount; i++)
+            let factor = 1;
+            for (let i = 0; i < entry.refCount; i++)
                 factor *= 2;
             if (random(factor) !== 0)
                 return false;
@@ -485,7 +387,7 @@ var HostList = /** @class */ (function () {
             entry = new HostEntry(addr, src);
             this.totalFresh += 1;
         }
-        var bucket = this.freshBucket(entry);
+        const bucket = this.freshBucket(entry);
         if (bucket.has(entry.key()))
             return false;
         if (bucket.size >= this.options.maxEntries)
@@ -495,19 +397,18 @@ var HostList = /** @class */ (function () {
         this.map.set(entry.key(), entry);
         this.needsFlush = true;
         return true;
-    };
+    }
     /**
      * Evict a host from fresh bucket.
      * @param {Map} bucket
      */
-    HostList.prototype.evictFresh = function (bucket) {
-        var old = null;
-        for (var _i = 0, _a = bucket.values(); _i < _a.length; _i++) {
-            var entry = _a[_i];
+    evictFresh(bucket) {
+        let old = null;
+        for (const entry of bucket.values()) {
             if (this.isStale(entry)) {
-                bucket["delete"](entry.key());
+                bucket.delete(entry.key());
                 if (--entry.refCount === 0) {
-                    this.map["delete"](entry.key());
+                    this.map.delete(entry.key());
                     this.totalFresh -= 1;
                 }
                 continue;
@@ -521,19 +422,19 @@ var HostList = /** @class */ (function () {
         }
         if (!old)
             return;
-        bucket["delete"](old.key());
+        bucket.delete(old.key());
         if (--old.refCount === 0) {
-            this.map["delete"](old.key());
+            this.map.delete(old.key());
             this.totalFresh -= 1;
         }
-    };
+    }
     /**
      * Test whether a host is evictable.
      * @param {HostEntry} entry
      * @returns {Boolean}
      */
-    HostList.prototype.isStale = function (entry) {
-        var now = this.network.now();
+    isStale(entry) {
+        const now = this.network.now();
         if (entry.lastAttempt && entry.lastAttempt >= now - 60)
             return false;
         if (entry.addr.time > now + 10 * 60)
@@ -549,23 +450,22 @@ var HostList = /** @class */ (function () {
                 return true;
         }
         return false;
-    };
+    }
     /**
      * Remove host from host list.
      * @param {String} hostname
      * @returns {NetAddress}
      */
-    HostList.prototype.remove = function (hostname) {
-        var entry = this.map.get(hostname);
+    remove(hostname) {
+        const entry = this.map.get(hostname);
         if (!entry)
             return null;
         if (entry.used) {
-            var head = entry;
+            let head = entry;
             assert(entry.refCount === 0);
             while (head.prev)
                 head = head.prev;
-            for (var _i = 0, _a = this.used; _i < _a.length; _i++) {
-                var bucket = _a[_i];
+            for (const bucket of this.used) {
                 if (bucket.head === head) {
                     bucket.remove(entry);
                     this.totalUsed -= 1;
@@ -576,51 +476,50 @@ var HostList = /** @class */ (function () {
             assert(!head);
         }
         else {
-            for (var _b = 0, _c = this.fresh; _b < _c.length; _b++) {
-                var bucket = _c[_b];
-                if (bucket["delete"](entry.key()))
+            for (const bucket of this.fresh) {
+                if (bucket.delete(entry.key()))
                     entry.refCount -= 1;
             }
             this.totalFresh -= 1;
             assert(entry.refCount === 0);
         }
-        this.map["delete"](entry.key());
+        this.map.delete(entry.key());
         return entry.addr;
-    };
+    }
     /**
      * Mark host as failed.
      * @param {String} hostname
      */
-    HostList.prototype.markAttempt = function (hostname) {
-        var entry = this.map.get(hostname);
-        var now = this.network.now();
+    markAttempt(hostname) {
+        const entry = this.map.get(hostname);
+        const now = this.network.now();
         if (!entry)
             return;
         entry.attempts += 1;
         entry.lastAttempt = now;
-    };
+    }
     /**
      * Mark host as successfully connected.
      * @param {String} hostname
      */
-    HostList.prototype.markSuccess = function (hostname) {
-        var entry = this.map.get(hostname);
-        var now = this.network.now();
+    markSuccess(hostname) {
+        const entry = this.map.get(hostname);
+        const now = this.network.now();
         if (!entry)
             return;
         if (now - entry.addr.time > 20 * 60)
             entry.addr.time = now;
-    };
+    }
     /**
      * Mark host as successfully ack'd.
      * @param {String} hostname
      * @param {Number} services
      */
-    HostList.prototype.markAck = function (hostname, services) {
-        var entry = this.map.get(hostname);
+    markAck(hostname, services) {
+        const entry = this.map.get(hostname);
         if (!entry)
             return;
-        var now = this.network.now();
+        const now = this.network.now();
         entry.addr.services |= services;
         entry.addr.services >>>= 0;
         entry.lastSuccess = now;
@@ -630,19 +529,18 @@ var HostList = /** @class */ (function () {
             return;
         assert(entry.refCount > 0);
         // Remove from fresh.
-        var old = null;
-        for (var _i = 0, _a = this.fresh; _i < _a.length; _i++) {
-            var bucket_1 = _a[_i];
-            if (bucket_1["delete"](entry.key())) {
+        let old = null;
+        for (const bucket of this.fresh) {
+            if (bucket.delete(entry.key())) {
                 entry.refCount -= 1;
-                old = bucket_1;
+                old = bucket;
             }
         }
         assert(old);
         assert(entry.refCount === 0);
         this.totalFresh -= 1;
         // Find room in used bucket.
-        var bucket = this.usedBucket(entry);
+        const bucket = this.usedBucket(entry);
         if (bucket.size < this.options.maxEntries) {
             entry.used = true;
             bucket.push(entry);
@@ -650,8 +548,8 @@ var HostList = /** @class */ (function () {
             return;
         }
         // No room. Evict.
-        var evicted = this.evictUsed(bucket);
-        var fresh = this.freshBucket(evicted);
+        const evicted = this.evictUsed(bucket);
+        let fresh = this.freshBucket(evicted);
         // Move to entry's old bucket if no room.
         if (fresh.size >= this.options.maxEntries)
             fresh = old;
@@ -664,73 +562,71 @@ var HostList = /** @class */ (function () {
         assert(evicted.refCount === 0);
         evicted.refCount += 1;
         this.totalFresh += 1;
-    };
+    }
     /**
      * Pick used for eviction.
      * @param {List} bucket
      */
-    HostList.prototype.evictUsed = function (bucket) {
-        var old = bucket.head;
-        for (var entry = bucket.head; entry; entry = entry.next) {
+    evictUsed(bucket) {
+        let old = bucket.head;
+        for (let entry = bucket.head; entry; entry = entry.next) {
             if (entry.addr.time < old.addr.time)
                 old = entry;
         }
         return old;
-    };
+    }
     /**
      * Convert address list to array.
      * @returns {NetAddress[]}
      */
-    HostList.prototype.toArray = function () {
-        var out = [];
-        for (var _i = 0, _a = this.map.values(); _i < _a.length; _i++) {
-            var entry = _a[_i];
+    toArray() {
+        const out = [];
+        for (const entry of this.map.values())
             out.push(entry.addr);
-        }
         assert.strictEqual(out.length, this.size());
         return out;
-    };
+    }
     /**
      * Add a preferred seed.
      * @param {String} host
      */
-    HostList.prototype.addSeed = function (host) {
-        var ip = IP.fromHostname(host, this.network.port);
+    addSeed(host) {
+        const ip = IP.fromHostname(host, this.network.port);
         if (ip.type === IP.types.DNS) {
             // Defer for resolution.
             this.dnsSeeds.push(ip);
             return null;
         }
-        var addr = NetAddress.fromHost(ip.host, ip.port, this.network);
+        const addr = NetAddress.fromHost(ip.host, ip.port, this.network);
         this.add(addr);
         return addr;
-    };
+    }
     /**
      * Add a priority node.
      * @param {String} host
      * @returns {NetAddress}
      */
-    HostList.prototype.addNode = function (host) {
-        var ip = IP.fromHostname(host, this.network.port);
+    addNode(host) {
+        const ip = IP.fromHostname(host, this.network.port);
         if (ip.type === IP.types.DNS) {
             // Defer for resolution.
             this.dnsNodes.push(ip);
             return null;
         }
-        var addr = NetAddress.fromHost(ip.host, ip.port, this.network);
+        const addr = NetAddress.fromHost(ip.host, ip.port, this.network);
         this.nodes.push(addr);
         this.add(addr);
         return addr;
-    };
+    }
     /**
      * Remove a priority node.
      * @param {String} host
      * @returns {Boolean}
      */
-    HostList.prototype.removeNode = function (host) {
-        var addr = IP.fromHostname(host, this.network.port);
-        for (var i = 0; i < this.nodes.length; i++) {
-            var node = this.nodes[i];
+    removeNode(host) {
+        const addr = IP.fromHostname(host, this.network.port);
+        for (let i = 0; i < this.nodes.length; i++) {
+            const node = this.nodes[i];
             if (node.host !== addr.host)
                 continue;
             if (node.port !== addr.port)
@@ -739,30 +635,26 @@ var HostList = /** @class */ (function () {
             return true;
         }
         return false;
-    };
+    }
     /**
      * Set initial seeds.
      * @param {String[]} seeds
      */
-    HostList.prototype.setSeeds = function (seeds) {
+    setSeeds(seeds) {
         this.dnsSeeds.length = 0;
-        for (var _i = 0, seeds_1 = seeds; _i < seeds_1.length; _i++) {
-            var host = seeds_1[_i];
+        for (const host of seeds)
             this.addSeed(host);
-        }
-    };
+    }
     /**
      * Set priority nodes.
      * @param {String[]} nodes
      */
-    HostList.prototype.setNodes = function (nodes) {
+    setNodes(nodes) {
         this.dnsNodes.length = 0;
         this.nodes.length = 0;
-        for (var _i = 0, nodes_2 = nodes; _i < nodes_2.length; _i++) {
-            var host = nodes_2[_i];
+        for (const host of nodes)
             this.addNode(host);
-        }
-    };
+    }
     /**
      * Add a local address.
      * @param {String} host
@@ -770,42 +662,41 @@ var HostList = /** @class */ (function () {
      * @param {Number} score
      * @returns {Boolean}
      */
-    HostList.prototype.addLocal = function (host, port, score) {
-        var addr = NetAddress.fromHost(host, port, this.network);
+    addLocal(host, port, score) {
+        const addr = NetAddress.fromHost(host, port, this.network);
         addr.services = this.options.services;
         return this.pushLocal(addr, score);
-    };
+    }
     /**
      * Add a local address.
      * @param {NetAddress} addr
      * @param {Number} score
      * @returns {Boolean}
      */
-    HostList.prototype.pushLocal = function (addr, score) {
+    pushLocal(addr, score) {
         if (!addr.isRoutable())
             return false;
         if (this.local.has(addr.hostname))
             return false;
-        var local = new LocalAddress(addr, score);
+        const local = new LocalAddress(addr, score);
         this.local.set(addr.hostname, local);
         return true;
-    };
+    }
     /**
      * Get local address based on reachability.
      * @param {NetAddress?} src
      * @returns {NetAddress}
      */
-    HostList.prototype.getLocal = function (src) {
-        var bestReach = -1;
-        var bestScore = -1;
-        var bestDest = null;
+    getLocal(src) {
+        let bestReach = -1;
+        let bestScore = -1;
+        let bestDest = null;
         if (!src)
             src = this.address;
         if (this.local.size === 0)
             return null;
-        for (var _i = 0, _a = this.local.values(); _i < _a.length; _i++) {
-            var dest = _a[_i];
-            var reach = src.getReachability(dest.addr);
+        for (const dest of this.local.values()) {
+            const reach = src.getReachability(dest.addr);
             if (reach < bestReach)
                 continue;
             if (reach > bestReach || dest.score > bestScore) {
@@ -816,163 +707,108 @@ var HostList = /** @class */ (function () {
         }
         bestDest.time = this.network.now();
         return bestDest;
-    };
+    }
     /**
      * Mark local address as seen during a handshake.
      * @param {NetAddress} addr
      * @returns {Boolean}
      */
-    HostList.prototype.markLocal = function (addr) {
-        var local = this.local.get(addr.hostname);
+    markLocal(addr) {
+        const local = this.local.get(addr.hostname);
         if (!local)
             return false;
         local.score += 1;
         return true;
-    };
+    }
     /**
      * Discover hosts from seeds.
      * @method
      * @returns {Promise}
      */
-    HostList.prototype.discoverSeeds = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var jobs, _i, _a, seed;
-            return __generator(this, function (_b) {
-                jobs = [];
-                for (_i = 0, _a = this.dnsSeeds; _i < _a.length; _i++) {
-                    seed = _a[_i];
-                    jobs.push(this.populateSeed(seed));
-                }
-                return [2 /*return*/, Promise.all(jobs)];
-            });
-        });
-    };
+    async discoverSeeds() {
+        const jobs = [];
+        for (const seed of this.dnsSeeds)
+            jobs.push(this.populateSeed(seed));
+        return Promise.all(jobs);
+    }
     /**
      * Discover hosts from nodes.
      * @method
      * @returns {Promise}
      */
-    HostList.prototype.discoverNodes = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var jobs, _i, _a, node;
-            return __generator(this, function (_b) {
-                jobs = [];
-                for (_i = 0, _a = this.dnsNodes; _i < _a.length; _i++) {
-                    node = _a[_i];
-                    jobs.push(this.populateNode(node));
-                }
-                return [2 /*return*/, Promise.all(jobs)];
-            });
-        });
-    };
+    async discoverNodes() {
+        const jobs = [];
+        for (const node of this.dnsNodes)
+            jobs.push(this.populateNode(node));
+        return Promise.all(jobs);
+    }
     /**
      * Lookup node's domain.
      * @method
      * @param {Object} addr
      * @returns {Promise}
      */
-    HostList.prototype.populateNode = function (addr) {
-        return __awaiter(this, void 0, void 0, function () {
-            var addrs;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.populate(addr)];
-                    case 1:
-                        addrs = _a.sent();
-                        if (addrs.length === 0)
-                            return [2 /*return*/];
-                        this.nodes.push(addrs[0]);
-                        this.add(addrs[0]);
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async populateNode(addr) {
+        const addrs = await this.populate(addr);
+        if (addrs.length === 0)
+            return;
+        this.nodes.push(addrs[0]);
+        this.add(addrs[0]);
+    }
     /**
      * Populate from seed.
      * @method
      * @param {Object} seed
      * @returns {Promise}
      */
-    HostList.prototype.populateSeed = function (seed) {
-        return __awaiter(this, void 0, void 0, function () {
-            var addrs, _i, addrs_1, addr;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.populate(seed)];
-                    case 1:
-                        addrs = _a.sent();
-                        for (_i = 0, addrs_1 = addrs; _i < addrs_1.length; _i++) {
-                            addr = addrs_1[_i];
-                            this.add(addr);
-                        }
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async populateSeed(seed) {
+        const addrs = await this.populate(seed);
+        for (const addr of addrs)
+            this.add(addr);
+    }
     /**
      * Lookup hosts from dns host.
      * @method
      * @param {Object} target
      * @returns {Promise}
      */
-    HostList.prototype.populate = function (target) {
-        return __awaiter(this, void 0, void 0, function () {
-            var addrs, hosts, e_4, _i, hosts_2, host, addr;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        addrs = [];
-                        assert(target.type === IP.types.DNS, 'Resolved host passed.');
-                        this.logger.info('Resolving host: %s.', target.host);
-                        _a.label = 1;
-                    case 1:
-                        _a.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, this.resolve(target.host)];
-                    case 2:
-                        hosts = _a.sent();
-                        return [3 /*break*/, 4];
-                    case 3:
-                        e_4 = _a.sent();
-                        this.logger.error(e_4);
-                        return [2 /*return*/, addrs];
-                    case 4:
-                        for (_i = 0, hosts_2 = hosts; _i < hosts_2.length; _i++) {
-                            host = hosts_2[_i];
-                            addr = NetAddress.fromHost(host, target.port, this.network);
-                            addrs.push(addr);
-                        }
-                        return [2 /*return*/, addrs];
-                }
-            });
-        });
-    };
+    async populate(target) {
+        const addrs = [];
+        assert(target.type === IP.types.DNS, 'Resolved host passed.');
+        this.logger.info('Resolving host: %s.', target.host);
+        let hosts;
+        try {
+            hosts = await this.resolve(target.host);
+        }
+        catch (e) {
+            this.logger.error(e);
+            return addrs;
+        }
+        for (const host of hosts) {
+            const addr = NetAddress.fromHost(host, target.port, this.network);
+            addrs.push(addr);
+        }
+        return addrs;
+    }
     /**
      * Convert host list to json-friendly object.
      * @returns {Object}
      */
-    HostList.prototype.toJSON = function () {
-        var addrs = [];
-        var fresh = [];
-        var used = [];
-        for (var _i = 0, _a = this.map.values(); _i < _a.length; _i++) {
-            var entry = _a[_i];
+    toJSON() {
+        const addrs = [];
+        const fresh = [];
+        const used = [];
+        for (const entry of this.map.values())
             addrs.push(entry.toJSON());
-        }
-        for (var _b = 0, _c = this.fresh; _b < _c.length; _b++) {
-            var bucket = _c[_b];
-            var keys = [];
-            for (var _d = 0, _e = bucket.keys(); _d < _e.length; _d++) {
-                var key = _e[_d];
+        for (const bucket of this.fresh) {
+            const keys = [];
+            for (const key of bucket.keys())
                 keys.push(key);
-            }
             fresh.push(keys);
         }
-        for (var _f = 0, _g = this.used; _f < _g.length; _f++) {
-            var bucket = _g[_f];
-            var keys = [];
-            for (var entry = bucket.head; entry; entry = entry.next)
+        for (const bucket of this.used) {
+            const keys = [];
+            for (let entry = bucket.head; entry; entry = entry.next)
                 keys.push(entry.key());
             used.push(keys);
         }
@@ -983,28 +819,27 @@ var HostList = /** @class */ (function () {
             fresh: fresh,
             used: used
         };
-    };
+    }
     /**
      * Inject properties from json object.
      * @private
      * @param {Object} json
      * @returns {HostList}
      */
-    HostList.prototype.fromJSON = function (json) {
-        var sources = new Map();
-        var map = new Map();
-        var fresh = [];
-        var used = [];
-        var totalFresh = 0;
-        var totalUsed = 0;
+    fromJSON(json) {
+        const sources = new Map();
+        const map = new Map();
+        const fresh = [];
+        const used = [];
+        let totalFresh = 0;
+        let totalUsed = 0;
         assert(json && typeof json === 'object');
         assert(!json.network || json.network === this.network.type, 'Network mistmatch.');
         assert(json.version === HostList.VERSION, 'Bad address serialization version.');
         assert(Array.isArray(json.addrs));
-        for (var _i = 0, _a = json.addrs; _i < _a.length; _i++) {
-            var addr = _a[_i];
-            var entry = HostEntry.fromJSON(addr, this.network);
-            var src = sources.get(entry.src.hostname);
+        for (const addr of json.addrs) {
+            const entry = HostEntry.fromJSON(addr, this.network);
+            let src = sources.get(entry.src.hostname);
             // Save some memory.
             if (!src) {
                 src = entry.src;
@@ -1015,12 +850,10 @@ var HostList = /** @class */ (function () {
         }
         assert(Array.isArray(json.fresh));
         assert(json.fresh.length <= this.options.maxBuckets, 'Buckets mismatch.');
-        for (var _b = 0, _c = json.fresh; _b < _c.length; _b++) {
-            var keys = _c[_b];
-            var bucket = new Map();
-            for (var _d = 0, keys_1 = keys; _d < keys_1.length; _d++) {
-                var key = keys_1[_d];
-                var entry = map.get(key);
+        for (const keys of json.fresh) {
+            const bucket = new Map();
+            for (const key of keys) {
+                const entry = map.get(key);
                 assert(entry);
                 if (entry.refCount === 0)
                     totalFresh += 1;
@@ -1033,12 +866,10 @@ var HostList = /** @class */ (function () {
         assert(fresh.length === this.fresh.length, 'Buckets mismatch.');
         assert(Array.isArray(json.used));
         assert(json.used.length <= this.options.maxBuckets, 'Buckets mismatch.');
-        for (var _e = 0, _f = json.used; _e < _f.length; _e++) {
-            var keys = _f[_e];
-            var bucket = new List();
-            for (var _g = 0, keys_2 = keys; _g < keys_2.length; _g++) {
-                var key = keys_2[_g];
-                var entry = map.get(key);
+        for (const keys of json.used) {
+            const bucket = new List();
+            for (const key of keys) {
+                const entry = map.get(key);
                 assert(entry);
                 assert(entry.refCount === 0);
                 assert(!entry.used);
@@ -1050,28 +881,25 @@ var HostList = /** @class */ (function () {
             used.push(bucket);
         }
         assert(used.length === this.used.length, 'Buckets mismatch.');
-        for (var _h = 0, _j = map.values(); _h < _j.length; _h++) {
-            var entry = _j[_h];
+        for (const entry of map.values())
             assert(entry.used || entry.refCount > 0);
-        }
         this.map = map;
         this.fresh = fresh;
         this.totalFresh = totalFresh;
         this.used = used;
         this.totalUsed = totalUsed;
         return this;
-    };
+    }
     /**
      * Instantiate host list from json object.
      * @param {Object} options
      * @param {Object} json
      * @returns {HostList}
      */
-    HostList.fromJSON = function (options, json) {
+    static fromJSON(options, json) {
         return new this(options).fromJSON(json);
-    };
-    return HostList;
-}());
+    }
+}
 /**
  * Number of days before considering
  * an address stale.
@@ -1133,14 +961,14 @@ HostList.scores = {
  * Host Entry
  * @alias module:net.HostEntry
  */
-var HostEntry = /** @class */ (function () {
+class HostEntry {
     /**
      * Create a host entry.
      * @constructor
      * @param {NetAddress} addr
      * @param {NetAddress} src
      */
-    function HostEntry(addr, src) {
+    constructor(addr, src) {
         this.addr = addr || new NetAddress();
         this.src = src || new NetAddress();
         this.prev = null;
@@ -1160,46 +988,46 @@ var HostEntry = /** @class */ (function () {
      * @param {NetAddress} src
      * @returns {HostEntry}
      */
-    HostEntry.prototype.fromOptions = function (addr, src) {
+    fromOptions(addr, src) {
         assert(addr instanceof NetAddress);
         assert(src instanceof NetAddress);
         this.addr = addr;
         this.src = src;
         return this;
-    };
+    }
     /**
      * Instantiate host entry from options.
      * @param {NetAddress} addr
      * @param {NetAddress} src
      * @returns {HostEntry}
      */
-    HostEntry.fromOptions = function (addr, src) {
+    static fromOptions(addr, src) {
         return new this().fromOptions(addr, src);
-    };
+    }
     /**
      * Get key suitable for a hash table (hostname).
      * @returns {String}
      */
-    HostEntry.prototype.key = function () {
+    key() {
         return this.addr.hostname;
-    };
+    }
     /**
      * Get host priority.
      * @param {Number} now
      * @returns {Number}
      */
-    HostEntry.prototype.chance = function (now) {
-        var c = 1;
+    chance(now) {
+        let c = 1;
         if (now - this.lastAttempt < 60 * 10)
             c *= 0.01;
         c *= Math.pow(0.66, Math.min(this.attempts, 8));
         return c;
-    };
+    }
     /**
      * Inspect host address.
      * @returns {Object}
      */
-    HostEntry.prototype[inspectSymbol] = function () {
+    [inspectSymbol]() {
         return {
             addr: this.addr,
             src: this.src,
@@ -1209,12 +1037,12 @@ var HostEntry = /** @class */ (function () {
             lastSuccess: util.date(this.lastSuccess),
             lastAttempt: util.date(this.lastAttempt)
         };
-    };
+    }
     /**
      * Convert host entry to json-friendly object.
      * @returns {Object}
      */
-    HostEntry.prototype.toJSON = function () {
+    toJSON() {
         return {
             addr: this.addr.hostname,
             src: this.src.hostname,
@@ -1224,7 +1052,7 @@ var HostEntry = /** @class */ (function () {
             lastSuccess: this.lastSuccess,
             lastAttempt: this.lastAttempt
         };
-    };
+    }
     /**
      * Inject properties from json object.
      * @private
@@ -1232,7 +1060,7 @@ var HostEntry = /** @class */ (function () {
      * @param {Network} network
      * @returns {HostEntry}
      */
-    HostEntry.prototype.fromJSON = function (json, network) {
+    fromJSON(json, network) {
         assert(json && typeof json === 'object');
         assert(typeof json.addr === 'string');
         assert(typeof json.src === 'string');
@@ -1241,7 +1069,7 @@ var HostEntry = /** @class */ (function () {
             assert(typeof json.services === 'string');
             assert(json.services.length > 0);
             assert(json.services.length <= 32);
-            var services = parseInt(json.services, 2);
+            const services = parseInt(json.services, 2);
             assert((services >>> 0) === services);
             this.addr.services = services;
         }
@@ -1269,46 +1097,44 @@ var HostEntry = /** @class */ (function () {
             this.lastAttempt = json.lastAttempt;
         }
         return this;
-    };
+    }
     /**
      * Instantiate host entry from json object.
      * @param {Object} json
      * @param {Network} network
      * @returns {HostEntry}
      */
-    HostEntry.fromJSON = function (json, network) {
+    static fromJSON(json, network) {
         return new this().fromJSON(json, network);
-    };
-    return HostEntry;
-}());
+    }
+}
 /**
  * Local Address
  * @alias module:net.LocalAddress
  */
-var LocalAddress = /** @class */ (function () {
+class LocalAddress {
     /**
      * Create a local address.
      * @constructor
      * @param {NetAddress} addr
      * @param {Number?} score
      */
-    function LocalAddress(addr, score) {
+    constructor(addr, score) {
         this.addr = addr;
         this.score = score || 0;
     }
-    return LocalAddress;
-}());
+}
 /**
  * Host List Options
  * @alias module:net.HostListOptions
  */
-var HostListOptions = /** @class */ (function () {
+class HostListOptions {
     /**
      * Create host list options.
      * @constructor
      * @param {Object?} options
      */
-    function HostListOptions(options) {
+    constructor(options) {
         this.network = Network.primary;
         this.logger = Logger.global;
         this.resolve = dns.lookup;
@@ -1336,7 +1162,7 @@ var HostListOptions = /** @class */ (function () {
      * @private
      * @param {Object} options
      */
-    HostListOptions.prototype.fromOptions = function (options) {
+    fromOptions(options) {
         assert(options, 'Options are required.');
         if (options.network != null) {
             this.network = Network.get(options.network);
@@ -1366,7 +1192,7 @@ var HostListOptions = /** @class */ (function () {
         }
         if (options.host != null) {
             assert(typeof options.host === 'string');
-            var raw = IP.toBuffer(options.host);
+            const raw = IP.toBuffer(options.host);
             this.host = IP.toString(raw);
             if (IP.isRoutable(raw))
                 this.address.setHost(this.host);
@@ -1422,14 +1248,13 @@ var HostListOptions = /** @class */ (function () {
         this.address.time = this.network.now();
         this.address.services = this.services;
         return this;
-    };
-    return HostListOptions;
-}());
+    }
+}
 /*
  * Helpers
  */
 function concat32(left, right) {
-    var data = POOL32;
+    const data = POOL32;
     left.copy(data, 0);
     right.copy(data, 32);
     return data;
@@ -1441,3 +1266,4 @@ function random(max) {
  * Expose
  */
 module.exports = HostList;
+//# sourceMappingURL=hostlist.js.map

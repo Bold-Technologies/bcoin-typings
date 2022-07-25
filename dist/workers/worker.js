@@ -5,7 +5,8 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var Master = require('./master');
-var server = new Master();
+const Master = require('./master');
+const server = new Master();
 process.title = 'bcoin-worker';
 server.listen();
+//# sourceMappingURL=worker.js.map

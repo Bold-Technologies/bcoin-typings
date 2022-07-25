@@ -958,7 +958,7 @@ import Network = require("../protocol/network");
  */
 declare class NonceList {
     map: any;
-    hosts: any;
+    hosts: Map<any, any>;
     alloc(hostname: any): Buffer;
     has(nonce: any): any;
     remove(hostname: any): boolean;
@@ -968,8 +968,8 @@ declare class NonceList {
  * @alias module:net.PeerList
  */
 declare class PeerList {
-    map: any;
-    ids: any;
+    map: Map<any, any>;
+    ids: Map<any, any>;
     list: any;
     load: any;
     inbound: number;

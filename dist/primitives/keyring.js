@@ -5,34 +5,34 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var assert = require('bsert');
-var base58 = require('bcrypto/lib/encoding/base58');
-var bio = require('bufio');
-var hash160 = require('bcrypto/lib/hash160');
-var hash256 = require('bcrypto/lib/hash256');
-var Network = require('../protocol/network');
-var Script = require('../script/script');
-var Address = require('./address');
-var Output = require('./output');
-var secp256k1 = require('bcrypto/lib/secp256k1');
-var encoding = bio.encoding;
-var inspectSymbol = require('../utils').inspectSymbol;
+const assert = require('bsert');
+const base58 = require('bcrypto/lib/encoding/base58');
+const bio = require('bufio');
+const hash160 = require('bcrypto/lib/hash160');
+const hash256 = require('bcrypto/lib/hash256');
+const Network = require('../protocol/network');
+const Script = require('../script/script');
+const Address = require('./address');
+const Output = require('./output');
+const secp256k1 = require('bcrypto/lib/secp256k1');
+const { encoding } = bio;
+const { inspectSymbol } = require('../utils');
 /*
  * Constants
  */
-var ZERO_KEY = Buffer.alloc(33, 0x00);
+const ZERO_KEY = Buffer.alloc(33, 0x00);
 /**
  * Key Ring
  * Represents a key ring which amounts to an address.
  * @alias module:primitives.KeyRing
  */
-var KeyRing = /** @class */ (function () {
+class KeyRing {
     /**
      * Create a key ring.
      * @constructor
      * @param {Object} options
      */
-    function KeyRing(options) {
+    constructor(options) {
         this.witness = false;
         this.nested = false;
         this.publicKey = ZERO_KEY;
@@ -54,8 +54,8 @@ var KeyRing = /** @class */ (function () {
      * @private
      * @param {Object} options
      */
-    KeyRing.prototype.fromOptions = function (options) {
-        var key = toKey(options);
+    fromOptions(options) {
+        let key = toKey(options);
         if (options.witness != null) {
             assert(typeof options.witness === 'boolean');
             this.witness = options.witness;
@@ -71,24 +71,24 @@ var KeyRing = /** @class */ (function () {
             key = toKey(options.publicKey);
         if (options.privateKey)
             key = toKey(options.privateKey);
-        var script = options.script;
-        var compress = options.compressed;
+        const script = options.script;
+        const compress = options.compressed;
         if (script)
             return this.fromScript(key, script, compress);
         return this.fromKey(key, compress);
-    };
+    }
     /**
      * Instantiate key ring from options.
      * @param {Object} options
      * @returns {KeyRing}
      */
-    KeyRing.fromOptions = function (options) {
+    static fromOptions(options) {
         return new this().fromOptions(options);
-    };
+    }
     /**
      * Clear cached key/script hashes.
      */
-    KeyRing.prototype.refresh = function () {
+    refresh() {
         this._keyHash = null;
         this._keyAddress = null;
         this._program = null;
@@ -97,87 +97,87 @@ var KeyRing = /** @class */ (function () {
         this._scriptHash160 = null;
         this._scriptHash256 = null;
         this._scriptAddress = null;
-    };
+    }
     /**
      * Inject data from private key.
      * @private
      * @param {Buffer} key
      * @param {Boolean?} compress
      */
-    KeyRing.prototype.fromPrivate = function (key, compress) {
+    fromPrivate(key, compress) {
         assert(Buffer.isBuffer(key), 'Private key must be a buffer.');
         assert(secp256k1.privateKeyVerify(key), 'Not a valid private key.');
         this.privateKey = key;
         this.publicKey = secp256k1.publicKeyCreate(key, compress !== false);
         return this;
-    };
+    }
     /**
      * Instantiate keyring from a private key.
      * @param {Buffer} key
      * @param {Boolean?} compress
      * @returns {KeyRing}
      */
-    KeyRing.fromPrivate = function (key, compress) {
+    static fromPrivate(key, compress) {
         return new this().fromPrivate(key, compress);
-    };
+    }
     /**
      * Inject data from public key.
      * @private
      * @param {Buffer} key
      */
-    KeyRing.prototype.fromPublic = function (key) {
+    fromPublic(key) {
         assert(Buffer.isBuffer(key), 'Public key must be a buffer.');
         assert(secp256k1.publicKeyVerify(key), 'Not a valid public key.');
         this.publicKey = key;
         return this;
-    };
+    }
     /**
      * Generate a keyring.
      * @private
      * @param {Boolean?} compress
      * @returns {KeyRing}
      */
-    KeyRing.prototype.generate = function (compress) {
-        var key = secp256k1.privateKeyGenerate();
+    generate(compress) {
+        const key = secp256k1.privateKeyGenerate();
         return this.fromKey(key, compress);
-    };
+    }
     /**
      * Generate a keyring.
      * @param {Boolean?} compress
      * @returns {KeyRing}
      */
-    KeyRing.generate = function (compress) {
+    static generate(compress) {
         return new this().generate(compress);
-    };
+    }
     /**
      * Instantiate keyring from a public key.
      * @param {Buffer} publicKey
      * @returns {KeyRing}
      */
-    KeyRing.fromPublic = function (key) {
+    static fromPublic(key) {
         return new this().fromPublic(key);
-    };
+    }
     /**
      * Inject data from public key.
      * @private
      * @param {Buffer} privateKey
      * @param {Boolean?} compress
      */
-    KeyRing.prototype.fromKey = function (key, compress) {
+    fromKey(key, compress) {
         assert(Buffer.isBuffer(key), 'Key must be a buffer.');
         if (key.length === 32)
             return this.fromPrivate(key, compress !== false);
         return this.fromPublic(key);
-    };
+    }
     /**
      * Instantiate keyring from a public key.
      * @param {Buffer} publicKey
      * @param {Boolean?} compress
      * @returns {KeyRing}
      */
-    KeyRing.fromKey = function (key, compress) {
+    static fromKey(key, compress) {
         return new this().fromKey(key, compress);
-    };
+    }
     /**
      * Inject data from script.
      * @private
@@ -185,12 +185,12 @@ var KeyRing = /** @class */ (function () {
      * @param {Script} script
      * @param {Boolean?} compress
      */
-    KeyRing.prototype.fromScript = function (key, script, compress) {
+    fromScript(key, script, compress) {
         assert(script instanceof Script, 'Non-script passed into KeyRing.');
         this.fromKey(key, compress);
         this.script = script;
         return this;
-    };
+    }
     /**
      * Instantiate keyring from script.
      * @param {Buffer} key
@@ -198,9 +198,9 @@ var KeyRing = /** @class */ (function () {
      * @param {Boolean?} compress
      * @returns {KeyRing}
      */
-    KeyRing.fromScript = function (key, script, compress) {
+    static fromScript(key, script, compress) {
         return new this().fromScript(key, script, compress);
-    };
+    }
     /**
      * Get ith public key from multisig script.
      * @private
@@ -208,44 +208,44 @@ var KeyRing = /** @class */ (function () {
      * @param {Number} i
      * @returns {KeyRing}
      */
-    KeyRing.prototype.fromMultisigScript = function (script, i) {
+    fromMultisigScript(script, i) {
         assert(script instanceof Script, 'Non-script passed.');
         assert(script.isMultisig(), 'Script must be multisig');
-        var n = script.getSmall(-2);
+        const n = script.getSmall(-2);
         assert(i >= 1 && i <= n, 'Requested `i`th key, `n` available');
         this.fromKey(script.code[i].toData());
         return this;
-    };
+    }
     /**
      * Instantiate keyring from ith key in multisig script.
      * @param {Script} script
      * @param {Number} i
      * @returns {KeyRing}
      */
-    KeyRing.fromMultisigScript = function (script, i) {
+    static fromMultisigScript(script, i) {
         return new this().fromMultisigScript(script, i);
-    };
+    }
     /**
      * Calculate WIF serialization size.
      * @returns {Number}
      */
-    KeyRing.prototype.getSecretSize = function () {
-        var size = 0;
+    getSecretSize() {
+        let size = 0;
         size += 1;
         size += this.privateKey.length;
         if (this.publicKey.length === 33)
             size += 1;
         size += 4;
         return size;
-    };
+    }
     /**
      * Convert key to a CBitcoinSecret.
      * @param {(Network|NetworkType)?} network
      * @returns {Base58String}
      */
-    KeyRing.prototype.toSecret = function (network) {
-        var size = this.getSecretSize();
-        var bw = bio.write(size);
+    toSecret(network) {
+        const size = this.getSecretSize();
+        const bw = bio.write(size);
         assert(this.privateKey, 'Cannot serialize without private key.');
         network = Network.get(network);
         bw.writeU8(network.keyPrefix.privkey);
@@ -254,41 +254,41 @@ var KeyRing = /** @class */ (function () {
             bw.writeU8(1);
         bw.writeChecksum(hash256.digest);
         return base58.encode(bw.render());
-    };
+    }
     /**
      * Inject properties from serialized CBitcoinSecret.
      * @private
      * @param {Base58String} secret
      * @param {(Network|NetworkType)?} network
      */
-    KeyRing.prototype.fromSecret = function (data, network) {
-        var br = bio.read(base58.decode(data), true);
-        var version = br.readU8();
+    fromSecret(data, network) {
+        const br = bio.read(base58.decode(data), true);
+        const version = br.readU8();
         Network.fromWIF(version, network);
-        var key = br.readBytes(32);
-        var compress = false;
+        const key = br.readBytes(32);
+        let compress = false;
         if (br.left() > 4) {
             assert(br.readU8() === 1, 'Bad compression flag.');
             compress = true;
         }
         br.verifyChecksum(hash256.digest);
         return this.fromPrivate(key, compress);
-    };
+    }
     /**
      * Instantiate a keyring from a serialized CBitcoinSecret.
      * @param {Base58String} secret
      * @param {(Network|NetworkType)?} network
      * @returns {KeyRing}
      */
-    KeyRing.fromSecret = function (data, network) {
+    static fromSecret(data, network) {
         return new this().fromSecret(data, network);
-    };
+    }
     /**
      * Get private key.
      * @param {String?} enc - Can be `"hex"`, `"base58"`, or `null`.
      * @returns {Buffer} Private key.
      */
-    KeyRing.prototype.getPrivateKey = function (enc, network) {
+    getPrivateKey(enc, network) {
         if (!this.privateKey)
             return null;
         if (enc === 'base58')
@@ -296,54 +296,54 @@ var KeyRing = /** @class */ (function () {
         if (enc === 'hex')
             return this.privateKey.toString('hex');
         return this.privateKey;
-    };
+    }
     /**
      * Get public key.
      * @param {String?} enc - `"hex"` or `null`.
      * @returns {Buffer}
      */
-    KeyRing.prototype.getPublicKey = function (enc) {
+    getPublicKey(enc) {
         if (enc === 'base58')
             return base58.encode(this.publicKey);
         if (enc === 'hex')
             return this.publicKey.toString('hex');
         return this.publicKey;
-    };
+    }
     /**
      * Get redeem script.
      * @returns {Script}
      */
-    KeyRing.prototype.getScript = function () {
+    getScript() {
         return this.script;
-    };
+    }
     /**
      * Get witness program.
      * @returns {Buffer}
      */
-    KeyRing.prototype.getProgram = function () {
+    getProgram() {
         if (!this.witness)
             return null;
         if (!this._program) {
-            var program = void 0;
+            let program;
             if (!this.script) {
-                var hash = hash160.digest(this.publicKey);
+                const hash = hash160.digest(this.publicKey);
                 program = Script.fromProgram(0, hash);
             }
             else {
-                var hash = this.script.sha256();
+                const hash = this.script.sha256();
                 program = Script.fromProgram(0, hash);
             }
             this._program = program;
         }
         return this._program;
-    };
+    }
     /**
      * Get address' ripemd160 program scripthash
      * (for witness programs behind a scripthash).
      * @param {String?} enc - `"hex"` or `null`.
      * @returns {Buffer}
      */
-    KeyRing.prototype.getNestedHash = function (enc) {
+    getNestedHash(enc) {
         if (!this.witness)
             return null;
         if (!this._nestedHash)
@@ -351,18 +351,18 @@ var KeyRing = /** @class */ (function () {
         return enc === 'hex'
             ? this._nestedHash.toString('hex')
             : this._nestedHash;
-    };
+    }
     /**
      * Get address' scripthash address for witness program.
      * @param {String?} enc - `"base58"` or `null`.
      * @returns {Address|AddressString}
      */
-    KeyRing.prototype.getNestedAddress = function (enc, network) {
+    getNestedAddress(enc, network) {
         if (!this.witness)
             return null;
         if (!this._nestedAddress) {
-            var hash = this.getNestedHash();
-            var addr = Address.fromScripthash(hash);
+            const hash = this.getNestedHash();
+            const addr = Address.fromScripthash(hash);
             this._nestedAddress = addr;
         }
         if (enc === 'base58')
@@ -370,23 +370,23 @@ var KeyRing = /** @class */ (function () {
         if (enc === 'string')
             return this._nestedAddress.toString(network);
         return this._nestedAddress;
-    };
+    }
     /**
      * Get scripthash.
      * @param {String?} enc - `"hex"` or `null`.
      * @returns {Buffer}
      */
-    KeyRing.prototype.getScriptHash = function (enc) {
+    getScriptHash(enc) {
         if (this.witness)
             return this.getScriptHash256(enc);
         return this.getScriptHash160(enc);
-    };
+    }
     /**
      * Get ripemd160 scripthash.
      * @param {String?} enc - `"hex"` or `null`.
      * @returns {Buffer}
      */
-    KeyRing.prototype.getScriptHash160 = function (enc) {
+    getScriptHash160(enc) {
         if (!this.script)
             return null;
         if (!this._scriptHash160)
@@ -394,13 +394,13 @@ var KeyRing = /** @class */ (function () {
         return enc === 'hex'
             ? this._scriptHash160.toString('hex')
             : this._scriptHash160;
-    };
+    }
     /**
      * Get sha256 scripthash.
      * @param {String?} enc - `"hex"` or `null`.
      * @returns {Buffer}
      */
-    KeyRing.prototype.getScriptHash256 = function (enc) {
+    getScriptHash256(enc) {
         if (!this.script)
             return null;
         if (!this._scriptHash256)
@@ -408,23 +408,23 @@ var KeyRing = /** @class */ (function () {
         return enc === 'hex'
             ? this._scriptHash256.toString('hex')
             : this._scriptHash256;
-    };
+    }
     /**
      * Get scripthash address.
      * @param {String?} enc - `"base58"` or `null`.
      * @returns {Address|AddressString}
      */
-    KeyRing.prototype.getScriptAddress = function (enc, network) {
+    getScriptAddress(enc, network) {
         if (!this.script)
             return null;
         if (!this._scriptAddress) {
-            var addr = void 0;
+            let addr;
             if (this.witness) {
-                var hash = this.getScriptHash256();
+                const hash = this.getScriptHash256();
                 addr = Address.fromWitnessScripthash(hash);
             }
             else {
-                var hash = this.getScriptHash160();
+                const hash = this.getScriptHash160();
                 addr = Address.fromScripthash(hash);
             }
             this._scriptAddress = addr;
@@ -434,28 +434,28 @@ var KeyRing = /** @class */ (function () {
         if (enc === 'string')
             return this._scriptAddress.toString(network);
         return this._scriptAddress;
-    };
+    }
     /**
      * Get public key hash.
      * @param {String?} enc - `"hex"` or `null`.
      * @returns {Buffer}
      */
-    KeyRing.prototype.getKeyHash = function (enc) {
+    getKeyHash(enc) {
         if (!this._keyHash)
             this._keyHash = hash160.digest(this.publicKey);
         return enc === 'hex'
             ? this._keyHash.toString('hex')
             : this._keyHash;
-    };
+    }
     /**
      * Get pubkeyhash address.
      * @param {String?} enc - `"base58"` or `null`.
      * @returns {Address|AddressString}
      */
-    KeyRing.prototype.getKeyAddress = function (enc, network) {
+    getKeyAddress(enc, network) {
         if (!this._keyAddress) {
-            var hash = this.getKeyHash();
-            var addr = void 0;
+            const hash = this.getKeyHash();
+            let addr;
             if (this.witness)
                 addr = Address.fromWitnessPubkeyhash(hash);
             else
@@ -467,37 +467,37 @@ var KeyRing = /** @class */ (function () {
         if (enc === 'string')
             return this._keyAddress.toString(network);
         return this._keyAddress;
-    };
+    }
     /**
      * Get hash.
      * @param {String?} enc - `"hex"` or `null`.
      * @returns {Buffer}
      */
-    KeyRing.prototype.getHash = function (enc) {
+    getHash(enc) {
         if (this.nested)
             return this.getNestedHash(enc);
         if (this.script)
             return this.getScriptHash(enc);
         return this.getKeyHash(enc);
-    };
+    }
     /**
      * Get base58 address.
      * @param {String?} enc - `"base58"` or `null`.
      * @returns {Address|AddressString}
      */
-    KeyRing.prototype.getAddress = function (enc, network) {
+    getAddress(enc, network) {
         if (this.nested)
             return this.getNestedAddress(enc, network);
         if (this.script)
             return this.getScriptAddress(enc, network);
         return this.getKeyAddress(enc, network);
-    };
+    }
     /**
      * Test an address hash against hash and program hash.
      * @param {Buffer} hash
      * @returns {Boolean}
      */
-    KeyRing.prototype.ownHash = function (hash) {
+    ownHash(hash) {
         if (!hash)
             return false;
         if (hash.equals(this.getKeyHash()))
@@ -511,15 +511,15 @@ var KeyRing = /** @class */ (function () {
                 return true;
         }
         return false;
-    };
+    }
     /**
      * Check whether transaction output belongs to this address.
      * @param {TX|Output} tx - Transaction or Output.
      * @param {Number?} index - Output index.
      * @returns {Boolean}
      */
-    KeyRing.prototype.ownOutput = function (tx, index) {
-        var output;
+    ownOutput(tx, index) {
+        let output;
         if (tx instanceof Output) {
             output = tx;
         }
@@ -528,14 +528,14 @@ var KeyRing = /** @class */ (function () {
             assert(output, 'Output does not exist.');
         }
         return this.ownHash(output.getHash());
-    };
+    }
     /**
      * Test a hash against script hashes to
      * find the correct redeem script, if any.
      * @param {Buffer} hash
      * @returns {Script|null}
      */
-    KeyRing.prototype.getRedeem = function (hash) {
+    getRedeem(hash) {
         if (this.witness) {
             if (hash.equals(this.getNestedHash()))
                 return this.getProgram();
@@ -547,41 +547,41 @@ var KeyRing = /** @class */ (function () {
                 return this.script;
         }
         return null;
-    };
+    }
     /**
      * Sign a message.
      * @param {Buffer} msg
      * @returns {Buffer} Signature in DER format.
      */
-    KeyRing.prototype.sign = function (msg) {
+    sign(msg) {
         assert(this.privateKey, 'Cannot sign without private key.');
         return secp256k1.signDER(msg, this.privateKey);
-    };
+    }
     /**
      * Verify a message.
      * @param {Buffer} msg
      * @param {Buffer} sig - Signature in DER format.
      * @returns {Boolean}
      */
-    KeyRing.prototype.verify = function (msg, sig) {
+    verify(msg, sig) {
         return secp256k1.verifyDER(msg, sig, this.publicKey);
-    };
+    }
     /**
      * Get witness program version.
      * @returns {Number}
      */
-    KeyRing.prototype.getVersion = function () {
+    getVersion() {
         if (!this.witness)
             return -1;
         if (this.nested)
             return -1;
         return 0;
-    };
+    }
     /**
      * Get address type.
      * @returns {ScriptType}
      */
-    KeyRing.prototype.getType = function () {
+    getType() {
         if (this.nested)
             return Address.types.SCRIPTHASH;
         if (this.witness)
@@ -589,19 +589,19 @@ var KeyRing = /** @class */ (function () {
         if (this.script)
             return Address.types.SCRIPTHASH;
         return Address.types.PUBKEYHASH;
-    };
+    }
     /**
      * Inspect keyring.
      * @returns {Object}
      */
-    KeyRing.prototype[inspectSymbol] = function () {
+    [inspectSymbol]() {
         return this.toJSON();
-    };
+    }
     /**
      * Convert an KeyRing to a more json-friendly object.
      * @returns {Object}
      */
-    KeyRing.prototype.toJSON = function (network) {
+    toJSON(network) {
         return {
             witness: this.witness,
             nested: this.nested,
@@ -611,13 +611,13 @@ var KeyRing = /** @class */ (function () {
             type: Address.typesByVal[this.getType()].toLowerCase(),
             address: this.getAddress('string', network)
         };
-    };
+    }
     /**
      * Inject properties from json object.
      * @private
      * @param {Object} json
      */
-    KeyRing.prototype.fromJSON = function (json) {
+    fromJSON(json) {
         assert(json);
         assert(typeof json.witness === 'boolean');
         assert(typeof json.nested === 'boolean');
@@ -629,21 +629,21 @@ var KeyRing = /** @class */ (function () {
         if (json.script)
             this.script = Buffer.from(json.script, 'hex');
         return this;
-    };
+    }
     /**
      * Instantiate an KeyRing from a jsonified transaction object.
      * @param {Object} json - The jsonified transaction object.
      * @returns {KeyRing}
      */
-    KeyRing.fromJSON = function (json) {
+    static fromJSON(json) {
         return new this().fromJSON(json);
-    };
+    }
     /**
      * Calculate serialization size.
      * @returns {Number}
      */
-    KeyRing.prototype.getSize = function () {
-        var size = 0;
+    getSize() {
+        let size = 0;
         size += 1;
         if (this.privateKey) {
             size += encoding.sizeVarBytes(this.privateKey);
@@ -654,13 +654,13 @@ var KeyRing = /** @class */ (function () {
         }
         size += this.script ? this.script.getVarSize() : 1;
         return size;
-    };
+    }
     /**
      * Write the keyring to a buffer writer.
      * @param {BufferWriter} bw
      */
-    KeyRing.prototype.toWriter = function (bw) {
-        var field = 0;
+    toWriter(bw) {
+        let field = 0;
         if (this.witness)
             field |= 1;
         if (this.nested)
@@ -678,27 +678,27 @@ var KeyRing = /** @class */ (function () {
         else
             bw.writeVarint(0);
         return bw;
-    };
+    }
     /**
      * Serialize the keyring.
      * @returns {Buffer}
      */
-    KeyRing.prototype.toRaw = function () {
-        var size = this.getSize();
+    toRaw() {
+        const size = this.getSize();
         return this.toWriter(bio.write(size)).render();
-    };
+    }
     /**
      * Inject properties from buffer reader.
      * @private
      * @param {BufferReader} br
      */
-    KeyRing.prototype.fromReader = function (br) {
-        var field = br.readU8();
+    fromReader(br) {
+        const field = br.readU8();
         this.witness = (field & 1) !== 0;
         this.nested = (field & 2) !== 0;
-        var key = br.readVarBytes();
+        const key = br.readVarBytes();
         if (key.length === 32) {
-            var compress = br.readU8() === 1;
+            const compress = br.readU8() === 1;
             this.privateKey = key;
             this.publicKey = secp256k1.publicKeyCreate(key, compress);
         }
@@ -706,45 +706,44 @@ var KeyRing = /** @class */ (function () {
             this.publicKey = key;
             assert(secp256k1.publicKeyVerify(key), 'Invalid public key.');
         }
-        var script = br.readVarBytes();
+        const script = br.readVarBytes();
         if (script.length > 0)
             this.script = Script.fromRaw(script);
         return this;
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    KeyRing.prototype.fromRaw = function (data) {
+    fromRaw(data) {
         return this.fromReader(bio.read(data));
-    };
+    }
     /**
      * Instantiate a keyring from buffer reader.
      * @param {BufferReader} br
      * @returns {KeyRing}
      */
-    KeyRing.fromReader = function (br) {
+    static fromReader(br) {
         return new this().fromReader(br);
-    };
+    }
     /**
      * Instantiate a keyring from serialized data.
      * @param {Buffer} data
      * @returns {KeyRing}
      */
-    KeyRing.fromRaw = function (data) {
+    static fromRaw(data) {
         return new this().fromRaw(data);
-    };
+    }
     /**
      * Test whether an object is a KeyRing.
      * @param {Object} obj
      * @returns {Boolean}
      */
-    KeyRing.isKeyRing = function (obj) {
+    static isKeyRing(obj) {
         return obj instanceof KeyRing;
-    };
-    return KeyRing;
-}());
+    }
+}
 /*
  * Helpers
  */
@@ -761,3 +760,4 @@ function toKey(opt) {
  * Expose
  */
 module.exports = KeyRing;
+//# sourceMappingURL=keyring.js.map

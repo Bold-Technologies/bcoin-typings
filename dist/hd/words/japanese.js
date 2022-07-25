@@ -2049,3 +2049,4 @@ module.exports = [
     'わらう',
     'われる'
 ];
+//# sourceMappingURL=japanese.js.map

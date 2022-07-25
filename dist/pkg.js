@@ -4,7 +4,7 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var pkg = exports;
+const pkg = exports;
 /**
  * Package Name
  * @const {String}
@@ -46,15 +46,16 @@ pkg.base = 'satoshi';
  * @const {String}
  * @default
  */
-pkg.cfg = "".concat(pkg.core, ".conf");
+pkg.cfg = `${pkg.core}.conf`;
 /**
  * Repository URL.
  * @const {String}
  * @default
  */
-pkg.url = "https://github.com/".concat(pkg.organization, "/").concat(pkg.name);
+pkg.url = `https://github.com/${pkg.organization}/${pkg.name}`;
 /**
  * Current version string.
  * @const {String}
  */
 pkg.version = require('../package.json').version;
+//# sourceMappingURL=pkg.js.map

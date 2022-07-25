@@ -14,7 +14,6 @@ declare class FullNode extends Node {
      */
     constructor(options: any | null);
     opened: boolean;
-    blocks: blockstore.LevelBlockStore | blockstore.FileBlockStore;
     chain: Chain;
     fees: Fees;
     mempool: Mempool;
@@ -162,7 +161,6 @@ declare class FullNode extends Node {
     getBlockFilter(hash: Hash | number): Promise<any>;
 }
 import Node = require("./node");
-import blockstore = require("../blockstore");
 import Chain = require("../blockchain/chain");
 import Fees = require("../mempool/fees");
 import Mempool = require("../mempool/mempool");

@@ -665,7 +665,7 @@ declare class Credit {
  */
 declare class BalanceDelta {
     wallet: Balance;
-    accounts: any;
+    accounts: Map<any, any>;
     updated(): boolean;
     applyTo(balance: any): void;
     get(path: any): any;

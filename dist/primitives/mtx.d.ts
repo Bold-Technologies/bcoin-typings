@@ -403,11 +403,11 @@ declare class CoinSelector {
     /**
      * Create a coin selector.
      * @constructor
-     * @param {TX} tx
+     * @param {MTX} tx
      * @param {Object?} options
      */
-    constructor(tx: TX, options: any | null);
-    tx: TX;
+    constructor(tx: MTX, options: any | null);
+    tx: MTX;
     coins: any[];
     outputValue: number;
     index: number;

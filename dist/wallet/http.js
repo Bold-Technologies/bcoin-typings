@@ -5,119 +5,64 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-var assert = require('bsert');
-var path = require('path');
-var Server = require('bweb').Server;
-var Validator = require('bval');
-var base58 = require('bcrypto/lib/encoding/base58');
-var MTX = require('../primitives/mtx');
-var Outpoint = require('../primitives/outpoint');
-var Script = require('../script/script');
-var sha256 = require('bcrypto/lib/sha256');
-var random = require('bcrypto/lib/random');
-var safeEqual = require('bcrypto/lib/safe').safeEqual;
-var Network = require('../protocol/network');
-var Address = require('../primitives/address');
-var KeyRing = require('../primitives/keyring');
-var Mnemonic = require('../hd/mnemonic');
-var HDPrivateKey = require('../hd/private');
-var HDPublicKey = require('../hd/public');
-var common = require('./common');
-var pkg = require('../pkg');
+const assert = require('bsert');
+const path = require('path');
+const { Server } = require('bweb');
+const Validator = require('bval');
+const base58 = require('bcrypto/lib/encoding/base58');
+const MTX = require('../primitives/mtx');
+const Outpoint = require('../primitives/outpoint');
+const Script = require('../script/script');
+const sha256 = require('bcrypto/lib/sha256');
+const random = require('bcrypto/lib/random');
+const { safeEqual } = require('bcrypto/lib/safe');
+const Network = require('../protocol/network');
+const Address = require('../primitives/address');
+const KeyRing = require('../primitives/keyring');
+const Mnemonic = require('../hd/mnemonic');
+const HDPrivateKey = require('../hd/private');
+const HDPublicKey = require('../hd/public');
+const common = require('./common');
+const pkg = require('../pkg');
 /**
  * HTTP
  * @alias module:wallet.HTTP
  */
-var HTTP = /** @class */ (function (_super) {
-    __extends(HTTP, _super);
+class HTTP extends Server {
     /**
      * Create an http server.
      * @constructor
      * @param {Object} options
      */
-    function HTTP(options) {
-        var _this = _super.call(this, new HTTPOptions(options)) || this;
-        _this.network = _this.options.network;
-        _this.logger = _this.options.logger.context('wallet-http');
-        _this.wdb = _this.options.node.wdb;
-        _this.rpc = _this.options.node.rpc;
-        _this.init();
-        return _this;
+    constructor(options) {
+        super(new HTTPOptions(options));
+        this.network = this.options.network;
+        this.logger = this.options.logger.context('wallet-http');
+        this.wdb = this.options.node.wdb;
+        this.rpc = this.options.node.rpc;
+        this.init();
     }
     /**
      * Initialize http server.
      * @private
      */
-    HTTP.prototype.init = function () {
-        var _this = this;
-        this.on('request', function (req, res) {
+    init() {
+        this.on('request', (req, res) => {
             if (req.method === 'POST' && req.pathname === '/')
                 return;
-            _this.logger.debug('Request for method=%s path=%s (%s).', req.method, req.pathname, req.socket.remoteAddress);
+            this.logger.debug('Request for method=%s path=%s (%s).', req.method, req.pathname, req.socket.remoteAddress);
         });
-        this.on('listening', function (address) {
-            _this.logger.info('Wallet HTTP server listening on %s (port=%d).', address.address, address.port);
+        this.on('listening', (address) => {
+            this.logger.info('Wallet HTTP server listening on %s (port=%d).', address.address, address.port);
         });
         this.initRouter();
         this.initSockets();
-    };
+    }
     /**
      * Initialize routes.
      * @private
      */
-    HTTP.prototype.initRouter = function () {
-        var _this = this;
+    initRouter() {
         if (this.options.cors)
             this.use(this.cors());
         if (!this.options.noAuth) {
@@ -130,30 +75,26 @@ var HTTP = /** @class */ (function (_super) {
         this.use(this.bodyParser({
             type: 'json'
         }));
-        this.use(function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, token;
-            return __generator(this, function (_a) {
-                if (!this.options.walletAuth) {
-                    req.admin = true;
-                    return [2 /*return*/];
-                }
-                valid = Validator.fromRequest(req);
-                token = valid.buf('token');
-                if (token && safeEqual(token, this.options.adminToken)) {
-                    req.admin = true;
-                    return [2 /*return*/];
-                }
-                if (req.method === 'POST' && req.path.length === 0) {
-                    res.json(403);
-                    return [2 /*return*/];
-                }
-                return [2 /*return*/];
-            });
-        }); });
+        this.use(async (req, res) => {
+            if (!this.options.walletAuth) {
+                req.admin = true;
+                return;
+            }
+            const valid = Validator.fromRequest(req);
+            const token = valid.buf('token');
+            if (token && safeEqual(token, this.options.adminToken)) {
+                req.admin = true;
+                return;
+            }
+            if (req.method === 'POST' && req.path.length === 0) {
+                res.json(403);
+                return;
+            }
+        });
         this.use(this.jsonRPC());
         this.use(this.router());
-        this.error(function (err, req, res) {
-            var code = err.statusCode || 500;
+        this.error((err, req, res) => {
+            const code = err.statusCode || 500;
             res.json(code, {
                 error: {
                     type: err.type,
@@ -162,1126 +103,700 @@ var HTTP = /** @class */ (function (_super) {
                 }
             });
         });
-        this.hook(function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, id, token, wallet_1, wallet, err_1;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (req.path.length < 2)
-                            return [2 /*return*/];
-                        if (req.path[0] !== 'wallet')
-                            return [2 /*return*/];
-                        if (req.method === 'PUT' && req.path.length === 2)
-                            return [2 /*return*/];
-                        valid = Validator.fromRequest(req);
-                        id = valid.str('id');
-                        token = valid.buf('token');
-                        if (!id) {
-                            res.json(403);
-                            return [2 /*return*/];
-                        }
-                        if (!(req.admin || !this.options.walletAuth)) return [3 /*break*/, 2];
-                        return [4 /*yield*/, this.wdb.get(id)];
-                    case 1:
-                        wallet_1 = _a.sent();
-                        if (!wallet_1) {
-                            res.json(404);
-                            return [2 /*return*/];
-                        }
-                        req.wallet = wallet_1;
-                        return [2 /*return*/];
-                    case 2:
-                        if (!token) {
-                            res.json(403);
-                            return [2 /*return*/];
-                        }
-                        _a.label = 3;
-                    case 3:
-                        _a.trys.push([3, 5, , 6]);
-                        return [4 /*yield*/, this.wdb.auth(id, token)];
-                    case 4:
-                        wallet = _a.sent();
-                        return [3 /*break*/, 6];
-                    case 5:
-                        err_1 = _a.sent();
-                        this.logger.info('Auth failure for %s: %s.', id, err_1.message);
-                        res.json(403);
-                        return [2 /*return*/];
-                    case 6:
-                        if (!wallet) {
-                            res.json(404);
-                            return [2 /*return*/];
-                        }
-                        req.wallet = wallet;
-                        this.logger.info('Successful auth for %s.', id);
-                        return [2 /*return*/];
+        this.hook(async (req, res) => {
+            if (req.path.length < 2)
+                return;
+            if (req.path[0] !== 'wallet')
+                return;
+            if (req.method === 'PUT' && req.path.length === 2)
+                return;
+            const valid = Validator.fromRequest(req);
+            const id = valid.str('id');
+            const token = valid.buf('token');
+            if (!id) {
+                res.json(403);
+                return;
+            }
+            if (req.admin || !this.options.walletAuth) {
+                const wallet = await this.wdb.get(id);
+                if (!wallet) {
+                    res.json(404);
+                    return;
                 }
-            });
-        }); });
+                req.wallet = wallet;
+                return;
+            }
+            if (!token) {
+                res.json(403);
+                return;
+            }
+            let wallet;
+            try {
+                wallet = await this.wdb.auth(id, token);
+            }
+            catch (err) {
+                this.logger.info('Auth failure for %s: %s.', id, err.message);
+                res.json(403);
+                return;
+            }
+            if (!wallet) {
+                res.json(404);
+                return;
+            }
+            req.wallet = wallet;
+            this.logger.info('Successful auth for %s.', id);
+        });
         // Info
-        this.get('/', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                res.json(200, {
-                    version: pkg.version,
-                    network: this.network.type
-                });
-                return [2 /*return*/];
+        this.get('/', async (req, res) => {
+            res.json(200, {
+                version: pkg.version,
+                network: this.network.type
             });
-        }); });
+        });
         // Rescan
-        this.post('/rescan', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, height;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (!req.admin) {
-                            res.json(403);
-                            return [2 /*return*/];
-                        }
-                        valid = Validator.fromRequest(req);
-                        height = valid.u32('height');
-                        res.json(200, { success: true });
-                        return [4 /*yield*/, this.wdb.rescan(height)];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        }); });
-        // Resend
-        this.post('/resend', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (!req.admin) {
-                            res.json(403);
-                            return [2 /*return*/];
-                        }
-                        return [4 /*yield*/, this.wdb.resend()];
-                    case 1:
-                        _a.sent();
-                        res.json(200, { success: true });
-                        return [2 /*return*/];
-                }
-            });
-        }); });
-        // Backup WalletDB
-        this.post('/backup', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, path;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (!req.admin) {
-                            res.json(403);
-                            return [2 /*return*/];
-                        }
-                        valid = Validator.fromRequest(req);
-                        path = valid.str('path');
-                        enforce(path, 'Path is required.');
-                        return [4 /*yield*/, this.wdb.backup(path)];
-                    case 1:
-                        _a.sent();
-                        res.json(200, { success: true });
-                        return [2 /*return*/];
-                }
-            });
-        }); });
-        // List wallets
-        this.get('/wallet', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var wallets;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (!req.admin) {
-                            res.json(403);
-                            return [2 /*return*/];
-                        }
-                        return [4 /*yield*/, this.wdb.getWallets()];
-                    case 1:
-                        wallets = _a.sent();
-                        res.json(200, wallets);
-                        return [2 /*return*/];
-                }
-            });
-        }); });
-        // Get wallet
-        this.get('/wallet/:id', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var balance;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, req.wallet.getBalance()];
-                    case 1:
-                        balance = _a.sent();
-                        res.json(200, req.wallet.toJSON(false, balance));
-                        return [2 /*return*/];
-                }
-            });
-        }); });
-        // Get wallet master key
-        this.get('/wallet/:id/master', function (req, res) {
+        this.post('/rescan', async (req, res) => {
             if (!req.admin) {
                 res.json(403);
                 return;
             }
-            res.json(200, req.wallet.master.toJSON(_this.network, true));
+            const valid = Validator.fromRequest(req);
+            const height = valid.u32('height');
+            res.json(200, { success: true });
+            await this.wdb.rescan(height);
+        });
+        // Resend
+        this.post('/resend', async (req, res) => {
+            if (!req.admin) {
+                res.json(403);
+                return;
+            }
+            await this.wdb.resend();
+            res.json(200, { success: true });
+        });
+        // Backup WalletDB
+        this.post('/backup', async (req, res) => {
+            if (!req.admin) {
+                res.json(403);
+                return;
+            }
+            const valid = Validator.fromRequest(req);
+            const path = valid.str('path');
+            enforce(path, 'Path is required.');
+            await this.wdb.backup(path);
+            res.json(200, { success: true });
+        });
+        // List wallets
+        this.get('/wallet', async (req, res) => {
+            if (!req.admin) {
+                res.json(403);
+                return;
+            }
+            const wallets = await this.wdb.getWallets();
+            res.json(200, wallets);
+        });
+        // Get wallet
+        this.get('/wallet/:id', async (req, res) => {
+            const balance = await req.wallet.getBalance();
+            res.json(200, req.wallet.toJSON(false, balance));
+        });
+        // Get wallet master key
+        this.get('/wallet/:id/master', (req, res) => {
+            if (!req.admin) {
+                res.json(403);
+                return;
+            }
+            res.json(200, req.wallet.master.toJSON(this.network, true));
         });
         // Create wallet
-        this.put('/wallet/:id', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, master, mnemonic, accountKey, wallet, balance;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        master = valid.str('master');
-                        mnemonic = valid.str('mnemonic');
-                        accountKey = valid.str('accountKey');
-                        if (master)
-                            master = HDPrivateKey.fromBase58(master, this.network);
-                        if (mnemonic)
-                            mnemonic = Mnemonic.fromPhrase(mnemonic);
-                        if (accountKey)
-                            accountKey = HDPublicKey.fromBase58(accountKey, this.network);
-                        return [4 /*yield*/, this.wdb.create({
-                                id: valid.str('id'),
-                                type: valid.str('type'),
-                                m: valid.u32('m'),
-                                n: valid.u32('n'),
-                                passphrase: valid.str('passphrase'),
-                                master: master,
-                                mnemonic: mnemonic,
-                                witness: valid.bool('witness'),
-                                accountKey: accountKey,
-                                watchOnly: valid.bool('watchOnly')
-                            })];
-                    case 1:
-                        wallet = _a.sent();
-                        return [4 /*yield*/, wallet.getBalance()];
-                    case 2:
-                        balance = _a.sent();
-                        res.json(200, wallet.toJSON(false, balance));
-                        return [2 /*return*/];
-                }
+        this.put('/wallet/:id', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            let master = valid.str('master');
+            let mnemonic = valid.str('mnemonic');
+            let accountKey = valid.str('accountKey');
+            if (master)
+                master = HDPrivateKey.fromBase58(master, this.network);
+            if (mnemonic)
+                mnemonic = Mnemonic.fromPhrase(mnemonic);
+            if (accountKey)
+                accountKey = HDPublicKey.fromBase58(accountKey, this.network);
+            const wallet = await this.wdb.create({
+                id: valid.str('id'),
+                type: valid.str('type'),
+                m: valid.u32('m'),
+                n: valid.u32('n'),
+                passphrase: valid.str('passphrase'),
+                master: master,
+                mnemonic: mnemonic,
+                witness: valid.bool('witness'),
+                accountKey: accountKey,
+                watchOnly: valid.bool('watchOnly')
             });
-        }); });
+            const balance = await wallet.getBalance();
+            res.json(200, wallet.toJSON(false, balance));
+        });
         // List accounts
-        this.get('/wallet/:id/account', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var accounts;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, req.wallet.getAccounts()];
-                    case 1:
-                        accounts = _a.sent();
-                        res.json(200, accounts);
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.get('/wallet/:id/account', async (req, res) => {
+            const accounts = await req.wallet.getAccounts();
+            res.json(200, accounts);
+        });
         // Get account
-        this.get('/wallet/:id/account/:account', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, acct, account, balance;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        acct = valid.str('account');
-                        return [4 /*yield*/, req.wallet.getAccount(acct)];
-                    case 1:
-                        account = _a.sent();
-                        if (!account) {
-                            res.json(404);
-                            return [2 /*return*/];
-                        }
-                        return [4 /*yield*/, req.wallet.getBalance(account.accountIndex)];
-                    case 2:
-                        balance = _a.sent();
-                        res.json(200, account.toJSON(balance));
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.get('/wallet/:id/account/:account', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const acct = valid.str('account');
+            const account = await req.wallet.getAccount(acct);
+            if (!account) {
+                res.json(404);
+                return;
+            }
+            const balance = await req.wallet.getBalance(account.accountIndex);
+            res.json(200, account.toJSON(balance));
+        });
         // Create account
-        this.put('/wallet/:id/account/:account', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, passphrase, accountKey, options, account, balance;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        passphrase = valid.str('passphrase');
-                        accountKey = valid.get('accountKey');
-                        if (accountKey)
-                            accountKey = HDPublicKey.fromBase58(accountKey, this.network);
-                        options = {
-                            name: valid.str('account'),
-                            witness: valid.bool('witness'),
-                            type: valid.str('type'),
-                            m: valid.u32('m'),
-                            n: valid.u32('n'),
-                            accountKey: accountKey,
-                            lookahead: valid.u32('lookahead')
-                        };
-                        return [4 /*yield*/, req.wallet.createAccount(options, passphrase)];
-                    case 1:
-                        account = _a.sent();
-                        return [4 /*yield*/, req.wallet.getBalance(account.accountIndex)];
-                    case 2:
-                        balance = _a.sent();
-                        res.json(200, account.toJSON(balance));
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.put('/wallet/:id/account/:account', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const passphrase = valid.str('passphrase');
+            let accountKey = valid.get('accountKey');
+            if (accountKey)
+                accountKey = HDPublicKey.fromBase58(accountKey, this.network);
+            const options = {
+                name: valid.str('account'),
+                witness: valid.bool('witness'),
+                type: valid.str('type'),
+                m: valid.u32('m'),
+                n: valid.u32('n'),
+                accountKey: accountKey,
+                lookahead: valid.u32('lookahead')
+            };
+            const account = await req.wallet.createAccount(options, passphrase);
+            const balance = await req.wallet.getBalance(account.accountIndex);
+            res.json(200, account.toJSON(balance));
+        });
         // Change passphrase
-        this.post('/wallet/:id/passphrase', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, passphrase, old;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        passphrase = valid.str('passphrase');
-                        old = valid.str('old');
-                        enforce(passphrase, 'Passphrase is required.');
-                        return [4 /*yield*/, req.wallet.setPassphrase(passphrase, old)];
-                    case 1:
-                        _a.sent();
-                        res.json(200, { success: true });
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.post('/wallet/:id/passphrase', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const passphrase = valid.str('passphrase');
+            const old = valid.str('old');
+            enforce(passphrase, 'Passphrase is required.');
+            await req.wallet.setPassphrase(passphrase, old);
+            res.json(200, { success: true });
+        });
         // Unlock wallet
-        this.post('/wallet/:id/unlock', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, passphrase, timeout;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        passphrase = valid.str('passphrase');
-                        timeout = valid.u32('timeout');
-                        enforce(passphrase, 'Passphrase is required.');
-                        return [4 /*yield*/, req.wallet.unlock(passphrase, timeout)];
-                    case 1:
-                        _a.sent();
-                        res.json(200, { success: true });
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.post('/wallet/:id/unlock', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const passphrase = valid.str('passphrase');
+            const timeout = valid.u32('timeout');
+            enforce(passphrase, 'Passphrase is required.');
+            await req.wallet.unlock(passphrase, timeout);
+            res.json(200, { success: true });
+        });
         // Lock wallet
-        this.post('/wallet/:id/lock', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, req.wallet.lock()];
-                    case 1:
-                        _a.sent();
-                        res.json(200, { success: true });
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.post('/wallet/:id/lock', async (req, res) => {
+            await req.wallet.lock();
+            res.json(200, { success: true });
+        });
         // Import key
-        this.post('/wallet/:id/import', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, acct, passphrase, pub, priv, address, key, key, addr;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        acct = valid.str('account');
-                        passphrase = valid.str('passphrase');
-                        pub = valid.buf('publicKey');
-                        priv = valid.str('privateKey');
-                        address = valid.str('address');
-                        if (!pub) return [3 /*break*/, 2];
-                        key = KeyRing.fromPublic(pub);
-                        return [4 /*yield*/, req.wallet.importKey(acct, key)];
-                    case 1:
-                        _a.sent();
-                        res.json(200, { success: true });
-                        return [2 /*return*/];
-                    case 2:
-                        if (!priv) return [3 /*break*/, 4];
-                        key = KeyRing.fromSecret(priv, this.network);
-                        return [4 /*yield*/, req.wallet.importKey(acct, key, passphrase)];
-                    case 3:
-                        _a.sent();
-                        res.json(200, { success: true });
-                        return [2 /*return*/];
-                    case 4:
-                        if (!address) return [3 /*break*/, 6];
-                        addr = Address.fromString(address, this.network);
-                        return [4 /*yield*/, req.wallet.importAddress(acct, addr)];
-                    case 5:
-                        _a.sent();
-                        res.json(200, { success: true });
-                        return [2 /*return*/];
-                    case 6:
-                        enforce(false, 'Key or address is required.');
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.post('/wallet/:id/import', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const acct = valid.str('account');
+            const passphrase = valid.str('passphrase');
+            const pub = valid.buf('publicKey');
+            const priv = valid.str('privateKey');
+            const address = valid.str('address');
+            if (pub) {
+                const key = KeyRing.fromPublic(pub);
+                await req.wallet.importKey(acct, key);
+                res.json(200, { success: true });
+                return;
+            }
+            if (priv) {
+                const key = KeyRing.fromSecret(priv, this.network);
+                await req.wallet.importKey(acct, key, passphrase);
+                res.json(200, { success: true });
+                return;
+            }
+            if (address) {
+                const addr = Address.fromString(address, this.network);
+                await req.wallet.importAddress(acct, addr);
+                res.json(200, { success: true });
+                return;
+            }
+            enforce(false, 'Key or address is required.');
+        });
         // Generate new token
-        this.post('/wallet/:id/retoken', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, passphrase, token;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        passphrase = valid.str('passphrase');
-                        return [4 /*yield*/, req.wallet.retoken(passphrase)];
-                    case 1:
-                        token = _a.sent();
-                        res.json(200, {
-                            token: token.toString('hex')
-                        });
-                        return [2 /*return*/];
-                }
+        this.post('/wallet/:id/retoken', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const passphrase = valid.str('passphrase');
+            const token = await req.wallet.retoken(passphrase);
+            res.json(200, {
+                token: token.toString('hex')
             });
-        }); });
+        });
         // Send TX
-        this.post('/wallet/:id/send', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, passphrase, outputs, options, _i, outputs_1, output, valid_1, addr, script, tx, details;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        passphrase = valid.str('passphrase');
-                        outputs = valid.array('outputs', []);
-                        options = {
-                            rate: valid.u64('rate'),
-                            blocks: valid.u32('blocks'),
-                            maxFee: valid.u64('maxFee'),
-                            selection: valid.str('selection'),
-                            smart: valid.bool('smart'),
-                            account: valid.str('account'),
-                            sort: valid.bool('sort'),
-                            subtractFee: valid.bool('subtractFee'),
-                            subtractIndex: valid.i32('subtractIndex'),
-                            depth: valid.u32(['confirmations', 'depth']),
-                            outputs: []
-                        };
-                        for (_i = 0, outputs_1 = outputs; _i < outputs_1.length; _i++) {
-                            output = outputs_1[_i];
-                            valid_1 = new Validator(output);
-                            addr = valid_1.str('address');
-                            script = valid_1.buf('script');
-                            if (addr)
-                                addr = Address.fromString(addr, this.network);
-                            if (script)
-                                script = Script.fromRaw(script);
-                            options.outputs.push({
-                                address: addr,
-                                script: script,
-                                value: valid_1.u64('value')
-                            });
-                        }
-                        return [4 /*yield*/, req.wallet.send(options, passphrase)];
-                    case 1:
-                        tx = _a.sent();
-                        return [4 /*yield*/, req.wallet.getDetails(tx.hash())];
-                    case 2:
-                        details = _a.sent();
-                        res.json(200, details.toJSON(this.network, this.wdb.height));
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.post('/wallet/:id/send', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const passphrase = valid.str('passphrase');
+            const outputs = valid.array('outputs', []);
+            const options = {
+                rate: valid.u64('rate'),
+                blocks: valid.u32('blocks'),
+                maxFee: valid.u64('maxFee'),
+                selection: valid.str('selection'),
+                smart: valid.bool('smart'),
+                account: valid.str('account'),
+                sort: valid.bool('sort'),
+                subtractFee: valid.bool('subtractFee'),
+                subtractIndex: valid.i32('subtractIndex'),
+                depth: valid.u32(['confirmations', 'depth']),
+                outputs: []
+            };
+            for (const output of outputs) {
+                const valid = new Validator(output);
+                let addr = valid.str('address');
+                let script = valid.buf('script');
+                if (addr)
+                    addr = Address.fromString(addr, this.network);
+                if (script)
+                    script = Script.fromRaw(script);
+                options.outputs.push({
+                    address: addr,
+                    script: script,
+                    value: valid.u64('value')
+                });
+            }
+            const tx = await req.wallet.send(options, passphrase);
+            const details = await req.wallet.getDetails(tx.hash());
+            res.json(200, details.toJSON(this.network, this.wdb.height));
+        });
         // Create TX
-        this.post('/wallet/:id/create', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, passphrase, outputs, sign, options, _i, outputs_2, output, valid_2, addr, script, tx;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        passphrase = valid.str('passphrase');
-                        outputs = valid.array('outputs', []);
-                        sign = valid.bool('sign', true);
-                        options = {
-                            rate: valid.u64('rate'),
-                            blocks: valid.u32('blocks'),
-                            maxFee: valid.u64('maxFee'),
-                            selection: valid.str('selection'),
-                            smart: valid.bool('smart'),
-                            account: valid.str('account'),
-                            sort: valid.bool('sort'),
-                            subtractFee: valid.bool('subtractFee'),
-                            subtractIndex: valid.i32('subtractIndex'),
-                            depth: valid.u32(['confirmations', 'depth']),
-                            template: valid.bool('template', sign),
-                            outputs: []
-                        };
-                        for (_i = 0, outputs_2 = outputs; _i < outputs_2.length; _i++) {
-                            output = outputs_2[_i];
-                            valid_2 = new Validator(output);
-                            addr = valid_2.str('address');
-                            script = valid_2.buf('script');
-                            if (addr)
-                                addr = Address.fromString(addr, this.network);
-                            if (script)
-                                script = Script.fromRaw(script);
-                            options.outputs.push({
-                                address: addr,
-                                script: script,
-                                value: valid_2.u64('value')
-                            });
-                        }
-                        return [4 /*yield*/, req.wallet.createTX(options)];
-                    case 1:
-                        tx = _a.sent();
-                        if (!sign) return [3 /*break*/, 3];
-                        return [4 /*yield*/, req.wallet.sign(tx, passphrase)];
-                    case 2:
-                        _a.sent();
-                        _a.label = 3;
-                    case 3:
-                        res.json(200, tx.getJSON(this.network));
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.post('/wallet/:id/create', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const passphrase = valid.str('passphrase');
+            const outputs = valid.array('outputs', []);
+            const sign = valid.bool('sign', true);
+            const options = {
+                rate: valid.u64('rate'),
+                blocks: valid.u32('blocks'),
+                maxFee: valid.u64('maxFee'),
+                selection: valid.str('selection'),
+                smart: valid.bool('smart'),
+                account: valid.str('account'),
+                sort: valid.bool('sort'),
+                subtractFee: valid.bool('subtractFee'),
+                subtractIndex: valid.i32('subtractIndex'),
+                depth: valid.u32(['confirmations', 'depth']),
+                template: valid.bool('template', sign),
+                outputs: []
+            };
+            for (const output of outputs) {
+                const valid = new Validator(output);
+                let addr = valid.str('address');
+                let script = valid.buf('script');
+                if (addr)
+                    addr = Address.fromString(addr, this.network);
+                if (script)
+                    script = Script.fromRaw(script);
+                options.outputs.push({
+                    address: addr,
+                    script: script,
+                    value: valid.u64('value')
+                });
+            }
+            const tx = await req.wallet.createTX(options);
+            if (sign)
+                await req.wallet.sign(tx, passphrase);
+            res.json(200, tx.getJSON(this.network));
+        });
         // Sign TX
-        this.post('/wallet/:id/sign', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, passphrase, raw, tx, _a;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        passphrase = valid.str('passphrase');
-                        raw = valid.buf('tx');
-                        enforce(raw, 'TX is required.');
-                        tx = MTX.fromRaw(raw);
-                        _a = tx;
-                        return [4 /*yield*/, req.wallet.getCoinView(tx)];
-                    case 1:
-                        _a.view = _b.sent();
-                        return [4 /*yield*/, req.wallet.sign(tx, passphrase)];
-                    case 2:
-                        _b.sent();
-                        res.json(200, tx.getJSON(this.network));
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.post('/wallet/:id/sign', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const passphrase = valid.str('passphrase');
+            const raw = valid.buf('tx');
+            enforce(raw, 'TX is required.');
+            const tx = MTX.fromRaw(raw);
+            tx.view = await req.wallet.getCoinView(tx);
+            await req.wallet.sign(tx, passphrase);
+            res.json(200, tx.getJSON(this.network));
+        });
         // Zap Wallet TXs
-        this.post('/wallet/:id/zap', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, acct, age;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        acct = valid.str('account');
-                        age = valid.u32('age');
-                        enforce(age, 'Age is required.');
-                        return [4 /*yield*/, req.wallet.zap(acct, age)];
-                    case 1:
-                        _a.sent();
-                        res.json(200, { success: true });
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.post('/wallet/:id/zap', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const acct = valid.str('account');
+            const age = valid.u32('age');
+            enforce(age, 'Age is required.');
+            await req.wallet.zap(acct, age);
+            res.json(200, { success: true });
+        });
         // Abandon Wallet TX
-        this.del('/wallet/:id/tx/:hash', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, hash;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        hash = valid.brhash('hash');
-                        enforce(hash, 'Hash is required.');
-                        return [4 /*yield*/, req.wallet.abandon(hash)];
-                    case 1:
-                        _a.sent();
-                        res.json(200, { success: true });
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.del('/wallet/:id/tx/:hash', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const hash = valid.brhash('hash');
+            enforce(hash, 'Hash is required.');
+            await req.wallet.abandon(hash);
+            res.json(200, { success: true });
+        });
         // List blocks
-        this.get('/wallet/:id/block', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var heights;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, req.wallet.getBlocks()];
-                    case 1:
-                        heights = _a.sent();
-                        res.json(200, heights);
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.get('/wallet/:id/block', async (req, res) => {
+            const heights = await req.wallet.getBlocks();
+            res.json(200, heights);
+        });
         // Get Block Record
-        this.get('/wallet/:id/block/:height', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, height, block;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        height = valid.u32('height');
-                        enforce(height != null, 'Height is required.');
-                        return [4 /*yield*/, req.wallet.getBlock(height)];
-                    case 1:
-                        block = _a.sent();
-                        if (!block) {
-                            res.json(404);
-                            return [2 /*return*/];
-                        }
-                        res.json(200, block.toJSON());
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.get('/wallet/:id/block/:height', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const height = valid.u32('height');
+            enforce(height != null, 'Height is required.');
+            const block = await req.wallet.getBlock(height);
+            if (!block) {
+                res.json(404);
+                return;
+            }
+            res.json(200, block.toJSON());
+        });
         // Add key
-        this.put('/wallet/:id/shared-key', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, acct, b58, key, added;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        acct = valid.str('account');
-                        b58 = valid.str('accountKey');
-                        enforce(b58, 'Key is required.');
-                        key = HDPublicKey.fromBase58(b58, this.network);
-                        return [4 /*yield*/, req.wallet.addSharedKey(acct, key)];
-                    case 1:
-                        added = _a.sent();
-                        res.json(200, {
-                            success: true,
-                            addedKey: added
-                        });
-                        return [2 /*return*/];
-                }
+        this.put('/wallet/:id/shared-key', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const acct = valid.str('account');
+            const b58 = valid.str('accountKey');
+            enforce(b58, 'Key is required.');
+            const key = HDPublicKey.fromBase58(b58, this.network);
+            const added = await req.wallet.addSharedKey(acct, key);
+            res.json(200, {
+                success: true,
+                addedKey: added
             });
-        }); });
+        });
         // Remove key
-        this.del('/wallet/:id/shared-key', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, acct, b58, key, removed;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        acct = valid.str('account');
-                        b58 = valid.str('accountKey');
-                        enforce(b58, 'Key is required.');
-                        key = HDPublicKey.fromBase58(b58, this.network);
-                        return [4 /*yield*/, req.wallet.removeSharedKey(acct, key)];
-                    case 1:
-                        removed = _a.sent();
-                        res.json(200, {
-                            success: true,
-                            removedKey: removed
-                        });
-                        return [2 /*return*/];
-                }
+        this.del('/wallet/:id/shared-key', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const acct = valid.str('account');
+            const b58 = valid.str('accountKey');
+            enforce(b58, 'Key is required.');
+            const key = HDPublicKey.fromBase58(b58, this.network);
+            const removed = await req.wallet.removeSharedKey(acct, key);
+            res.json(200, {
+                success: true,
+                removedKey: removed
             });
-        }); });
+        });
         // Get key by address
-        this.get('/wallet/:id/key/:address', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, b58, addr, key;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        b58 = valid.str('address');
-                        enforce(b58, 'Address is required.');
-                        addr = Address.fromString(b58, this.network);
-                        return [4 /*yield*/, req.wallet.getKey(addr)];
-                    case 1:
-                        key = _a.sent();
-                        if (!key) {
-                            res.json(404);
-                            return [2 /*return*/];
-                        }
-                        res.json(200, key.toJSON(this.network));
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.get('/wallet/:id/key/:address', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const b58 = valid.str('address');
+            enforce(b58, 'Address is required.');
+            const addr = Address.fromString(b58, this.network);
+            const key = await req.wallet.getKey(addr);
+            if (!key) {
+                res.json(404);
+                return;
+            }
+            res.json(200, key.toJSON(this.network));
+        });
         // Get private key
-        this.get('/wallet/:id/wif/:address', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, address, passphrase, addr, key;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        address = valid.str('address');
-                        passphrase = valid.str('passphrase');
-                        enforce(address, 'Address is required.');
-                        addr = Address.fromString(address, this.network);
-                        return [4 /*yield*/, req.wallet.getPrivateKey(addr, passphrase)];
-                    case 1:
-                        key = _a.sent();
-                        if (!key) {
-                            res.json(404);
-                            return [2 /*return*/];
-                        }
-                        res.json(200, { privateKey: key.toSecret(this.network) });
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.get('/wallet/:id/wif/:address', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const address = valid.str('address');
+            const passphrase = valid.str('passphrase');
+            enforce(address, 'Address is required.');
+            const addr = Address.fromString(address, this.network);
+            const key = await req.wallet.getPrivateKey(addr, passphrase);
+            if (!key) {
+                res.json(404);
+                return;
+            }
+            res.json(200, { privateKey: key.toSecret(this.network) });
+        });
         // Create address
-        this.post('/wallet/:id/address', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, acct, addr;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        acct = valid.str('account');
-                        return [4 /*yield*/, req.wallet.createReceive(acct)];
-                    case 1:
-                        addr = _a.sent();
-                        res.json(200, addr.toJSON(this.network));
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.post('/wallet/:id/address', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const acct = valid.str('account');
+            const addr = await req.wallet.createReceive(acct);
+            res.json(200, addr.toJSON(this.network));
+        });
         // Create change address
-        this.post('/wallet/:id/change', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, acct, addr;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        acct = valid.str('account');
-                        return [4 /*yield*/, req.wallet.createChange(acct)];
-                    case 1:
-                        addr = _a.sent();
-                        res.json(200, addr.toJSON(this.network));
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.post('/wallet/:id/change', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const acct = valid.str('account');
+            const addr = await req.wallet.createChange(acct);
+            res.json(200, addr.toJSON(this.network));
+        });
         // Create nested address
-        this.post('/wallet/:id/nested', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, acct, addr;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        acct = valid.str('account');
-                        return [4 /*yield*/, req.wallet.createNested(acct)];
-                    case 1:
-                        addr = _a.sent();
-                        res.json(200, addr.toJSON(this.network));
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.post('/wallet/:id/nested', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const acct = valid.str('account');
+            const addr = await req.wallet.createNested(acct);
+            res.json(200, addr.toJSON(this.network));
+        });
         // Wallet Balance
-        this.get('/wallet/:id/balance', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, acct, balance;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        acct = valid.str('account');
-                        return [4 /*yield*/, req.wallet.getBalance(acct)];
-                    case 1:
-                        balance = _a.sent();
-                        if (!balance) {
-                            res.json(404);
-                            return [2 /*return*/];
-                        }
-                        res.json(200, balance.toJSON());
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.get('/wallet/:id/balance', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const acct = valid.str('account');
+            const balance = await req.wallet.getBalance(acct);
+            if (!balance) {
+                res.json(404);
+                return;
+            }
+            res.json(200, balance.toJSON());
+        });
         // Wallet UTXOs
-        this.get('/wallet/:id/coin', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, acct, coins, result, _i, coins_1, coin;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        acct = valid.str('account');
-                        return [4 /*yield*/, req.wallet.getCoins(acct)];
-                    case 1:
-                        coins = _a.sent();
-                        result = [];
-                        common.sortCoins(coins);
-                        for (_i = 0, coins_1 = coins; _i < coins_1.length; _i++) {
-                            coin = coins_1[_i];
-                            result.push(coin.getJSON(this.network));
-                        }
-                        res.json(200, result);
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.get('/wallet/:id/coin', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const acct = valid.str('account');
+            const coins = await req.wallet.getCoins(acct);
+            const result = [];
+            common.sortCoins(coins);
+            for (const coin of coins)
+                result.push(coin.getJSON(this.network));
+            res.json(200, result);
+        });
         // Locked coins
-        this.get('/wallet/:id/locked', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var locked, result, _i, locked_1, outpoint;
-            return __generator(this, function (_a) {
-                locked = req.wallet.getLocked();
-                result = [];
-                for (_i = 0, locked_1 = locked; _i < locked_1.length; _i++) {
-                    outpoint = locked_1[_i];
-                    result.push(outpoint.toJSON());
-                }
-                res.json(200, result);
-                return [2 /*return*/];
-            });
-        }); });
+        this.get('/wallet/:id/locked', async (req, res) => {
+            const locked = req.wallet.getLocked();
+            const result = [];
+            for (const outpoint of locked)
+                result.push(outpoint.toJSON());
+            res.json(200, result);
+        });
         // Lock coin
-        this.put('/wallet/:id/locked/:hash/:index', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, hash, index, outpoint;
-            return __generator(this, function (_a) {
-                valid = Validator.fromRequest(req);
-                hash = valid.brhash('hash');
-                index = valid.u32('index');
-                enforce(hash, 'Hash is required.');
-                enforce(index != null, 'Index is required.');
-                outpoint = new Outpoint(hash, index);
-                req.wallet.lockCoin(outpoint);
-                res.json(200, { success: true });
-                return [2 /*return*/];
-            });
-        }); });
+        this.put('/wallet/:id/locked/:hash/:index', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const hash = valid.brhash('hash');
+            const index = valid.u32('index');
+            enforce(hash, 'Hash is required.');
+            enforce(index != null, 'Index is required.');
+            const outpoint = new Outpoint(hash, index);
+            req.wallet.lockCoin(outpoint);
+            res.json(200, { success: true });
+        });
         // Unlock coin
-        this.del('/wallet/:id/locked/:hash/:index', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, hash, index, outpoint;
-            return __generator(this, function (_a) {
-                valid = Validator.fromRequest(req);
-                hash = valid.brhash('hash');
-                index = valid.u32('index');
-                enforce(hash, 'Hash is required.');
-                enforce(index != null, 'Index is required.');
-                outpoint = new Outpoint(hash, index);
-                req.wallet.unlockCoin(outpoint);
-                res.json(200, { success: true });
-                return [2 /*return*/];
-            });
-        }); });
+        this.del('/wallet/:id/locked/:hash/:index', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const hash = valid.brhash('hash');
+            const index = valid.u32('index');
+            enforce(hash, 'Hash is required.');
+            enforce(index != null, 'Index is required.');
+            const outpoint = new Outpoint(hash, index);
+            req.wallet.unlockCoin(outpoint);
+            res.json(200, { success: true });
+        });
         // Wallet Coin
-        this.get('/wallet/:id/coin/:hash/:index', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, hash, index, coin;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        hash = valid.brhash('hash');
-                        index = valid.u32('index');
-                        enforce(hash, 'Hash is required.');
-                        enforce(index != null, 'Index is required.');
-                        return [4 /*yield*/, req.wallet.getCoin(hash, index)];
-                    case 1:
-                        coin = _a.sent();
-                        if (!coin) {
-                            res.json(404);
-                            return [2 /*return*/];
-                        }
-                        res.json(200, coin.getJSON(this.network));
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.get('/wallet/:id/coin/:hash/:index', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const hash = valid.brhash('hash');
+            const index = valid.u32('index');
+            enforce(hash, 'Hash is required.');
+            enforce(index != null, 'Index is required.');
+            const coin = await req.wallet.getCoin(hash, index);
+            if (!coin) {
+                res.json(404);
+                return;
+            }
+            res.json(200, coin.getJSON(this.network));
+        });
         // Wallet TXs
-        this.get('/wallet/:id/tx/history', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, acct, txs, details, result, _i, details_1, item;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        acct = valid.str('account');
-                        return [4 /*yield*/, req.wallet.getHistory(acct)];
-                    case 1:
-                        txs = _a.sent();
-                        common.sortTX(txs);
-                        return [4 /*yield*/, req.wallet.toDetails(txs)];
-                    case 2:
-                        details = _a.sent();
-                        result = [];
-                        for (_i = 0, details_1 = details; _i < details_1.length; _i++) {
-                            item = details_1[_i];
-                            result.push(item.toJSON(this.network, this.wdb.height));
-                        }
-                        res.json(200, result);
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.get('/wallet/:id/tx/history', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const acct = valid.str('account');
+            const txs = await req.wallet.getHistory(acct);
+            common.sortTX(txs);
+            const details = await req.wallet.toDetails(txs);
+            const result = [];
+            for (const item of details)
+                result.push(item.toJSON(this.network, this.wdb.height));
+            res.json(200, result);
+        });
         // Wallet Pending TXs
-        this.get('/wallet/:id/tx/unconfirmed', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, acct, txs, details, result, _i, details_2, item;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        acct = valid.str('account');
-                        return [4 /*yield*/, req.wallet.getPending(acct)];
-                    case 1:
-                        txs = _a.sent();
-                        common.sortTX(txs);
-                        return [4 /*yield*/, req.wallet.toDetails(txs)];
-                    case 2:
-                        details = _a.sent();
-                        result = [];
-                        for (_i = 0, details_2 = details; _i < details_2.length; _i++) {
-                            item = details_2[_i];
-                            result.push(item.toJSON(this.network, this.wdb.height));
-                        }
-                        res.json(200, result);
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.get('/wallet/:id/tx/unconfirmed', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const acct = valid.str('account');
+            const txs = await req.wallet.getPending(acct);
+            common.sortTX(txs);
+            const details = await req.wallet.toDetails(txs);
+            const result = [];
+            for (const item of details)
+                result.push(item.toJSON(this.network, this.wdb.height));
+            res.json(200, result);
+        });
         // Wallet TXs within time range
-        this.get('/wallet/:id/tx/range', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, acct, options, txs, details, result, _i, details_3, item;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        acct = valid.str('account');
-                        options = {
-                            start: valid.u32('start'),
-                            end: valid.u32('end'),
-                            limit: valid.u32('limit'),
-                            reverse: valid.bool('reverse')
-                        };
-                        return [4 /*yield*/, req.wallet.getRange(acct, options)];
-                    case 1:
-                        txs = _a.sent();
-                        return [4 /*yield*/, req.wallet.toDetails(txs)];
-                    case 2:
-                        details = _a.sent();
-                        result = [];
-                        for (_i = 0, details_3 = details; _i < details_3.length; _i++) {
-                            item = details_3[_i];
-                            result.push(item.toJSON(this.network, this.wdb.height));
-                        }
-                        res.json(200, result);
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.get('/wallet/:id/tx/range', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const acct = valid.str('account');
+            const options = {
+                start: valid.u32('start'),
+                end: valid.u32('end'),
+                limit: valid.u32('limit'),
+                reverse: valid.bool('reverse')
+            };
+            const txs = await req.wallet.getRange(acct, options);
+            const details = await req.wallet.toDetails(txs);
+            const result = [];
+            for (const item of details)
+                result.push(item.toJSON(this.network, this.wdb.height));
+            res.json(200, result);
+        });
         // Last Wallet TXs
-        this.get('/wallet/:id/tx/last', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, acct, limit, txs, details, result, _i, details_4, item;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        acct = valid.str('account');
-                        limit = valid.u32('limit');
-                        return [4 /*yield*/, req.wallet.getLast(acct, limit)];
-                    case 1:
-                        txs = _a.sent();
-                        return [4 /*yield*/, req.wallet.toDetails(txs)];
-                    case 2:
-                        details = _a.sent();
-                        result = [];
-                        for (_i = 0, details_4 = details; _i < details_4.length; _i++) {
-                            item = details_4[_i];
-                            result.push(item.toJSON(this.network, this.wdb.height));
-                        }
-                        res.json(200, result);
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.get('/wallet/:id/tx/last', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const acct = valid.str('account');
+            const limit = valid.u32('limit');
+            const txs = await req.wallet.getLast(acct, limit);
+            const details = await req.wallet.toDetails(txs);
+            const result = [];
+            for (const item of details)
+                result.push(item.toJSON(this.network, this.wdb.height));
+            res.json(200, result);
+        });
         // Wallet TX
-        this.get('/wallet/:id/tx/:hash', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var valid, hash, tx, details;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        valid = Validator.fromRequest(req);
-                        hash = valid.brhash('hash');
-                        enforce(hash, 'Hash is required.');
-                        return [4 /*yield*/, req.wallet.getTX(hash)];
-                    case 1:
-                        tx = _a.sent();
-                        if (!tx) {
-                            res.json(404);
-                            return [2 /*return*/];
-                        }
-                        return [4 /*yield*/, req.wallet.toDetails(tx)];
-                    case 2:
-                        details = _a.sent();
-                        res.json(200, details.toJSON(this.network, this.wdb.height));
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+        this.get('/wallet/:id/tx/:hash', async (req, res) => {
+            const valid = Validator.fromRequest(req);
+            const hash = valid.brhash('hash');
+            enforce(hash, 'Hash is required.');
+            const tx = await req.wallet.getTX(hash);
+            if (!tx) {
+                res.json(404);
+                return;
+            }
+            const details = await req.wallet.toDetails(tx);
+            res.json(200, details.toJSON(this.network, this.wdb.height));
+        });
         // Resend
-        this.post('/wallet/:id/resend', function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, req.wallet.resend()];
-                    case 1:
-                        _a.sent();
-                        res.json(200, { success: true });
-                        return [2 /*return*/];
-                }
-            });
-        }); });
-    };
+        this.post('/wallet/:id/resend', async (req, res) => {
+            await req.wallet.resend();
+            res.json(200, { success: true });
+        });
+    }
     /**
      * Initialize websockets.
      * @private
      */
-    HTTP.prototype.initSockets = function () {
-        var _this = this;
-        var handleTX = function (event, wallet, tx, details) {
-            var name = "w:".concat(wallet.id);
-            if (!_this.channel(name) && !_this.channel('w:*'))
+    initSockets() {
+        const handleTX = (event, wallet, tx, details) => {
+            const name = `w:${wallet.id}`;
+            if (!this.channel(name) && !this.channel('w:*'))
                 return;
-            var json = details.toJSON(_this.network, _this.wdb.liveHeight());
-            if (_this.channel(name))
-                _this.to(name, event, wallet.id, json);
-            if (_this.channel('w:*'))
-                _this.to('w:*', event, wallet.id, json);
+            const json = details.toJSON(this.network, this.wdb.liveHeight());
+            if (this.channel(name))
+                this.to(name, event, wallet.id, json);
+            if (this.channel('w:*'))
+                this.to('w:*', event, wallet.id, json);
         };
-        this.wdb.on('tx', function (wallet, tx, details) {
+        this.wdb.on('tx', (wallet, tx, details) => {
             handleTX('tx', wallet, tx, details);
         });
-        this.wdb.on('confirmed', function (wallet, tx, details) {
+        this.wdb.on('confirmed', (wallet, tx, details) => {
             handleTX('confirmed', wallet, tx, details);
         });
-        this.wdb.on('unconfirmed', function (wallet, tx, details) {
+        this.wdb.on('unconfirmed', (wallet, tx, details) => {
             handleTX('unconfirmed', wallet, tx, details);
         });
-        this.wdb.on('conflict', function (wallet, tx, details) {
+        this.wdb.on('conflict', (wallet, tx, details) => {
             handleTX('conflict', wallet, tx, details);
         });
-        this.wdb.on('balance', function (wallet, balance) {
-            var name = "w:".concat(wallet.id);
-            if (!_this.channel(name) && !_this.channel('w:*'))
+        this.wdb.on('balance', (wallet, balance) => {
+            const name = `w:${wallet.id}`;
+            if (!this.channel(name) && !this.channel('w:*'))
                 return;
-            var json = balance.toJSON();
-            if (_this.channel(name))
-                _this.to(name, 'balance', wallet.id, json);
-            if (_this.channel('w:*'))
-                _this.to('w:*', 'balance', wallet.id, json);
+            const json = balance.toJSON();
+            if (this.channel(name))
+                this.to(name, 'balance', wallet.id, json);
+            if (this.channel('w:*'))
+                this.to('w:*', 'balance', wallet.id, json);
         });
-        this.wdb.on('address', function (wallet, receive) {
-            var name = "w:".concat(wallet.id);
-            if (!_this.channel(name) && !_this.channel('w:*'))
+        this.wdb.on('address', (wallet, receive) => {
+            const name = `w:${wallet.id}`;
+            if (!this.channel(name) && !this.channel('w:*'))
                 return;
-            var json = [];
-            for (var _i = 0, receive_1 = receive; _i < receive_1.length; _i++) {
-                var addr = receive_1[_i];
-                json.push(addr.toJSON(_this.network));
-            }
-            if (_this.channel(name))
-                _this.to(name, 'address', wallet.id, json);
-            if (_this.channel('w:*'))
-                _this.to('w:*', 'address', wallet.id, json);
+            const json = [];
+            for (const addr of receive)
+                json.push(addr.toJSON(this.network));
+            if (this.channel(name))
+                this.to(name, 'address', wallet.id, json);
+            if (this.channel('w:*'))
+                this.to('w:*', 'address', wallet.id, json);
         });
-    };
+    }
     /**
      * Handle new websocket.
      * @private
      * @param {WebSocket} socket
      */
-    HTTP.prototype.handleSocket = function (socket) {
-        var _this = this;
-        socket.hook('auth', function () {
-            var args = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i] = arguments[_i];
-            }
+    handleSocket(socket) {
+        socket.hook('auth', (...args) => {
             if (socket.channel('auth'))
                 throw new Error('Already authed.');
-            if (!_this.options.noAuth) {
-                var valid = new Validator(args);
-                var key = valid.str(0, '');
+            if (!this.options.noAuth) {
+                const valid = new Validator(args);
+                const key = valid.str(0, '');
                 if (key.length > 255)
                     throw new Error('Invalid API key.');
-                var data = Buffer.from(key, 'utf8');
-                var hash = sha256.digest(data);
-                if (!safeEqual(hash, _this.options.apiHash))
+                const data = Buffer.from(key, 'utf8');
+                const hash = sha256.digest(data);
+                if (!safeEqual(hash, this.options.apiHash))
                     throw new Error('Invalid API key.');
             }
             socket.join('auth');
-            _this.logger.info('Successful auth from %s.', socket.host);
-            _this.handleAuth(socket);
+            this.logger.info('Successful auth from %s.', socket.host);
+            this.handleAuth(socket);
             return null;
         });
-    };
+    }
     /**
      * Handle new auth'd websocket.
      * @private
      * @param {WebSocket} socket
      */
-    HTTP.prototype.handleAuth = function (socket) {
-        var _this = this;
-        socket.hook('join', function () {
-            var args = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i] = arguments[_i];
-            }
-            return __awaiter(_this, void 0, void 0, function () {
-                var valid, id, token, wallet, e_1;
-                return __generator(this, function (_a) {
-                    switch (_a.label) {
-                        case 0:
-                            valid = new Validator(args);
-                            id = valid.str(0, '');
-                            token = valid.buf(1);
-                            if (!id)
-                                throw new Error('Invalid parameter.');
-                            if (!this.options.walletAuth) {
-                                socket.join('admin');
-                            }
-                            else if (token) {
-                                if (safeEqual(token, this.options.adminToken))
-                                    socket.join('admin');
-                            }
-                            if (socket.channel('admin') || !this.options.walletAuth) {
-                                socket.join("w:".concat(id));
-                                return [2 /*return*/, null];
-                            }
-                            if (id === '*')
-                                throw new Error('Bad token.');
-                            if (!token)
-                                throw new Error('Invalid parameter.');
-                            _a.label = 1;
-                        case 1:
-                            _a.trys.push([1, 3, , 4]);
-                            return [4 /*yield*/, this.wdb.auth(id, token)];
-                        case 2:
-                            wallet = _a.sent();
-                            return [3 /*break*/, 4];
-                        case 3:
-                            e_1 = _a.sent();
-                            this.logger.info('Wallet auth failure for %s: %s.', id, e_1.message);
-                            throw new Error('Bad token.');
-                        case 4:
-                            if (!wallet)
-                                throw new Error('Wallet does not exist.');
-                            this.logger.info('Successful wallet auth for %s.', id);
-                            socket.join("w:".concat(id));
-                            return [2 /*return*/, null];
-                    }
-                });
-            });
-        });
-        socket.hook('leave', function () {
-            var args = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i] = arguments[_i];
-            }
-            var valid = new Validator(args);
-            var id = valid.str(0, '');
+    handleAuth(socket) {
+        socket.hook('join', async (...args) => {
+            const valid = new Validator(args);
+            const id = valid.str(0, '');
+            const token = valid.buf(1);
             if (!id)
                 throw new Error('Invalid parameter.');
-            socket.leave("w:".concat(id));
+            if (!this.options.walletAuth) {
+                socket.join('admin');
+            }
+            else if (token) {
+                if (safeEqual(token, this.options.adminToken))
+                    socket.join('admin');
+            }
+            if (socket.channel('admin') || !this.options.walletAuth) {
+                socket.join(`w:${id}`);
+                return null;
+            }
+            if (id === '*')
+                throw new Error('Bad token.');
+            if (!token)
+                throw new Error('Invalid parameter.');
+            let wallet;
+            try {
+                wallet = await this.wdb.auth(id, token);
+            }
+            catch (e) {
+                this.logger.info('Wallet auth failure for %s: %s.', id, e.message);
+                throw new Error('Bad token.');
+            }
+            if (!wallet)
+                throw new Error('Wallet does not exist.');
+            this.logger.info('Successful wallet auth for %s.', id);
+            socket.join(`w:${id}`);
             return null;
         });
-    };
-    return HTTP;
-}(Server));
-var HTTPOptions = /** @class */ (function () {
+        socket.hook('leave', (...args) => {
+            const valid = new Validator(args);
+            const id = valid.str(0, '');
+            if (!id)
+                throw new Error('Invalid parameter.');
+            socket.leave(`w:${id}`);
+            return null;
+        });
+    }
+}
+class HTTPOptions {
     /**
      * HTTPOptions
      * @alias module:http.HTTPOptions
      * @constructor
      * @param {Object} options
      */
-    function HTTPOptions(options) {
+    constructor(options) {
         this.network = Network.primary;
         this.logger = null;
         this.node = null;
@@ -1306,7 +821,7 @@ var HTTPOptions = /** @class */ (function () {
      * @param {Object} options
      * @returns {HTTPOptions}
      */
-    HTTPOptions.prototype.fromOptions = function (options) {
+    fromOptions(options) {
         assert(options);
         assert(options.node && typeof options.node === 'object', 'HTTP Server requires a WalletDB.');
         this.node = options.node;
@@ -1326,7 +841,7 @@ var HTTPOptions = /** @class */ (function () {
         if (options.adminToken != null) {
             if (typeof options.adminToken === 'string') {
                 assert(options.adminToken.length === 64, 'Admin token must be a 32 byte hex string.');
-                var token = Buffer.from(options.adminToken, 'hex');
+                const token = Buffer.from(options.adminToken, 'hex');
                 assert(token.length === 32, 'Admin token must be a 32 byte hex string.');
                 this.adminToken = token;
             }
@@ -1381,23 +896,22 @@ var HTTPOptions = /** @class */ (function () {
                 this.noAuth = true;
         }
         return this;
-    };
+    }
     /**
      * Instantiate http options from object.
      * @param {Object} options
      * @returns {HTTPOptions}
      */
-    HTTPOptions.fromOptions = function (options) {
+    static fromOptions(options) {
         return new HTTPOptions().fromOptions(options);
-    };
-    return HTTPOptions;
-}());
+    }
+}
 /*
  * Helpers
  */
 function enforce(value, msg) {
     if (!value) {
-        var err = new Error(msg);
+        const err = new Error(msg);
         err.statusCode = 400;
         throw err;
     }
@@ -1406,3 +920,4 @@ function enforce(value, msg) {
  * Expose
  */
 module.exports = HTTP;
+//# sourceMappingURL=http.js.map

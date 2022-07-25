@@ -5,13 +5,13 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var assert = require('bsert');
-var bio = require('bufio');
-var ScriptNum = require('./scriptnum');
-var common = require('./common');
-var opcodes = common.opcodes;
-var opCache = [];
-var PARSE_ERROR = null;
+const assert = require('bsert');
+const bio = require('bufio');
+const ScriptNum = require('./scriptnum');
+const common = require('./common');
+const opcodes = common.opcodes;
+const opCache = [];
+let PARSE_ERROR = null;
 /**
  * Opcode
  * A simple struct which contains
@@ -20,7 +20,7 @@ var PARSE_ERROR = null;
  * @property {Number} value
  * @property {Buffer|null} data
  */
-var Opcode = /** @class */ (function () {
+class Opcode {
     /**
      * Create an opcode.
      * Note: this should not be called directly.
@@ -28,7 +28,7 @@ var Opcode = /** @class */ (function () {
      * @param {Number} value - Opcode.
      * @param {Buffer?} data - Pushdata buffer.
      */
-    function Opcode(value, data) {
+    constructor(value, data) {
         this.value = value || 0;
         this.data = data || null;
     }
@@ -36,7 +36,7 @@ var Opcode = /** @class */ (function () {
      * Test whether a pushdata abides by minimaldata.
      * @returns {Boolean}
      */
-    Opcode.prototype.isMinimal = function () {
+    isMinimal() {
         if (!this.data)
             return true;
         if (this.data.length === 1) {
@@ -53,12 +53,12 @@ var Opcode = /** @class */ (function () {
             return this.value === opcodes.OP_PUSHDATA2;
         assert(this.value === opcodes.OP_PUSHDATA4);
         return true;
-    };
+    }
     /**
      * Test whether opcode is a disabled opcode.
      * @returns {Boolean}
      */
-    Opcode.prototype.isDisabled = function () {
+    isDisabled() {
         switch (this.value) {
             case opcodes.OP_CAT:
             case opcodes.OP_SUBSTR:
@@ -78,20 +78,20 @@ var Opcode = /** @class */ (function () {
                 return true;
         }
         return false;
-    };
+    }
     /**
      * Test whether opcode is a branch (if/else/endif).
      * @returns {Boolean}
      */
-    Opcode.prototype.isBranch = function () {
+    isBranch() {
         return this.value >= opcodes.OP_IF && this.value <= opcodes.OP_ENDIF;
-    };
+    }
     /**
      * Test opcode equality.
      * @param {Opcode} op
      * @returns {Boolean}
      */
-    Opcode.prototype.equals = function (op) {
+    equals(op) {
         assert(Opcode.isOpcode(op));
         if (this.value !== op.value)
             return false;
@@ -101,33 +101,33 @@ var Opcode = /** @class */ (function () {
         }
         assert(op.data);
         return this.data.equals(op.data);
-    };
+    }
     /**
      * Convert Opcode to opcode value.
      * @returns {Number}
      */
-    Opcode.prototype.toOp = function () {
+    toOp() {
         return this.value;
-    };
+    }
     /**
      * Covert opcode to data push.
      * @returns {Buffer|null}
      */
-    Opcode.prototype.toData = function () {
+    toData() {
         return this.data;
-    };
+    }
     /**
      * Covert opcode to data length.
      * @returns {Number}
      */
-    Opcode.prototype.toLength = function () {
+    toLength() {
         return this.data ? this.data.length : -1;
-    };
+    }
     /**
      * Covert and _cast_ opcode to data push.
      * @returns {Buffer|null}
      */
-    Opcode.prototype.toPush = function () {
+    toPush() {
         if (this.value === opcodes.OP_0)
             return common.small[0 + 1];
         if (this.value === opcodes.OP_1NEGATE)
@@ -135,36 +135,36 @@ var Opcode = /** @class */ (function () {
         if (this.value >= opcodes.OP_1 && this.value <= opcodes.OP_16)
             return common.small[this.value - 0x50 + 1];
         return this.toData();
-    };
+    }
     /**
      * Get string for opcode.
      * @param {String?} enc
      * @returns {Buffer|null}
      */
-    Opcode.prototype.toString = function (enc) {
-        var data = this.toPush();
+    toString(enc) {
+        const data = this.toPush();
         if (!data)
             return null;
         return data.toString(enc || 'utf8');
-    };
+    }
     /**
      * Convert opcode to small integer.
      * @returns {Number}
      */
-    Opcode.prototype.toSmall = function () {
+    toSmall() {
         if (this.value === opcodes.OP_0)
             return 0;
         if (this.value >= opcodes.OP_1 && this.value <= opcodes.OP_16)
             return this.value - 0x50;
         return -1;
-    };
+    }
     /**
      * Convert opcode to script number.
      * @param {Boolean?} minimal
      * @param {Number?} limit
      * @returns {ScriptNum|null}
      */
-    Opcode.prototype.toNum = function (minimal, limit) {
+    toNum(minimal, limit) {
         if (this.value === opcodes.OP_0)
             return ScriptNum.fromInt(0);
         if (this.value === opcodes.OP_1NEGATE)
@@ -174,46 +174,46 @@ var Opcode = /** @class */ (function () {
         if (!this.data)
             return null;
         return ScriptNum.decode(this.data, minimal, limit);
-    };
+    }
     /**
      * Convert opcode to integer.
      * @param {Boolean?} minimal
      * @param {Number?} limit
      * @returns {Number}
      */
-    Opcode.prototype.toInt = function (minimal, limit) {
-        var num = this.toNum(minimal, limit);
+    toInt(minimal, limit) {
+        const num = this.toNum(minimal, limit);
         if (!num)
             return -1;
         return num.getInt();
-    };
+    }
     /**
      * Convert opcode to boolean.
      * @returns {Boolean}
      */
-    Opcode.prototype.toBool = function () {
-        var smi = this.toSmall();
+    toBool() {
+        const smi = this.toSmall();
         if (smi === -1)
             return false;
         return smi === 1;
-    };
+    }
     /**
      * Convert opcode to its symbolic representation.
      * @returns {String}
      */
-    Opcode.prototype.toSymbol = function () {
+    toSymbol() {
         if (this.value === -1)
             return 'OP_INVALIDOPCODE';
-        var symbol = common.opcodesByVal[this.value];
+        const symbol = common.opcodesByVal[this.value];
         if (!symbol)
-            return "0x".concat(hex8(this.value));
+            return `0x${hex8(this.value)}`;
         return symbol;
-    };
+    }
     /**
      * Calculate opcode size.
      * @returns {Number}
      */
-    Opcode.prototype.getSize = function () {
+    getSize() {
         if (!this.data)
             return 1;
         switch (this.value) {
@@ -226,12 +226,12 @@ var Opcode = /** @class */ (function () {
             default:
                 return 1 + this.data.length;
         }
-    };
+    }
     /**
      * Encode the opcode to a buffer writer.
      * @param {BufferWriter} bw
      */
-    Opcode.prototype.toWriter = function (bw) {
+    toWriter(bw) {
         if (this.value === -1)
             throw new Error('Cannot reserialize a parse error.');
         if (!this.data) {
@@ -261,80 +261,80 @@ var Opcode = /** @class */ (function () {
                 break;
         }
         return bw;
-    };
+    }
     /**
      * Encode the opcode.
      * @returns {Buffer}
      */
-    Opcode.prototype.toRaw = function () {
-        var size = this.getSize();
+    toRaw() {
+        const size = this.getSize();
         return this.toWriter(bio.write(size)).render();
-    };
+    }
     /**
      * Convert the opcode to a bitcoind test string.
      * @returns {String} Human-readable script code.
      */
-    Opcode.prototype.toFormat = function () {
+    toFormat() {
         if (this.value === -1)
             return '0x01';
         if (this.data) {
             // Numbers
             if (this.data.length <= 4) {
-                var num = this.toNum();
+                const num = this.toNum();
                 if (this.equals(Opcode.fromNum(num)))
                     return num.toString(10);
             }
-            var symbol_1 = common.opcodesByVal[this.value];
-            var data = this.data.toString('hex');
+            const symbol = common.opcodesByVal[this.value];
+            const data = this.data.toString('hex');
             // Direct push
-            if (!symbol_1) {
-                var size_1 = hex8(this.value);
-                return "0x".concat(size_1, " 0x").concat(data);
+            if (!symbol) {
+                const size = hex8(this.value);
+                return `0x${size} 0x${data}`;
             }
             // Pushdatas
-            var size = this.data.length.toString(16);
+            let size = this.data.length.toString(16);
             while (size.length % 2 !== 0)
                 size = '0' + size;
-            return "".concat(symbol_1, " 0x").concat(size, " 0x").concat(data);
+            return `${symbol} 0x${size} 0x${data}`;
         }
         // Opcodes
-        var symbol = common.opcodesByVal[this.value];
+        const symbol = common.opcodesByVal[this.value];
         if (symbol)
             return symbol;
         // Unknown opcodes
-        var value = hex8(this.value);
-        return "0x".concat(value);
-    };
+        const value = hex8(this.value);
+        return `0x${value}`;
+    }
     /**
      * Format the opcode as bitcoind asm.
      * @param {Boolean?} decode - Attempt to decode hash types.
      * @returns {String} Human-readable script.
      */
-    Opcode.prototype.toASM = function (decode) {
+    toASM(decode) {
         if (this.value === -1)
             return '[error]';
         if (this.data)
             return common.toASM(this.data, decode);
         return common.opcodesByVal[this.value] || 'OP_UNKNOWN';
-    };
+    }
     /**
      * Instantiate an opcode from a number opcode.
      * @param {Number} op
      * @returns {Opcode}
      */
-    Opcode.fromOp = function (op) {
+    static fromOp(op) {
         assert(typeof op === 'number');
-        var cached = opCache[op];
+        const cached = opCache[op];
         assert(cached, 'Bad opcode.');
         return cached;
-    };
+    }
     /**
      * Instantiate a pushdata opcode from
      * a buffer (will encode minimaldata).
      * @param {Buffer} data
      * @returns {Opcode}
      */
-    Opcode.fromData = function (data) {
+    static fromData(data) {
         assert(Buffer.isBuffer(data));
         if (data.length === 1) {
             if (data[0] === 0x81)
@@ -343,7 +343,7 @@ var Opcode = /** @class */ (function () {
                 return this.fromOp(data[0] + 0x50);
         }
         return this.fromPush(data);
-    };
+    }
     /**
      * Instantiate a pushdata opcode from a
      * buffer (this differs from fromData in
@@ -351,7 +351,7 @@ var Opcode = /** @class */ (function () {
      * @param {Buffer} data
      * @returns {Opcode}
      */
-    Opcode.fromPush = function (data) {
+    static fromPush(data) {
         assert(Buffer.isBuffer(data));
         if (data.length === 0)
             return this.fromOp(opcodes.OP_0);
@@ -364,42 +364,42 @@ var Opcode = /** @class */ (function () {
         if (data.length <= 0xffffffff)
             return new this(opcodes.OP_PUSHDATA4, data);
         throw new Error('Pushdata size too large.');
-    };
+    }
     /**
      * Instantiate a pushdata opcode from a string.
      * @param {String} str
      * @param {String} [enc=utf8]
      * @returns {Opcode}
      */
-    Opcode.fromString = function (str, enc) {
+    static fromString(str, enc) {
         assert(typeof str === 'string');
-        var data = Buffer.from(str, enc || 'utf8');
+        const data = Buffer.from(str, enc || 'utf8');
         return this.fromData(data);
-    };
+    }
     /**
      * Instantiate an opcode from a small number.
      * @param {Number} num
      * @returns {Opcode}
      */
-    Opcode.fromSmall = function (num) {
+    static fromSmall(num) {
         assert((num & 0xff) === num && num >= 0 && num <= 16);
         return this.fromOp(num === 0 ? 0 : num + 0x50);
-    };
+    }
     /**
      * Instantiate an opcode from a ScriptNum.
      * @param {ScriptNumber} num
      * @returns {Opcode}
      */
-    Opcode.fromNum = function (num) {
+    static fromNum(num) {
         assert(ScriptNum.isScriptNum(num));
         return this.fromData(num.encode());
-    };
+    }
     /**
      * Instantiate an opcode from a Number.
      * @param {Number} num
      * @returns {Opcode}
      */
-    Opcode.fromInt = function (num) {
+    static fromInt(num) {
         assert(Number.isSafeInteger(num));
         if (num === 0)
             return this.fromOp(opcodes.OP_0);
@@ -408,16 +408,16 @@ var Opcode = /** @class */ (function () {
         if (num >= 1 && num <= 16)
             return this.fromOp(num + 0x50);
         return this.fromNum(ScriptNum.fromNumber(num));
-    };
+    }
     /**
      * Instantiate an opcode from a Number.
      * @param {Boolean} value
      * @returns {Opcode}
      */
-    Opcode.fromBool = function (value) {
+    static fromBool(value) {
         assert(typeof value === 'boolean');
         return this.fromSmall(value ? 1 : 0);
-    };
+    }
     /**
      * Instantiate a pushdata opcode from symbolic name.
      * @example
@@ -425,42 +425,42 @@ var Opcode = /** @class */ (function () {
      * @param {String} name
      * @returns {Opcode}
      */
-    Opcode.fromSymbol = function (name) {
+    static fromSymbol(name) {
         assert(typeof name === 'string');
         assert(name.length > 0);
         if (name.charCodeAt(0) & 32)
             name = name.toUpperCase();
         if (!/^OP_/.test(name))
-            name = "OP_".concat(name);
-        var op = common.opcodes[name];
+            name = `OP_${name}`;
+        const op = common.opcodes[name];
         if (op != null)
             return this.fromOp(op);
         assert(/^OP_0X/.test(name), 'Unknown opcode.');
         assert(name.length === 7, 'Unknown opcode.');
-        var value = parseInt(name.substring(5), 16);
+        const value = parseInt(name.substring(5), 16);
         assert((value & 0xff) === value, 'Unknown opcode.');
         return this.fromOp(value);
-    };
+    }
     /**
      * Instantiate opcode from buffer reader.
      * @param {BufferReader} br
      * @returns {Opcode}
      */
-    Opcode.fromReader = function (br) {
-        var value = br.readU8();
-        var op = opCache[value];
+    static fromReader(br) {
+        const value = br.readU8();
+        const op = opCache[value];
         if (op)
             return op;
         switch (value) {
             case opcodes.OP_PUSHDATA1: {
                 if (br.left() < 1)
                     return PARSE_ERROR;
-                var size = br.readU8();
+                const size = br.readU8();
                 if (br.left() < size) {
                     br.seek(br.left());
                     return PARSE_ERROR;
                 }
-                var data = br.readBytes(size);
+                const data = br.readBytes(size);
                 return new this(value, data);
             }
             case opcodes.OP_PUSHDATA2: {
@@ -468,12 +468,12 @@ var Opcode = /** @class */ (function () {
                     br.seek(br.left());
                     return PARSE_ERROR;
                 }
-                var size = br.readU16();
+                const size = br.readU16();
                 if (br.left() < size) {
                     br.seek(br.left());
                     return PARSE_ERROR;
                 }
-                var data = br.readBytes(size);
+                const data = br.readBytes(size);
                 return new this(value, data);
             }
             case opcodes.OP_PUSHDATA4: {
@@ -481,12 +481,12 @@ var Opcode = /** @class */ (function () {
                     br.seek(br.left());
                     return PARSE_ERROR;
                 }
-                var size = br.readU32();
+                const size = br.readU32();
                 if (br.left() < size) {
                     br.seek(br.left());
                     return PARSE_ERROR;
                 }
-                var data = br.readBytes(size);
+                const data = br.readBytes(size);
                 return new this(value, data);
             }
             default: {
@@ -494,29 +494,28 @@ var Opcode = /** @class */ (function () {
                     br.seek(br.left());
                     return PARSE_ERROR;
                 }
-                var data = br.readBytes(value);
+                const data = br.readBytes(value);
                 return new this(value, data);
             }
         }
-    };
+    }
     /**
      * Instantiate opcode from serialized data.
      * @param {Buffer} data
      * @returns {Opcode}
      */
-    Opcode.fromRaw = function (data) {
+    static fromRaw(data) {
         return this.fromReader(bio.read(data));
-    };
+    }
     /**
      * Test whether an object an Opcode.
      * @param {Object} obj
      * @returns {Boolean}
      */
-    Opcode.isOpcode = function (obj) {
+    static isOpcode(obj) {
         return obj instanceof Opcode;
-    };
-    return Opcode;
-}());
+    }
+}
 /*
  * Helpers
  */
@@ -529,15 +528,16 @@ function hex8(num) {
  * Fill Cache
  */
 PARSE_ERROR = Object.freeze(new Opcode(-1));
-for (var value = 0x00; value <= 0xff; value++) {
+for (let value = 0x00; value <= 0xff; value++) {
     if (value >= 0x01 && value <= 0x4e) {
         opCache.push(null);
         continue;
     }
-    var op = new Opcode(value);
+    const op = new Opcode(value);
     opCache.push(Object.freeze(op));
 }
 /*
  * Expose
  */
 module.exports = Opcode;
+//# sourceMappingURL=opcode.js.map

@@ -4,7 +4,7 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var bdb = require('bdb');
+const bdb = require('bdb');
 /*
  * Database Layout:
  *   V -> db version
@@ -24,7 +24,7 @@ var bdb = require('bdb');
  *   T[addr-hash][hash] -> dummy (tx by address) (deprecated)
  *   C[addr-hash][hash][index] -> dummy (coin by address) (deprecated)
  */
-var layout = {
+const layout = {
     V: bdb.key('V'),
     O: bdb.key('O'),
     R: bdb.key('R'),
@@ -46,3 +46,4 @@ var layout = {
  * Expose
  */
 module.exports = layout;
+//# sourceMappingURL=layout.js.map

@@ -8,8 +8,8 @@
 /**
  * @module protocol/consensus
  */
-var assert = require('bsert');
-var BN = require('bcrypto/lib/bn.js');
+const assert = require('bsert');
+const BN = require('bcrypto/lib/bn.js');
 /**
  * One bitcoin in satoshis.
  * @const  {SatoshiAmount}
@@ -187,10 +187,10 @@ exports.ZERO_HASH = Buffer.alloc(32, 0x00);
 exports.fromCompact = function fromCompact(compact) {
     if (compact === 0)
         return new BN(0);
-    var exponent = compact >>> 24;
-    var negative = (compact >>> 23) & 1;
-    var mantissa = compact & 0x7fffff;
-    var num;
+    const exponent = compact >>> 24;
+    const negative = (compact >>> 23) & 1;
+    let mantissa = compact & 0x7fffff;
+    let num;
     if (exponent <= 3) {
         mantissa >>>= 8 * (3 - exponent);
         num = new BN(mantissa);
@@ -212,8 +212,8 @@ exports.fromCompact = function fromCompact(compact) {
 exports.toCompact = function toCompact(num) {
     if (num.isZero())
         return 0;
-    var exponent = num.byteLength();
-    var mantissa;
+    let exponent = num.byteLength();
+    let mantissa;
     if (exponent <= 3) {
         mantissa = num.toNumber();
         mantissa <<= 8 * (3 - exponent);
@@ -225,7 +225,7 @@ exports.toCompact = function toCompact(num) {
         mantissa >>= 8;
         exponent++;
     }
-    var compact = (exponent << 24) | mantissa;
+    let compact = (exponent << 24) | mantissa;
     if (num.isNeg())
         compact |= 0x800000;
     compact >>>= 0;
@@ -238,12 +238,12 @@ exports.toCompact = function toCompact(num) {
  * @returns {Boolean}
  */
 exports.verifyPOW = function verifyPOW(hash, bits) {
-    var target = exports.fromCompact(bits);
+    const target = exports.fromCompact(bits);
     if (target.isNeg() || target.isZero())
         return false;
     if (target.bitLength() > 256)
         return false;
-    var num = new BN(hash, 'le');
+    const num = new BN(hash, 'le');
     if (num.gt(target))
         return false;
     return true;
@@ -255,7 +255,7 @@ exports.verifyPOW = function verifyPOW(hash, bits) {
  */
 exports.getReward = function getReward(height, interval) {
     assert(height >= 0, 'Bad height for reward.');
-    var halvings = Math.floor(height / interval);
+    const halvings = Math.floor(height / interval);
     // BIP 42 (well, our own version of it,
     // since we can only handle 32 bit shifts).
     // https://github.com/bitcoin/bips/blob/master/bip-0042.mediawiki
@@ -276,9 +276,10 @@ exports.getReward = function getReward(height, interval) {
  * @returns {Boolean}
  */
 exports.hasBit = function hasBit(version, bit) {
-    var TOP_MASK = exports.VERSION_TOP_MASK;
-    var TOP_BITS = exports.VERSION_TOP_BITS;
-    var bits = (version & TOP_MASK) >>> 0;
-    var mask = 1 << bit;
+    const TOP_MASK = exports.VERSION_TOP_MASK;
+    const TOP_BITS = exports.VERSION_TOP_BITS;
+    const bits = (version & TOP_MASK) >>> 0;
+    const mask = 1 << bit;
     return bits === TOP_BITS && (version & mask) !== 0;
 };
+//# sourceMappingURL=consensus.js.map

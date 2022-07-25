@@ -4,7 +4,7 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var bdb = require('bdb');
+const bdb = require('bdb');
 /*
  * Index database layout:
  * To be extended by indexer implementations.
@@ -14,7 +14,7 @@ var bdb = require('bdb');
  *  h[height] -> block hash
  *  R -> index sync height
  */
-var layout = {
+const layout = {
     V: bdb.key('V'),
     O: bdb.key('O'),
     h: bdb.key('h', ['uint32']),
@@ -24,3 +24,4 @@ var layout = {
  * Expose
  */
 module.exports = layout;
+//# sourceMappingURL=layout.js.map

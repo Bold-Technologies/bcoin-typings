@@ -4,7 +4,7 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var words = require('./words');
+const words = require('./words');
 exports.get = function get(name) {
     switch (name) {
         case 'simplified chinese':
@@ -22,6 +22,7 @@ exports.get = function get(name) {
         case 'spanish':
             return words.spanish;
         default:
-            throw new Error("Unknown language: ".concat(name, "."));
+            throw new Error(`Unknown language: ${name}.`);
     }
 };
+//# sourceMappingURL=wordlist-browser.js.map

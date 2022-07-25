@@ -8,9 +8,9 @@
 /**
  * @module script/common
  */
-var assert = require('bsert');
-var secp256k1 = require('bcrypto/lib/secp256k1');
-var ScriptNum = require('./scriptnum');
+const assert = require('bsert');
+const secp256k1 = require('bcrypto/lib/secp256k1');
+const ScriptNum = require('./scriptnum');
 /**
  * Script opcodes.
  * @enum {Number}
@@ -421,7 +421,7 @@ exports.isHashType = function isHashType(sig) {
     assert(Buffer.isBuffer(sig));
     if (sig.length === 0)
         return false;
-    var type = sig[sig.length - 1] & ~exports.hashType.ANYONECANPAY;
+    const type = sig[sig.length - 1] & ~exports.hashType.ANYONECANPAY;
     if (type < exports.hashType.ALL || type > exports.hashType.SINGLE)
         return false;
     return true;
@@ -504,12 +504,12 @@ exports.isSignatureEncoding = function isSignatureEncoding(sig) {
     if (sig[1] !== sig.length - 3)
         return false;
     // Extract the length of the R element.
-    var lenR = sig[3];
+    const lenR = sig[3];
     // Make sure the length of the S element is still inside the signature.
     if (5 + lenR >= sig.length)
         return false;
     // Extract the length of the S element.
-    var lenS = sig[5 + lenR];
+    const lenS = sig[5 + lenR];
     // Verify that the length of the signature matches the sum of the length
     // of the elements.
     if (lenR + lenS + 7 !== sig.length)
@@ -550,18 +550,19 @@ exports.isSignatureEncoding = function isSignatureEncoding(sig) {
  */
 exports.toASM = function toASM(item, decode) {
     if (item.length <= 4) {
-        var num = ScriptNum.decode(item);
+        const num = ScriptNum.decode(item);
         return num.toString(10);
     }
     if (decode && exports.isSignatureEncoding(item)) {
-        var type = item[item.length - 1];
-        var symbol = exports.hashTypeByVal[type & 0x1f] || '';
+        const type = item[item.length - 1];
+        let symbol = exports.hashTypeByVal[type & 0x1f] || '';
         if (symbol) {
             if (type & exports.hashType.ANYONECANPAY)
                 symbol += '|ANYONECANPAY';
-            symbol = "[".concat(symbol, "]");
+            symbol = `[${symbol}]`;
         }
         return item.slice(0, -1).toString('hex') + symbol;
     }
     return item.toString('hex');
 };
+//# sourceMappingURL=common.js.map

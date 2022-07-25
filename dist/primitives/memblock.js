@@ -5,27 +5,12 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-var bio = require('bufio');
-var AbstractBlock = require('./abstractblock');
-var Block = require('./block');
-var Headers = require('./headers');
-var Script = require('../script/script');
-var DUMMY = Buffer.alloc(0);
+const bio = require('bufio');
+const AbstractBlock = require('./abstractblock');
+const Block = require('./block');
+const Headers = require('./headers');
+const Script = require('../script/script');
+const DUMMY = Buffer.alloc(0);
 /**
  * Mem Block
  * A block object which is essentially a "placeholder"
@@ -46,51 +31,49 @@ var DUMMY = Buffer.alloc(0);
  * @alias module:primitives.MemBlock
  * @extends AbstractBlock
  */
-var MemBlock = /** @class */ (function (_super) {
-    __extends(MemBlock, _super);
+class MemBlock extends AbstractBlock {
     /**
      * Create a mem block.
      * @constructor
      */
-    function MemBlock() {
-        var _this = _super.call(this) || this;
-        _this._raw = DUMMY;
-        return _this;
+    constructor() {
+        super();
+        this._raw = DUMMY;
     }
     /**
      * Test whether the block is a memblock.
      * @returns {Boolean}
      */
-    MemBlock.prototype.isMemory = function () {
+    isMemory() {
         return true;
-    };
+    }
     /**
      * Serialize the block headers.
      * @returns {Buffer}
      */
-    MemBlock.prototype.toHead = function () {
+    toHead() {
         return this._raw.slice(0, 80);
-    };
+    }
     /**
      * Get the full block size.
      * @returns {Number}
      */
-    MemBlock.prototype.getSize = function () {
+    getSize() {
         return this._raw.length;
-    };
+    }
     /**
      * Verify the block.
      * @returns {Boolean}
      */
-    MemBlock.prototype.verifyBody = function () {
+    verifyBody() {
         return true;
-    };
+    }
     /**
      * Retrieve the coinbase height
      * from the coinbase input script.
      * @returns {Number} height (-1 if not present).
      */
-    MemBlock.prototype.getCoinbaseHeight = function () {
+    getCoinbaseHeight() {
         if (this.version < 2)
             return -1;
         try {
@@ -99,21 +82,21 @@ var MemBlock = /** @class */ (function (_super) {
         catch (e) {
             return -1;
         }
-    };
+    }
     /**
      * Parse the coinbase height
      * from the coinbase input script.
      * @private
      * @returns {Number} height (-1 if not present).
      */
-    MemBlock.prototype.parseCoinbaseHeight = function () {
-        var br = bio.read(this._raw, true);
+    parseCoinbaseHeight() {
+        const br = bio.read(this._raw, true);
         br.seek(80);
-        var txCount = br.readVarint();
+        const txCount = br.readVarint();
         if (txCount === 0)
             return -1;
         br.seek(4);
-        var inCount = br.readVarint();
+        let inCount = br.readVarint();
         if (inCount === 0) {
             if (br.readU8() !== 0)
                 inCount = br.readVarint();
@@ -121,72 +104,72 @@ var MemBlock = /** @class */ (function (_super) {
         if (inCount === 0)
             return -1;
         br.seek(36);
-        var script = br.readVarBytes();
+        const script = br.readVarBytes();
         return Script.getCoinbaseHeight(script);
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    MemBlock.prototype.fromRaw = function (data) {
-        var br = bio.read(data, true);
+    fromRaw(data) {
+        const br = bio.read(data, true);
         this.readHead(br);
         this._raw = br.data;
         return this;
-    };
+    }
     /**
      * Insantiate a memblock from serialized data.
      * @param {Buffer} data
      * @returns {MemBlock}
      */
-    MemBlock.fromRaw = function (data) {
+    static fromRaw(data) {
         return new this().fromRaw(data);
-    };
+    }
     /**
      * Return serialized block data.
      * @returns {Buffer}
      */
-    MemBlock.prototype.toRaw = function () {
+    toRaw() {
         return this._raw;
-    };
+    }
     /**
      * Return serialized block data.
      * @returns {Buffer}
      */
-    MemBlock.prototype.toNormal = function () {
+    toNormal() {
         return this._raw;
-    };
+    }
     /**
      * Parse the serialized block data
      * and create an actual {@link Block}.
      * @returns {Block}
      * @throws Parse error
      */
-    MemBlock.prototype.toBlock = function () {
-        var block = Block.fromRaw(this._raw);
+    toBlock() {
+        const block = Block.fromRaw(this._raw);
         block._hash = this._hash;
         block._hhash = this._hhash;
         return block;
-    };
+    }
     /**
      * Convert the block to a headers object.
      * @returns {Headers}
      */
-    MemBlock.prototype.toHeaders = function () {
+    toHeaders() {
         return Headers.fromBlock(this);
-    };
+    }
     /**
      * Test whether an object is a MemBlock.
      * @param {Object} obj
      * @returns {Boolean}
      */
-    MemBlock.isMemBlock = function (obj) {
+    static isMemBlock(obj) {
         return obj instanceof MemBlock;
-    };
-    return MemBlock;
-}(AbstractBlock));
+    }
+}
 /*
  * Expose
  */
 module.exports = MemBlock;
+//# sourceMappingURL=memblock.js.map

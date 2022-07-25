@@ -21,6 +21,7 @@ exports.get = function get(name) {
         case 'spanish':
             return require('./words/spanish.js');
         default:
-            throw new Error("Unknown language: ".concat(name, "."));
+            throw new Error(`Unknown language: ${name}.`);
     }
 };
+//# sourceMappingURL=wordlist.js.map

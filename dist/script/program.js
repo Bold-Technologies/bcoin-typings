@@ -5,10 +5,10 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var assert = require('bsert');
-var common = require('./common');
-var scriptTypes = common.types;
-var inspectSymbol = require('../utils').inspectSymbol;
+const assert = require('bsert');
+const common = require('./common');
+const scriptTypes = common.types;
+const { inspectSymbol } = require('../utils');
 /**
  * Witness Program
  * @alias module:script.Program
@@ -16,14 +16,14 @@ var inspectSymbol = require('../utils').inspectSymbol;
  * @property {String|null} type - Null if malformed.
  * @property {Buffer} data - The hash (for now).
  */
-var Program = /** @class */ (function () {
+class Program {
     /**
      * Create a witness program.
      * @constructor
      * @param {Number} version
      * @param {Buffer} data
      */
-    function Program(version, data) {
+    constructor(version, data) {
         assert((version & 0xff) === version);
         assert(version >= 0 && version <= 16);
         assert(Buffer.isBuffer(data));
@@ -35,7 +35,7 @@ var Program = /** @class */ (function () {
      * Get the witness program type.
      * @returns {ScriptType}
      */
-    Program.prototype.getType = function () {
+    getType() {
         if (this.version === 0) {
             if (this.data.length === 20)
                 return scriptTypes.WITNESSPUBKEYHASH;
@@ -46,36 +46,36 @@ var Program = /** @class */ (function () {
         }
         // No interpretation of script (anyone can spend)
         return scriptTypes.NONSTANDARD;
-    };
+    }
     /**
      * Test whether the program is either
      * an unknown version or malformed.
      * @returns {Boolean}
      */
-    Program.prototype.isUnknown = function () {
-        var type = this.getType();
+    isUnknown() {
+        const type = this.getType();
         return type === scriptTypes.WITNESSMALFORMED
             || type === scriptTypes.NONSTANDARD;
-    };
+    }
     /**
      * Test whether the program is malformed.
      * @returns {Boolean}
      */
-    Program.prototype.isMalformed = function () {
+    isMalformed() {
         return this.getType() === scriptTypes.WITNESSMALFORMED;
-    };
+    }
     /**
      * Inspect the program.
      * @returns {String}
      */
-    Program.prototype[inspectSymbol] = function () {
-        var data = this.data.toString('hex');
-        var type = common.typesByVal[this.getType()].toLowerCase();
-        return "<Program: version=".concat(this.version, " data=").concat(data, " type=").concat(type, ">");
-    };
-    return Program;
-}());
+    [inspectSymbol]() {
+        const data = this.data.toString('hex');
+        const type = common.typesByVal[this.getType()].toLowerCase();
+        return `<Program: version=${this.version} data=${data} type=${type}>`;
+    }
+}
 /*
  * Expose
  */
 module.exports = Program;
+//# sourceMappingURL=program.js.map

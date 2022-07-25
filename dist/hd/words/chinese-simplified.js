@@ -2049,3 +2049,4 @@ module.exports = [
     '矮',
     '歇'
 ];
+//# sourceMappingURL=chinese-simplified.js.map

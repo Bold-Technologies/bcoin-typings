@@ -8,15 +8,15 @@
  * @module coins/compress
  * @ignore
  */
-var assert = require('bsert');
-var encoding = require('bufio').encoding;
-var secp256k1 = require('bcrypto/lib/secp256k1');
-var consensus = require('../protocol/consensus');
+const assert = require('bsert');
+const { encoding } = require('bufio');
+const secp256k1 = require('bcrypto/lib/secp256k1');
+const consensus = require('../protocol/consensus');
 /*
  * Constants
  */
-var COMPRESS_TYPES = 6;
-var EMPTY_BUFFER = Buffer.alloc(0);
+const COMPRESS_TYPES = 6;
+const EMPTY_BUFFER = Buffer.alloc(0);
 /**
  * Compress a script, write directly to the buffer.
  * @param {Script} script
@@ -30,7 +30,7 @@ function compressScript(script, bw) {
     // them.
     // P2PKH -> 0 | key-hash
     // Saves 5 bytes.
-    var pkh = script.getPubkeyhash(true);
+    const pkh = script.getPubkeyhash(true);
     if (pkh) {
         bw.writeU8(0);
         bw.writeBytes(pkh);
@@ -38,7 +38,7 @@ function compressScript(script, bw) {
     }
     // P2SH -> 1 | script-hash
     // Saves 3 bytes.
-    var sh = script.getScripthash();
+    const sh = script.getScripthash();
     if (sh) {
         bw.writeU8(1);
         bw.writeBytes(sh);
@@ -47,10 +47,10 @@ function compressScript(script, bw) {
     // P2PK -> 2-5 | compressed-key
     // Only works if the key is valid.
     // Saves up to 35 bytes.
-    var pk = script.getPubkey(true);
+    const pk = script.getPubkey(true);
     if (pk) {
         if (publicKeyVerify(pk)) {
-            var key = compressKey(pk);
+            const key = compressKey(pk);
             bw.writeBytes(key);
             return bw;
         }
@@ -69,12 +69,12 @@ function decompressScript(script, br) {
     // Decompress the script.
     switch (br.readU8()) {
         case 0: {
-            var hash = br.readBytes(20, true);
+            const hash = br.readBytes(20, true);
             script.fromPubkeyhash(hash);
             break;
         }
         case 1: {
-            var hash = br.readBytes(20, true);
+            const hash = br.readBytes(20, true);
             script.fromScripthash(hash);
             break;
         }
@@ -83,16 +83,16 @@ function decompressScript(script, br) {
         case 4:
         case 5: {
             br.offset -= 1;
-            var data = br.readBytes(33, true);
+            const data = br.readBytes(33, true);
             // Decompress the key. If this fails,
             // we have database corruption!
-            var key = decompressKey(data);
+            const key = decompressKey(data);
             script.fromPubkey(key);
             break;
         }
         default: {
             br.offset -= 1;
-            var size = br.readVarint() - COMPRESS_TYPES;
+            const size = br.readVarint() - COMPRESS_TYPES;
             if (size > consensus.MAX_SCRIPT_SIZE) {
                 // This violates consensus rules.
                 // We don't need to read it.
@@ -100,7 +100,7 @@ function decompressScript(script, br) {
                 br.seek(size);
             }
             else {
-                var data = br.readBytes(size);
+                const data = br.readBytes(size);
                 script.fromRaw(data);
             }
             break;
@@ -117,12 +117,12 @@ function sizeScript(script) {
         return 21;
     if (script.isScripthash())
         return 21;
-    var pk = script.getPubkey(true);
+    const pk = script.getPubkey(true);
     if (pk) {
         if (publicKeyVerify(pk))
             return 33;
     }
-    var size = 0;
+    let size = 0;
     size += encoding.sizeVarint(script.raw.length + COMPRESS_TYPES);
     size += script.raw.length;
     return size;
@@ -152,7 +152,7 @@ function decompressOutput(output, br) {
  * @returns {Number}
  */
 function sizeOutput(output) {
-    var size = 0;
+    let size = 0;
     size += encoding.sizeVarint(output.value);
     size += sizeScript(output.script);
     return size;
@@ -167,13 +167,13 @@ function sizeOutput(output) {
 function compressValue(value) {
     if (value === 0)
         return 0;
-    var exp = 0;
+    let exp = 0;
     while (value % 10 === 0 && exp < 9) {
         value /= 10;
         exp++;
     }
     if (exp < 9) {
-        var last = value % 10;
+        const last = value % 10;
         value = (value - last) / 10;
         return 1 + 10 * (9 * value + last - 1) + exp;
     }
@@ -188,11 +188,11 @@ function decompressValue(value) {
     if (value === 0)
         return 0;
     value--;
-    var exp = value % 10;
+    let exp = value % 10;
     value = (value - exp) / 10;
-    var n;
+    let n;
     if (exp < 9) {
-        var last = value % 9;
+        const last = value % 9;
         value = (value - last) / 9;
         n = value * 10 + last + 1;
     }
@@ -231,7 +231,7 @@ function publicKeyVerify(key) {
  * @returns {Buffer}
  */
 function compressKey(key) {
-    var out;
+    let out;
     switch (key[0]) {
         case 0x02:
         case 0x03:
@@ -257,7 +257,7 @@ function compressKey(key) {
  * @returns {Buffer}
  */
 function decompressKey(key) {
-    var format = key[0];
+    const format = key[0];
     assert(key.length === 33);
     switch (format) {
         case 0x02:
@@ -273,7 +273,7 @@ function decompressKey(key) {
             throw new Error('Bad point format.');
     }
     // Decompress the key.
-    var out = secp256k1.publicKeyConvert(key, false);
+    const out = secp256k1.publicKeyConvert(key, false);
     // Reset the first byte so as not to
     // mutate the original buffer.
     key[0] = format;
@@ -288,3 +288,4 @@ decompressValue;
 exports.pack = compressOutput;
 exports.unpack = decompressOutput;
 exports.size = sizeOutput;
+//# sourceMappingURL=compress.js.map

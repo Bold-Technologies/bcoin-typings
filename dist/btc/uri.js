@@ -4,10 +4,10 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var assert = require('bsert');
-var Address = require('../primitives/address');
-var Amount = require('./amount');
-var inspectSymbol = require('../utils').inspectSymbol;
+const assert = require('bsert');
+const Address = require('../primitives/address');
+const Amount = require('./amount');
+const { inspectSymbol } = require('../utils');
 /**
  * URI
  * Represents a bitcoin URI.
@@ -18,14 +18,14 @@ var inspectSymbol = require('../utils').inspectSymbol;
  * @property {String|null} message
  * @property {String|null} request
  */
-var URI = /** @class */ (function () {
+class URI {
     /**
      * Create a bitcoin URI.
      * @alias module:btc.URI
      * @constructor
      * @param {Object|String} options
      */
-    function URI(options) {
+    constructor(options) {
         this.address = new Address();
         this.amount = -1;
         this.label = null;
@@ -40,7 +40,7 @@ var URI = /** @class */ (function () {
      * @param {Object|String} options
      * @returns {URI}
      */
-    URI.prototype.fromOptions = function (options) {
+    fromOptions(options) {
         if (typeof options === 'string')
             return this.fromString(options);
         if (options.address)
@@ -62,15 +62,15 @@ var URI = /** @class */ (function () {
             this.request = options.request;
         }
         return this;
-    };
+    }
     /**
      * Instantiate URI from options.
      * @param {Object|String} options
      * @returns {URI}
      */
-    URI.fromOptions = function (options) {
+    static fromOptions(options) {
         return new this().fromOptions(options);
-    };
+    }
     /**
      * Parse and inject properties from string.
      * @private
@@ -78,14 +78,14 @@ var URI = /** @class */ (function () {
      * @param {Network?} network
      * @returns {URI}
      */
-    URI.prototype.fromString = function (str, network) {
+    fromString(str, network) {
         assert(typeof str === 'string');
         assert(str.length > 8, 'Not a bitcoin URI.');
-        var prefix = str.substring(0, 8);
+        const prefix = str.substring(0, 8);
         assert(prefix === 'bitcoin:', 'Not a bitcoin URI.');
         str = str.substring(8);
-        var index = str.indexOf('?');
-        var addr, qs;
+        const index = str.indexOf('?');
+        let addr, qs;
         if (index === -1) {
             addr = str;
         }
@@ -96,7 +96,7 @@ var URI = /** @class */ (function () {
         this.address.fromString(addr, network);
         if (!qs)
             return this;
-        var query = parsePairs(qs);
+        const query = parsePairs(qs);
         if (query.amount) {
             assert(query.amount.length > 0, 'Value is empty.');
             assert(query.amount[0] !== '-', 'Value is negative.');
@@ -109,65 +109,62 @@ var URI = /** @class */ (function () {
         if (query.r)
             this.request = query.r;
         return this;
-    };
+    }
     /**
      * Instantiate uri from string.
      * @param {String} str
      * @param {Network?} network
      * @returns {URI}
      */
-    URI.fromString = function (str, network) {
+    static fromString(str, network) {
         return new this().fromString(str, network);
-    };
+    }
     /**
      * Serialize uri to a string.
      * @returns {String}
      */
-    URI.prototype.toString = function () {
-        var str = 'bitcoin:';
+    toString() {
+        let str = 'bitcoin:';
         str += this.address.toString();
-        var query = [];
+        const query = [];
         if (this.amount !== -1)
-            query.push("amount=".concat(Amount.btc(this.amount)));
+            query.push(`amount=${Amount.btc(this.amount)}`);
         if (this.label)
-            query.push("label=".concat(escape(this.label)));
+            query.push(`label=${escape(this.label)}`);
         if (this.message)
-            query.push("message=".concat(escape(this.message)));
+            query.push(`message=${escape(this.message)}`);
         if (this.request)
-            query.push("r=".concat(escape(this.request)));
+            query.push(`r=${escape(this.request)}`);
         if (query.length > 0)
             str += '?' + query.join('&');
         return str;
-    };
+    }
     /**
      * Inspect bitcoin uri.
      * @returns {String}
      */
-    URI.prototype[inspectSymbol] = function () {
-        return "<URI: ".concat(this.toString(), ">");
-    };
-    return URI;
-}());
+    [inspectSymbol]() {
+        return `<URI: ${this.toString()}>`;
+    }
+}
 /*
  * Helpers
  */
-var BitcoinQuery = /** @class */ (function () {
-    function BitcoinQuery() {
+class BitcoinQuery {
+    constructor() {
         this.amount = null;
         this.label = null;
         this.message = null;
         this.r = null;
     }
-    return BitcoinQuery;
-}());
+}
 function parsePairs(str) {
-    var parts = str.split('&');
-    var data = new BitcoinQuery();
-    var size = 0;
-    for (var _i = 0, parts_1 = parts; _i < parts_1.length; _i++) {
-        var pair = parts_1[_i];
-        var index = pair.indexOf('=');
-        var key = void 0, value = void 0;
+    const parts = str.split('&');
+    const data = new BitcoinQuery();
+    let size = 0;
+    for (const pair of parts) {
+        const index = pair.indexOf('=');
+        let key, value;
         if (index === -1) {
             key = pair;
             value = '';
@@ -199,7 +196,7 @@ function parsePairs(str) {
                 data.r = unescape(value);
                 break;
             default:
-                assert(false, "Unknown querystring key: ".concat(value, "."));
+                assert(false, `Unknown querystring key: ${value}.`);
                 break;
         }
         size += 1;
@@ -227,3 +224,4 @@ function escape(str) {
  * Expose
  */
 module.exports = URI;
+//# sourceMappingURL=uri.js.map

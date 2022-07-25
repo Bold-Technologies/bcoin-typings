@@ -4,19 +4,19 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var assert = require('bsert');
-var U64 = require('n64').U64;
-var hash256 = require('bcrypto/lib/hash256');
-var sipmod = require('bcrypto/lib/siphash').sipmod;
-var bio = require('bufio');
-var BufferSet = require('buffer-map').BufferSet;
-var BitWriter = require('./writer');
-var BitReader = require('./reader');
+const assert = require('bsert');
+const { U64 } = require('n64');
+const hash256 = require('bcrypto/lib/hash256');
+const { sipmod } = require('bcrypto/lib/siphash');
+const bio = require('bufio');
+const { BufferSet } = require('buffer-map');
+const BitWriter = require('./writer');
+const BitReader = require('./reader');
 /*
  * Constants
  */
-var DUMMY = Buffer.alloc(0);
-var EOF = new U64(-1);
+const DUMMY = Buffer.alloc(0);
+const EOF = new U64(-1);
 /**
  * Golomb - BIP 158 block filters
  * @alias module:golomb.Golomb
@@ -26,12 +26,12 @@ var EOF = new U64(-1);
  * @property {Number} p
  * @property {Buffer} data
  */
-var Golomb = /** @class */ (function () {
+class Golomb {
     /**
      * Create a block filter.
      * @constructor
      */
-    function Golomb(P, M) {
+    constructor(P, M) {
         assert(P < 32 && P >= 0);
         assert(M instanceof U64);
         this.n = 0;
@@ -45,31 +45,31 @@ var Golomb = /** @class */ (function () {
      * @param {String?} enc - Can be `'hex'` or `null`.
      * @returns {Hash|Buffer} hash
      */
-    Golomb.prototype.hash = function (enc) {
-        var h = hash256.digest(this.toNBytes());
+    hash(enc) {
+        const h = hash256.digest(this.toNBytes());
         return enc === 'hex' ? h.toString('hex') : h;
-    };
+    }
     /**
      * Get the block filter header.
      * hash of block filter concatenated with previous block filter header.
      * @param {Hash} prev - previous filter header.
      * @returns {Hash|Buffer} hash
      */
-    Golomb.prototype.header = function (prev) {
+    header(prev) {
         return hash256.root(this.hash(), prev);
-    };
+    }
     /**
      * Get the membership of given item in the block filter.
      * @param {Buffer} key - 128-bit key.
      * @param {Buffer} data - item.
      * @returns {Boolean} match
      */
-    Golomb.prototype.match = function (key, data) {
-        var br = new BitReader(this.data);
-        var term = sipmod64(data, key, this.m);
-        var last = new U64(0);
+    match(key, data) {
+        const br = new BitReader(this.data);
+        const term = sipmod64(data, key, this.m);
+        let last = new U64(0);
         while (last.lt(term)) {
-            var value = this.readU64(br);
+            const value = this.readU64(br);
             if (value === EOF)
                 return false;
             value.iadd(last);
@@ -78,29 +78,28 @@ var Golomb = /** @class */ (function () {
             last = value;
         }
         return false;
-    };
+    }
     /**
      * Get the membership of any item of given items in the block filter.
      * @param {Buffer} key - 128-bit key.
      * @param {Buffer[]} items.
      * @returns {Boolean} match
      */
-    Golomb.prototype.matchAny = function (key, items) {
+    matchAny(key, items) {
         items = new BufferSet(items);
         assert(items.size > 0);
-        var br = new BitReader(this.data);
-        var last1 = new U64(0);
-        var values = [];
-        for (var _i = 0, items_1 = items; _i < items_1.length; _i++) {
-            var item = items_1[_i];
-            var hash = sipmod64(item, key, this.m);
+        const br = new BitReader(this.data);
+        const last1 = new U64(0);
+        const values = [];
+        for (const item of items) {
+            const hash = sipmod64(item, key, this.m);
             values.push(hash);
         }
         values.sort(compare);
-        var last2 = values[0];
-        var i = 1;
+        let last2 = values[0];
+        let i = 1;
         for (;;) {
-            var cmp = last1.cmp(last2);
+            const cmp = last1.cmp(last2);
             if (cmp === 0)
                 break;
             if (cmp > 0) {
@@ -111,18 +110,18 @@ var Golomb = /** @class */ (function () {
                 }
                 return false;
             }
-            var value = this.readU64(br);
+            const value = this.readU64(br);
             if (value === EOF)
                 return false;
             last1.iadd(value);
         }
         return true;
-    };
+    }
     /**
      * Read uint64 from a bit reader.
      * @param {BufferReader} br {@link BitReader}
      */
-    Golomb.prototype.readU64 = function (br) {
+    readU64(br) {
         try {
             return this._readU64(br);
         }
@@ -131,51 +130,51 @@ var Golomb = /** @class */ (function () {
                 return EOF;
             throw e;
         }
-    };
+    }
     /**
      * Read uint64 from a bit reader.
      * @param {BufferReader} br {@link BitReader}
      * @throws on EOF
      */
-    Golomb.prototype._readU64 = function (br) {
-        var num = new U64(0);
+    _readU64(br) {
+        const num = new U64(0);
         // Unary
         while (br.readBit())
             num.iaddn(1);
-        var rem = br.readBits64(this.P);
+        const rem = br.readBits64(this.P);
         return num.ishln(this.P).ior(rem);
-    };
+    }
     /**
      * Serialize the block filter as raw filter bytes.
      * @returns {Buffer} filter
      */
-    Golomb.prototype.toBytes = function () {
+    toBytes() {
         return this.data;
-    };
+    }
     /**
      * Serialize the block filter as n and raw filter bytes
      * @returns {Buffer} filter
      */
-    Golomb.prototype.toNBytes = function () {
-        var bw = bio.write();
+    toNBytes() {
+        const bw = bio.write();
         bw.writeVarint(this.n);
         bw.writeBytes(this.data);
         return bw.render();
-    };
+    }
     /**
      * Serialize the block filter as default filter bytes.
      * @returns {Buffer} filter
      */
-    Golomb.prototype.toRaw = function () {
+    toRaw() {
         return this.toNBytes();
-    };
+    }
     /**
      * Instantiate a block filter from a 128-bit key and items.
      * @param {Buffer} key - 128-bit key.
      * @param {Buffer[]} items
      * @returns {Golomb}
      */
-    Golomb.prototype.fromItems = function (key, items) {
+    fromItems(key, items) {
         items = new BufferSet(items);
         assert(Buffer.isBuffer(key));
         assert(key.length === 16);
@@ -183,20 +182,18 @@ var Golomb = /** @class */ (function () {
         assert(items.size <= 0xffffffff);
         this.n = items.size;
         this.m = this.M.mul(new U64(this.n));
-        var values = [];
-        for (var _i = 0, items_2 = items; _i < items_2.length; _i++) {
-            var item = items_2[_i];
+        const values = [];
+        for (const item of items) {
             assert(Buffer.isBuffer(item));
-            var hash = sipmod64(item, key, this.m);
+            const hash = sipmod64(item, key, this.m);
             values.push(hash);
         }
         values.sort(compare);
-        var bw = new BitWriter();
-        var last = new U64(0);
-        for (var _a = 0, values_1 = values; _a < values_1.length; _a++) {
-            var hash = values_1[_a];
-            var rem = hash.sub(last).imaskn(this.P);
-            var value = hash.sub(last).isub(rem).ishrn(this.P);
+        const bw = new BitWriter();
+        let last = new U64(0);
+        for (const hash of values) {
+            const rem = hash.sub(last).imaskn(this.P);
+            const value = hash.sub(last).isub(rem).ishrn(this.P);
             last = hash;
             // Unary
             while (!value.isZero()) {
@@ -208,46 +205,45 @@ var Golomb = /** @class */ (function () {
         }
         this.data = bw.render();
         return this;
-    };
+    }
     /**
      * Instantiate a block filter from an n, and raw data.
      * @param {Number} n
      * @param {Buffer} data
      * @returns {Golomb}
      */
-    Golomb.prototype.fromBytes = function (n, data) {
+    fromBytes(n, data) {
         assert(typeof n === 'number' && isFinite(n));
         assert(Buffer.isBuffer(data));
         this.n = n;
         this.m = this.M.mul(new U64(this.n));
         this.data = data;
         return this;
-    };
+    }
     /**
      * Instantiate a block filter from raw data.
      * @param {Buffer} data
      * @returns {Golomb}
      */
-    Golomb.prototype.fromNBytes = function (data) {
-        var br = bio.read(data);
-        var n = br.readVarint();
+    fromNBytes(data) {
+        const br = bio.read(data);
+        const n = br.readVarint();
         return this.fromBytes(n, data.slice(bio.sizeVarint(n)));
-    };
+    }
     /**
      * Instantiate a block filter from raw data.
      * @param {Buffer} data
      * @returns {Golomb}
      */
-    Golomb.prototype.fromRaw = function (data) {
+    fromRaw(data) {
         return this.fromNBytes(data);
-    };
-    return Golomb;
-}());
+    }
+}
 /*
  * Helpers
  */
 function sipmod64(data, key, m) {
-    var _a = sipmod(data, key, m.hi, m.lo), hi = _a[0], lo = _a[1];
+    const [hi, lo] = sipmod(data, key, m.hi, m.lo);
     return U64.fromBits(hi, lo);
 }
 function compare(a, b) {
@@ -257,3 +253,4 @@ function compare(a, b) {
  * Expose
  */
 module.exports = Golomb;
+//# sourceMappingURL=golomb.js.map

@@ -4,29 +4,29 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var assert = require('bsert');
-var consensus = require('../protocol/consensus');
-var BN = require('bcrypto/lib/bn.js');
+const assert = require('bsert');
+const consensus = require('../protocol/consensus');
+const BN = require('bcrypto/lib/bn.js');
 /**
  * @exports mining/common
  */
-var common = exports;
+const common = exports;
 /*
  * Constants
  */
-var DIFF = 0x00000000ffff0000000000000000000000000000000000000000000000000000;
-var B192 = 0x1000000000000000000000000000000000000000000000000;
-var B128 = 0x100000000000000000000000000000000;
-var B64 = 0x10000000000000000;
-var B0 = 0x1;
+const DIFF = 0x00000000ffff0000000000000000000000000000000000000000000000000000;
+const B192 = 0x1000000000000000000000000000000000000000000000000;
+const B128 = 0x100000000000000000000000000000000;
+const B64 = 0x10000000000000000;
+const B0 = 0x1;
 /**
  * Swap 32 bit endianness of uint256.
  * @param {Buffer} data
  * @returns {Buffer}
  */
 common.swap32 = function swap32(data) {
-    for (var i = 0; i < data.length; i += 4) {
-        var field = data.readUInt32LE(i, true);
+    for (let i = 0; i < data.length; i += 4) {
+        const field = data.readUInt32LE(i, true);
         data.writeUInt32BE(field, i, true);
     }
     return data;
@@ -39,7 +39,7 @@ common.swap32 = function swap32(data) {
  */
 common.rcmp = function rcmp(a, b) {
     assert(a.length === b.length);
-    for (var i = a.length - 1; i >= 0; i--) {
+    for (let i = a.length - 1; i >= 0; i--) {
         if (a[i] < b[i])
             return -1;
         if (a[i] > b[i])
@@ -53,8 +53,8 @@ common.rcmp = function rcmp(a, b) {
  * @returns {Number}
  */
 common.double256 = function double256(target) {
-    var n = 0;
-    var hi, lo;
+    let n = 0;
+    let hi, lo;
     assert(target.length === 32);
     hi = target.readUInt32LE(28, true);
     lo = target.readUInt32LE(24, true);
@@ -77,8 +77,8 @@ common.double256 = function double256(target) {
  * @returns {Number}
  */
 common.getDifficulty = function getDifficulty(target) {
-    var d = DIFF;
-    var n = common.double256(target);
+    const d = DIFF;
+    const n = common.double256(target);
     if (n === 0)
         return d;
     return Math.floor(d / n);
@@ -89,7 +89,7 @@ common.getDifficulty = function getDifficulty(target) {
  * @returns {Buffer}
  */
 common.getTarget = function getTarget(bits) {
-    var target = consensus.fromCompact(bits);
+    const target = consensus.fromCompact(bits);
     if (target.isNeg())
         throw new Error('Target is negative.');
     if (target.isZero())
@@ -102,8 +102,9 @@ common.getTarget = function getTarget(bits) {
  * @returns {Buffer}
  */
 common.getBits = function getBits(data) {
-    var target = new BN(data, 'le');
+    const target = new BN(data, 'le');
     if (target.isZero())
         throw new Error('Target is zero.');
     return consensus.toCompact(target);
 };
+//# sourceMappingURL=common.js.map

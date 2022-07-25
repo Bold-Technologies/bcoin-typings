@@ -5,40 +5,25 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
  * @module net/packets
  */
-var assert = require('bsert');
-var bio = require('bufio');
-var BloomFilter = require('bfilter').BloomFilter;
-var common = require('./common');
-var util = require('../utils/util');
-var bip152 = require('./bip152');
-var NetAddress = require('./netaddress');
-var consensus = require('../protocol/consensus');
-var Headers = require('../primitives/headers');
-var InvItem = require('../primitives/invitem');
-var MemBlock = require('../primitives/memblock');
-var MerkleBlock = require('../primitives/merkleblock');
-var TX = require('../primitives/tx');
-var encoding = bio.encoding;
-var DUMMY = Buffer.alloc(0);
-var inspectSymbol = require('../utils').inspectSymbol;
+const assert = require('bsert');
+const bio = require('bufio');
+const { BloomFilter } = require('bfilter');
+const common = require('./common');
+const util = require('../utils/util');
+const bip152 = require('./bip152');
+const NetAddress = require('./netaddress');
+const consensus = require('../protocol/consensus');
+const Headers = require('../primitives/headers');
+const InvItem = require('../primitives/invitem');
+const MemBlock = require('../primitives/memblock');
+const MerkleBlock = require('../primitives/merkleblock');
+const TX = require('../primitives/tx');
+const { encoding } = bio;
+const DUMMY = Buffer.alloc(0);
+const { inspectSymbol } = require('../utils');
 /**
  * Packet types.
  * @enum {Number}
@@ -116,12 +101,12 @@ exports.typesByVal = [
 /**
  * Base Packet
  */
-var Packet = /** @class */ (function () {
+class Packet {
     /**
      * Create a base packet.
      * @constructor
      */
-    function Packet() {
+    constructor() {
         this.type = -1;
         this.cmd = '';
     }
@@ -129,39 +114,38 @@ var Packet = /** @class */ (function () {
      * Get serialization size.
      * @returns {Number}
      */
-    Packet.prototype.getSize = function () {
+    getSize() {
         return 0;
-    };
+    }
     /**
      * Serialize packet to writer.
      * @param {BufferWriter} bw
      */
-    Packet.prototype.toWriter = function (bw) {
+    toWriter(bw) {
         return bw;
-    };
+    }
     /**
      * Serialize packet.
      * @returns {Buffer}
      */
-    Packet.prototype.toRaw = function () {
+    toRaw() {
         return DUMMY;
-    };
+    }
     /**
      * Inject properties from buffer reader.
      * @param {BufferReader} br
      */
-    Packet.prototype.fromReader = function (br) {
+    fromReader(br) {
         return this;
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @param {Buffer} data
      */
-    Packet.prototype.fromRaw = function (data) {
+    fromRaw(data) {
         return this;
-    };
-    return Packet;
-}());
+    }
+}
 /**
  * Version Packet
  * @extends Packet
@@ -176,8 +160,7 @@ var Packet = /** @class */ (function () {
  * @property {Boolean} noRelay - Whether transactions
  * should be relayed immediately.
  */
-var VersionPacket = /** @class */ (function (_super) {
-    __extends(VersionPacket, _super);
+class VersionPacket extends Packet {
     /**
      * Create a version packet.
      * @constructor
@@ -193,29 +176,28 @@ var VersionPacket = /** @class */ (function (_super) {
      * @param {Boolean} options.noRelay - Whether transactions
      * should be relayed immediately.
      */
-    function VersionPacket(options) {
-        var _this = _super.call(this) || this;
-        _this.cmd = 'version';
-        _this.type = exports.types.VERSION;
-        _this.version = common.PROTOCOL_VERSION;
-        _this.services = common.LOCAL_SERVICES;
-        _this.time = util.now();
-        _this.remote = new NetAddress();
-        _this.local = new NetAddress();
-        _this.nonce = common.ZERO_NONCE;
-        _this.agent = common.USER_AGENT;
-        _this.height = 0;
-        _this.noRelay = false;
+    constructor(options) {
+        super();
+        this.cmd = 'version';
+        this.type = exports.types.VERSION;
+        this.version = common.PROTOCOL_VERSION;
+        this.services = common.LOCAL_SERVICES;
+        this.time = util.now();
+        this.remote = new NetAddress();
+        this.local = new NetAddress();
+        this.nonce = common.ZERO_NONCE;
+        this.agent = common.USER_AGENT;
+        this.height = 0;
+        this.noRelay = false;
         if (options)
-            _this.fromOptions(options);
-        return _this;
+            this.fromOptions(options);
     }
     /**
      * Inject properties from options.
      * @private
      * @param {Object} options
      */
-    VersionPacket.prototype.fromOptions = function (options) {
+    fromOptions(options) {
         if (options.version != null)
             this.version = options.version;
         if (options.services != null)
@@ -235,21 +217,21 @@ var VersionPacket = /** @class */ (function (_super) {
         if (options.noRelay != null)
             this.noRelay = options.noRelay;
         return this;
-    };
+    }
     /**
      * Instantiate version packet from options.
      * @param {Object} options
      * @returns {VersionPacket}
      */
-    VersionPacket.fromOptions = function (options) {
+    static fromOptions(options) {
         return new this().fromOptions(options);
-    };
+    }
     /**
      * Get serialization size.
      * @returns {Number}
      */
-    VersionPacket.prototype.getSize = function () {
-        var size = 0;
+    getSize() {
+        let size = 0;
         size += 20;
         size += this.remote.getSize(false);
         size += this.local.getSize(false);
@@ -257,12 +239,12 @@ var VersionPacket = /** @class */ (function (_super) {
         size += encoding.sizeVarString(this.agent, 'ascii');
         size += 5;
         return size;
-    };
+    }
     /**
      * Write version packet to buffer writer.
      * @param {BufferWriter} bw
      */
-    VersionPacket.prototype.toWriter = function (bw) {
+    toWriter(bw) {
         bw.writeI32(this.version);
         bw.writeU32(this.services);
         bw.writeU32(0);
@@ -274,21 +256,21 @@ var VersionPacket = /** @class */ (function (_super) {
         bw.writeI32(this.height);
         bw.writeU8(this.noRelay ? 0 : 1);
         return bw;
-    };
+    }
     /**
      * Serialize version packet.
      * @returns {Buffer}
      */
-    VersionPacket.prototype.toRaw = function () {
-        var size = this.getSize();
+    toRaw() {
+        const size = this.getSize();
         return this.toWriter(bio.write(size)).render();
-    };
+    }
     /**
      * Inject properties from buffer reader.
      * @private
      * @param {BufferReader} br
      */
-    VersionPacket.prototype.fromReader = function (br) {
+    fromReader(br) {
         this.version = br.readI32();
         this.services = br.readU32();
         // Note: hi service bits
@@ -314,953 +296,900 @@ var VersionPacket = /** @class */ (function (_super) {
         if (this.height < 0)
             this.height = 0;
         return this;
-    };
+    }
     /**
      * Instantiate version packet from buffer reader.
      * @param {BufferReader} br
      * @returns {VersionPacket}
      */
-    VersionPacket.fromReader = function (br) {
+    static fromReader(br) {
         return new this().fromReader(br);
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    VersionPacket.prototype.fromRaw = function (data) {
+    fromRaw(data) {
         return this.fromReader(bio.read(data));
-    };
+    }
     /**
      * Instantiate version packet from serialized data.
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {VersionPacket}
      */
-    VersionPacket.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data, enc);
-    };
-    return VersionPacket;
-}(Packet));
+    }
+}
 /**
  * Verack Packet
  * @extends Packet
  */
-var VerackPacket = /** @class */ (function (_super) {
-    __extends(VerackPacket, _super);
+class VerackPacket extends Packet {
     /**
      * Create a `verack` packet.
      * @constructor
      */
-    function VerackPacket() {
-        var _this = _super.call(this) || this;
-        _this.cmd = 'verack';
-        _this.type = exports.types.VERACK;
-        return _this;
+    constructor() {
+        super();
+        this.cmd = 'verack';
+        this.type = exports.types.VERACK;
     }
     /**
      * Instantiate verack packet from serialized data.
      * @param {BufferReader} br
      * @returns {VerackPacket}
      */
-    VerackPacket.fromReader = function (br) {
+    static fromReader(br) {
         return new this().fromReader(br);
-    };
+    }
     /**
      * Instantiate verack packet from serialized data.
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {VerackPacket}
      */
-    VerackPacket.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data);
-    };
-    return VerackPacket;
-}(Packet));
+    }
+}
 /**
  * Ping Packet
  * @extends Packet
  * @property {Buffer|null} nonce
  */
-var PingPacket = /** @class */ (function (_super) {
-    __extends(PingPacket, _super);
+class PingPacket extends Packet {
     /**
      * Create a `ping` packet.
      * @constructor
      * @param {Buffer?} nonce
      */
-    function PingPacket(nonce) {
-        var _this = _super.call(this) || this;
-        _this.cmd = 'ping';
-        _this.type = exports.types.PING;
-        _this.nonce = nonce || null;
-        return _this;
+    constructor(nonce) {
+        super();
+        this.cmd = 'ping';
+        this.type = exports.types.PING;
+        this.nonce = nonce || null;
     }
     /**
      * Get serialization size.
      * @returns {Number}
      */
-    PingPacket.prototype.getSize = function () {
+    getSize() {
         return this.nonce ? 8 : 0;
-    };
+    }
     /**
      * Serialize ping packet.
      * @returns {Buffer}
      */
-    PingPacket.prototype.toRaw = function () {
-        var size = this.getSize();
+    toRaw() {
+        const size = this.getSize();
         return this.toWriter(bio.write(size)).render();
-    };
+    }
     /**
      * Serialize ping packet to writer.
      * @param {BufferWriter} bw
      */
-    PingPacket.prototype.toWriter = function (bw) {
+    toWriter(bw) {
         if (this.nonce)
             bw.writeBytes(this.nonce);
         return bw;
-    };
+    }
     /**
      * Inject properties from buffer reader.
      * @private
      * @param {BufferReader} br
      */
-    PingPacket.prototype.fromReader = function (br) {
+    fromReader(br) {
         if (br.left() >= 8)
             this.nonce = br.readBytes(8);
         return this;
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    PingPacket.prototype.fromRaw = function (data) {
+    fromRaw(data) {
         return this.fromReader(bio.read(data));
-    };
+    }
     /**
      * Instantiate ping packet from serialized data.
      * @param {BufferReader} br
      * @returns {PingPacket}
      */
-    PingPacket.fromReader = function (br) {
+    static fromReader(br) {
         return new this().fromRaw(br);
-    };
+    }
     /**
      * Instantiate ping packet from serialized data.
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {PingPacket}
      */
-    PingPacket.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data);
-    };
-    return PingPacket;
-}(Packet));
+    }
+}
 /**
  * Pong Packet
  * @extends Packet
  * @property {BN} nonce
  */
-var PongPacket = /** @class */ (function (_super) {
-    __extends(PongPacket, _super);
+class PongPacket extends Packet {
     /**
      * Create a `pong` packet.
      * @constructor
      * @param {BN?} nonce
      */
-    function PongPacket(nonce) {
-        var _this = _super.call(this) || this;
-        _this.cmd = 'pong';
-        _this.type = exports.types.PONG;
-        _this.nonce = nonce || common.ZERO_NONCE;
-        return _this;
+    constructor(nonce) {
+        super();
+        this.cmd = 'pong';
+        this.type = exports.types.PONG;
+        this.nonce = nonce || common.ZERO_NONCE;
     }
     /**
      * Get serialization size.
      * @returns {Number}
      */
-    PongPacket.prototype.getSize = function () {
+    getSize() {
         return 8;
-    };
+    }
     /**
      * Serialize pong packet to writer.
      * @param {BufferWriter} bw
      */
-    PongPacket.prototype.toWriter = function (bw) {
+    toWriter(bw) {
         bw.writeBytes(this.nonce);
         return bw;
-    };
+    }
     /**
      * Serialize pong packet.
      * @returns {Buffer}
      */
-    PongPacket.prototype.toRaw = function () {
+    toRaw() {
         return this.toWriter(bio.write(8)).render();
-    };
+    }
     /**
      * Inject properties from buffer reader.
      * @private
      * @param {BufferReader} br
      */
-    PongPacket.prototype.fromReader = function (br) {
+    fromReader(br) {
         this.nonce = br.readBytes(8);
         return this;
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    PongPacket.prototype.fromRaw = function (data) {
+    fromRaw(data) {
         return this.fromReader(bio.read(data));
-    };
+    }
     /**
      * Instantiate pong packet from buffer reader.
      * @param {BufferReader} br
      * @returns {VerackPacket}
      */
-    PongPacket.fromReader = function (br) {
+    static fromReader(br) {
         return new this().fromReader(br);
-    };
+    }
     /**
      * Instantiate pong packet from serialized data.
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {VerackPacket}
      */
-    PongPacket.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data);
-    };
-    return PongPacket;
-}(Packet));
+    }
+}
 /**
  * GetAddr Packet
  * @extends Packet
  */
-var GetAddrPacket = /** @class */ (function (_super) {
-    __extends(GetAddrPacket, _super);
+class GetAddrPacket extends Packet {
     /**
      * Create a `getaddr` packet.
      * @constructor
      */
-    function GetAddrPacket() {
-        var _this = _super.call(this) || this;
-        _this.cmd = 'getaddr';
-        _this.type = exports.types.GETADDR;
-        return _this;
+    constructor() {
+        super();
+        this.cmd = 'getaddr';
+        this.type = exports.types.GETADDR;
     }
     /**
      * Instantiate getaddr packet from buffer reader.
      * @param {BufferReader} br
      * @returns {GetAddrPacket}
      */
-    GetAddrPacket.fromReader = function (br) {
+    static fromReader(br) {
         return new this().fromReader(br);
-    };
+    }
     /**
      * Instantiate getaddr packet from serialized data.
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {GetAddrPacket}
      */
-    GetAddrPacket.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data);
-    };
-    return GetAddrPacket;
-}(Packet));
+    }
+}
 /**
  * Addr Packet
  * @extends Packet
  * @property {NetAddress[]} items
  */
-var AddrPacket = /** @class */ (function (_super) {
-    __extends(AddrPacket, _super);
+class AddrPacket extends Packet {
     /**
      * Create a `addr` packet.
      * @constructor
      * @param {(NetAddress[])?} items
      */
-    function AddrPacket(items) {
-        var _this = _super.call(this) || this;
-        _this.cmd = 'addr';
-        _this.type = exports.types.ADDR;
-        _this.items = items || [];
-        return _this;
+    constructor(items) {
+        super();
+        this.cmd = 'addr';
+        this.type = exports.types.ADDR;
+        this.items = items || [];
     }
     /**
      * Get serialization size.
      * @returns {Number}
      */
-    AddrPacket.prototype.getSize = function () {
-        var size = 0;
+    getSize() {
+        let size = 0;
         size += encoding.sizeVarint(this.items.length);
         size += 30 * this.items.length;
         return size;
-    };
+    }
     /**
      * Serialize addr packet to writer.
      * @param {BufferWriter} bw
      */
-    AddrPacket.prototype.toWriter = function (bw) {
+    toWriter(bw) {
         bw.writeVarint(this.items.length);
-        for (var _i = 0, _a = this.items; _i < _a.length; _i++) {
-            var item = _a[_i];
+        for (const item of this.items)
             item.toWriter(bw, true);
-        }
         return bw;
-    };
+    }
     /**
      * Serialize addr packet.
      * @returns {Buffer}
      */
-    AddrPacket.prototype.toRaw = function () {
-        var size = this.getSize();
+    toRaw() {
+        const size = this.getSize();
         return this.toWriter(bio.write(size)).render();
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    AddrPacket.prototype.fromRaw = function (data) {
-        var br = bio.read(data);
-        var count = br.readVarint();
-        for (var i = 0; i < count; i++)
+    fromRaw(data) {
+        const br = bio.read(data);
+        const count = br.readVarint();
+        for (let i = 0; i < count; i++)
             this.items.push(NetAddress.fromReader(br, true));
         return this;
-    };
+    }
     /**
      * Instantiate addr packet from Buffer reader.
      * @param {BufferReader} br
      * @returns {AddrPacket}
      */
-    AddrPacket.fromReader = function (br) {
+    static fromReader(br) {
         return new this().fromReader(br);
-    };
+    }
     /**
      * Instantiate addr packet from serialized data.
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {AddrPacket}
      */
-    AddrPacket.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data);
-    };
-    return AddrPacket;
-}(Packet));
+    }
+}
 /**
  * Inv Packet
  * @extends Packet
  * @property {InvItem[]} items
  */
-var InvPacket = /** @class */ (function (_super) {
-    __extends(InvPacket, _super);
+class InvPacket extends Packet {
     /**
      * Create a `inv` packet.
      * @constructor
      * @param {(InvItem[])?} items
      */
-    function InvPacket(items) {
-        var _this = _super.call(this) || this;
-        _this.cmd = 'inv';
-        _this.type = exports.types.INV;
-        _this.items = items || [];
-        return _this;
+    constructor(items) {
+        super();
+        this.cmd = 'inv';
+        this.type = exports.types.INV;
+        this.items = items || [];
     }
     /**
      * Get serialization size.
      * @returns {Number}
      */
-    InvPacket.prototype.getSize = function () {
-        var size = 0;
+    getSize() {
+        let size = 0;
         size += encoding.sizeVarint(this.items.length);
         size += 36 * this.items.length;
         return size;
-    };
+    }
     /**
      * Serialize inv packet to writer.
      * @param {Buffer} bw
      */
-    InvPacket.prototype.toWriter = function (bw) {
+    toWriter(bw) {
         assert(this.items.length <= common.MAX_INV);
         bw.writeVarint(this.items.length);
-        for (var _i = 0, _a = this.items; _i < _a.length; _i++) {
-            var item = _a[_i];
+        for (const item of this.items)
             item.toWriter(bw);
-        }
         return bw;
-    };
+    }
     /**
      * Serialize inv packet.
      * @returns {Buffer}
      */
-    InvPacket.prototype.toRaw = function () {
-        var size = this.getSize();
+    toRaw() {
+        const size = this.getSize();
         return this.toWriter(bio.write(size)).render();
-    };
+    }
     /**
      * Inject properties from buffer reader.
      * @private
      * @param {BufferReader} br
      */
-    InvPacket.prototype.fromReader = function (br) {
-        var count = br.readVarint();
+    fromReader(br) {
+        const count = br.readVarint();
         assert(count <= common.MAX_INV, 'Inv item count too high.');
-        for (var i = 0; i < count; i++)
+        for (let i = 0; i < count; i++)
             this.items.push(InvItem.fromReader(br));
         return this;
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    InvPacket.prototype.fromRaw = function (data) {
+    fromRaw(data) {
         return this.fromReader(bio.read(data));
-    };
+    }
     /**
      * Instantiate inv packet from buffer reader.
      * @param {BufferReader} br
      * @returns {InvPacket}
      */
-    InvPacket.fromReader = function (br) {
+    static fromReader(br) {
         return new this().fromRaw(br);
-    };
+    }
     /**
      * Instantiate inv packet from serialized data.
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {InvPacket}
      */
-    InvPacket.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data);
-    };
-    return InvPacket;
-}(Packet));
+    }
+}
 /**
  * GetData Packet
  * @extends InvPacket
  */
-var GetDataPacket = /** @class */ (function (_super) {
-    __extends(GetDataPacket, _super);
+class GetDataPacket extends InvPacket {
     /**
      * Create a `getdata` packet.
      * @constructor
      * @param {(InvItem[])?} items
      */
-    function GetDataPacket(items) {
-        var _this = _super.call(this, items) || this;
-        _this.cmd = 'getdata';
-        _this.type = exports.types.GETDATA;
-        return _this;
+    constructor(items) {
+        super(items);
+        this.cmd = 'getdata';
+        this.type = exports.types.GETDATA;
     }
     /**
      * Instantiate getdata packet from buffer reader.
      * @param {BufferReader} br
      * @returns {GetDataPacket}
      */
-    GetDataPacket.fromReader = function (br) {
+    static fromReader(br) {
         return new this().fromReader(br);
-    };
+    }
     /**
      * Instantiate getdata packet from serialized data.
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {GetDataPacket}
      */
-    GetDataPacket.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data);
-    };
-    return GetDataPacket;
-}(InvPacket));
+    }
+}
 /**
  * NotFound Packet
  * @extends InvPacket
  */
-var NotFoundPacket = /** @class */ (function (_super) {
-    __extends(NotFoundPacket, _super);
+class NotFoundPacket extends InvPacket {
     /**
      * Create a `notfound` packet.
      * @constructor
      * @param {(InvItem[])?} items
      */
-    function NotFoundPacket(items) {
-        var _this = _super.call(this, items) || this;
-        _this.cmd = 'notfound';
-        _this.type = exports.types.NOTFOUND;
-        return _this;
+    constructor(items) {
+        super(items);
+        this.cmd = 'notfound';
+        this.type = exports.types.NOTFOUND;
     }
     /**
      * Instantiate notfound packet from buffer reader.
      * @param {BufferReader} br
      * @returns {NotFoundPacket}
      */
-    NotFoundPacket.fromReader = function (br) {
+    static fromReader(br) {
         return new this().fromReader(br);
-    };
+    }
     /**
      * Instantiate notfound packet from serialized data.
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {NotFoundPacket}
      */
-    NotFoundPacket.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data);
-    };
-    return NotFoundPacket;
-}(InvPacket));
+    }
+}
 /**
  * GetBlocks Packet
  * @extends Packet
  * @property {Hash[]} locator
  * @property {Hash|null} stop
  */
-var GetBlocksPacket = /** @class */ (function (_super) {
-    __extends(GetBlocksPacket, _super);
+class GetBlocksPacket extends Packet {
     /**
      * Create a `getblocks` packet.
      * @constructor
      * @param {Hash[]} locator
      * @param {Hash?} stop
      */
-    function GetBlocksPacket(locator, stop) {
-        var _this = _super.call(this) || this;
-        _this.cmd = 'getblocks';
-        _this.type = exports.types.GETBLOCKS;
-        _this.version = common.PROTOCOL_VERSION;
-        _this.locator = locator || [];
-        _this.stop = stop || null;
-        return _this;
+    constructor(locator, stop) {
+        super();
+        this.cmd = 'getblocks';
+        this.type = exports.types.GETBLOCKS;
+        this.version = common.PROTOCOL_VERSION;
+        this.locator = locator || [];
+        this.stop = stop || null;
     }
     /**
      * Get serialization size.
      * @returns {Number}
      */
-    GetBlocksPacket.prototype.getSize = function () {
-        var size = 0;
+    getSize() {
+        let size = 0;
         size += 4;
         size += encoding.sizeVarint(this.locator.length);
         size += 32 * this.locator.length;
         size += 32;
         return size;
-    };
+    }
     /**
      * Serialize getblocks packet to writer.
      * @param {BufferWriter} bw
      */
-    GetBlocksPacket.prototype.toWriter = function (bw) {
+    toWriter(bw) {
         assert(this.locator.length <= common.MAX_INV, 'Too many block hashes.');
         bw.writeU32(this.version);
         bw.writeVarint(this.locator.length);
-        for (var _i = 0, _a = this.locator; _i < _a.length; _i++) {
-            var hash = _a[_i];
+        for (const hash of this.locator)
             bw.writeHash(hash);
-        }
         bw.writeHash(this.stop || consensus.ZERO_HASH);
         return bw;
-    };
+    }
     /**
      * Serialize getblocks packet.
      * @returns {Buffer}
      */
-    GetBlocksPacket.prototype.toRaw = function () {
-        var size = this.getSize();
+    toRaw() {
+        const size = this.getSize();
         return this.toWriter(bio.write(size)).render();
-    };
+    }
     /**
      * Inject properties from buffer reader.
      * @private
      * @param {BufferReader} br
      */
-    GetBlocksPacket.prototype.fromReader = function (br) {
+    fromReader(br) {
         this.version = br.readU32();
-        var count = br.readVarint();
+        const count = br.readVarint();
         assert(count <= common.MAX_INV, 'Too many block hashes.');
-        for (var i = 0; i < count; i++)
+        for (let i = 0; i < count; i++)
             this.locator.push(br.readHash());
         this.stop = br.readHash();
         if (this.stop.equals(consensus.ZERO_HASH))
             this.stop = null;
         return this;
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    GetBlocksPacket.prototype.fromRaw = function (data) {
+    fromRaw(data) {
         return this.fromReader(bio.read(data));
-    };
+    }
     /**
      * Instantiate getblocks packet from serialized data.
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {GetBlocksPacket}
      */
-    GetBlocksPacket.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data);
-    };
-    return GetBlocksPacket;
-}(Packet));
+    }
+}
 /**
  * GetHeader Packets
  * @extends GetBlocksPacket
  */
-var GetHeadersPacket = /** @class */ (function (_super) {
-    __extends(GetHeadersPacket, _super);
+class GetHeadersPacket extends GetBlocksPacket {
     /**
      * Create a `getheaders` packet.
      * @constructor
      * @param {Hash[]} locator
      * @param {Hash?} stop
      */
-    function GetHeadersPacket(locator, stop) {
-        var _this = _super.call(this, locator, stop) || this;
-        _this.cmd = 'getheaders';
-        _this.type = exports.types.GETHEADERS;
-        return _this;
+    constructor(locator, stop) {
+        super(locator, stop);
+        this.cmd = 'getheaders';
+        this.type = exports.types.GETHEADERS;
     }
     /**
      * Instantiate getheaders packet from buffer reader.
      * @param {BufferReader} br
      * @returns {GetHeadersPacket}
      */
-    GetHeadersPacket.fromReader = function (br) {
+    static fromReader(br) {
         return new this().fromReader(br);
-    };
+    }
     /**
      * Instantiate getheaders packet from serialized data.
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {GetHeadersPacket}
      */
-    GetHeadersPacket.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data);
-    };
-    return GetHeadersPacket;
-}(GetBlocksPacket));
+    }
+}
 /**
  * Headers Packet
  * @extends Packet
  * @property {Headers[]} items
  */
-var HeadersPacket = /** @class */ (function (_super) {
-    __extends(HeadersPacket, _super);
+class HeadersPacket extends Packet {
     /**
      * Create a `headers` packet.
      * @constructor
      * @param {(Headers[])?} items
      */
-    function HeadersPacket(items) {
-        var _this = _super.call(this) || this;
-        _this.cmd = 'headers';
-        _this.type = exports.types.HEADERS;
-        _this.items = items || [];
-        return _this;
+    constructor(items) {
+        super();
+        this.cmd = 'headers';
+        this.type = exports.types.HEADERS;
+        this.items = items || [];
     }
     /**
      * Get serialization size.
      * @returns {Number}
      */
-    HeadersPacket.prototype.getSize = function () {
-        var size = 0;
+    getSize() {
+        let size = 0;
         size += encoding.sizeVarint(this.items.length);
-        for (var _i = 0, _a = this.items; _i < _a.length; _i++) {
-            var item = _a[_i];
+        for (const item of this.items)
             size += item.getSize();
-        }
         return size;
-    };
+    }
     /**
      * Serialize headers packet to writer.
      * @param {BufferWriter} bw
      */
-    HeadersPacket.prototype.toWriter = function (bw) {
+    toWriter(bw) {
         assert(this.items.length <= 2000, 'Too many headers.');
         bw.writeVarint(this.items.length);
-        for (var _i = 0, _a = this.items; _i < _a.length; _i++) {
-            var item = _a[_i];
+        for (const item of this.items)
             item.toWriter(bw);
-        }
         return bw;
-    };
+    }
     /**
      * Serialize headers packet.
      * @returns {Buffer}
      */
-    HeadersPacket.prototype.toRaw = function () {
-        var size = this.getSize();
+    toRaw() {
+        const size = this.getSize();
         return this.toWriter(bio.write(size)).render();
-    };
+    }
     /**
      * Inject properties from buffer reader.
      * @private
      * @param {BufferReader} br
      */
-    HeadersPacket.prototype.fromReader = function (br) {
-        var count = br.readVarint();
+    fromReader(br) {
+        const count = br.readVarint();
         assert(count <= 2000, 'Too many headers.');
-        for (var i = 0; i < count; i++)
+        for (let i = 0; i < count; i++)
             this.items.push(Headers.fromReader(br));
         return this;
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    HeadersPacket.prototype.fromRaw = function (data) {
+    fromRaw(data) {
         return this.fromReader(bio.read(data));
-    };
+    }
     /**
      * Instantiate headers packet from serialized data.
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {VerackPacket}
      */
-    HeadersPacket.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data);
-    };
-    return HeadersPacket;
-}(Packet));
+    }
+}
 /**
  * SendHeaders Packet
  * @extends Packet
  */
-var SendHeadersPacket = /** @class */ (function (_super) {
-    __extends(SendHeadersPacket, _super);
+class SendHeadersPacket extends Packet {
     /**
      * Create a `sendheaders` packet.
      * @constructor
      */
-    function SendHeadersPacket() {
-        var _this = _super.call(this) || this;
-        _this.cmd = 'sendheaders';
-        _this.type = exports.types.SENDHEADERS;
-        return _this;
+    constructor() {
+        super();
+        this.cmd = 'sendheaders';
+        this.type = exports.types.SENDHEADERS;
     }
     /**
      * Instantiate sendheaders packet from buffer reader.
      * @param {BufferReader} br
      * @returns {SendHeadersPacket}
      */
-    SendHeadersPacket.fromReader = function (br) {
+    static fromReader(br) {
         return new this().fromReader(br);
-    };
+    }
     /**
      * Instantiate sendheaders packet from serialized data.
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {SendHeadersPacket}
      */
-    SendHeadersPacket.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data);
-    };
-    return SendHeadersPacket;
-}(Packet));
+    }
+}
 /**
  * Block Packet
  * @extends Packet
  * @property {Block} block
  * @property {Boolean} witness
  */
-var BlockPacket = /** @class */ (function (_super) {
-    __extends(BlockPacket, _super);
+class BlockPacket extends Packet {
     /**
      * Create a `block` packet.
      * @constructor
      * @param {Block|null} block
      * @param {Boolean?} witness
      */
-    function BlockPacket(block, witness) {
-        var _this = _super.call(this) || this;
-        _this.cmd = 'block';
-        _this.type = exports.types.BLOCK;
-        _this.block = block || new MemBlock();
-        _this.witness = witness || false;
-        return _this;
+    constructor(block, witness) {
+        super();
+        this.cmd = 'block';
+        this.type = exports.types.BLOCK;
+        this.block = block || new MemBlock();
+        this.witness = witness || false;
     }
     /**
      * Get serialization size.
      * @returns {Number}
      */
-    BlockPacket.prototype.getSize = function () {
+    getSize() {
         if (this.witness)
             return this.block.getSize();
         return this.block.getBaseSize();
-    };
+    }
     /**
      * Serialize block packet to writer.
      * @param {BufferWriter} bw
      */
-    BlockPacket.prototype.toWriter = function (bw) {
+    toWriter(bw) {
         if (this.witness)
             return this.block.toWriter(bw);
         return this.block.toNormalWriter(bw);
-    };
+    }
     /**
      * Serialize block packet.
      * @returns {Buffer}
      */
-    BlockPacket.prototype.toRaw = function () {
+    toRaw() {
         if (this.witness)
             return this.block.toRaw();
         return this.block.toNormal();
-    };
+    }
     /**
      * Inject properties from buffer reader.
      * @private
      * @param {BufferReader} br
      */
-    BlockPacket.prototype.fromReader = function (br) {
+    fromReader(br) {
         this.block.fromReader(br);
         return this;
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    BlockPacket.prototype.fromRaw = function (data) {
+    fromRaw(data) {
         this.block.fromRaw(data);
         return this;
-    };
+    }
     /**
      * Instantiate block packet from buffer reader.
      * @param {BufferReader} br
      * @returns {BlockPacket}
      */
-    BlockPacket.fromReader = function (br) {
+    static fromReader(br) {
         return new this().fromReader(br);
-    };
+    }
     /**
      * Instantiate block packet from serialized data.
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {BlockPacket}
      */
-    BlockPacket.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data);
-    };
-    return BlockPacket;
-}(Packet));
+    }
+}
 /**
  * TX Packet
  * @extends Packet
  * @property {TX} block
  * @property {Boolean} witness
  */
-var TXPacket = /** @class */ (function (_super) {
-    __extends(TXPacket, _super);
+class TXPacket extends Packet {
     /**
      * Create a `tx` packet.
      * @constructor
      * @param {TX|null} tx
      * @param {Boolean?} witness
      */
-    function TXPacket(tx, witness) {
-        var _this = _super.call(this) || this;
-        _this.cmd = 'tx';
-        _this.type = exports.types.TX;
-        _this.tx = tx || new TX();
-        _this.witness = witness || false;
-        return _this;
+    constructor(tx, witness) {
+        super();
+        this.cmd = 'tx';
+        this.type = exports.types.TX;
+        this.tx = tx || new TX();
+        this.witness = witness || false;
     }
     /**
      * Get serialization size.
      * @returns {Number}
      */
-    TXPacket.prototype.getSize = function () {
+    getSize() {
         if (this.witness)
             return this.tx.getSize();
         return this.tx.getBaseSize();
-    };
+    }
     /**
      * Serialize tx packet to writer.
      * @param {BufferWriter} bw
      */
-    TXPacket.prototype.toWriter = function (bw) {
+    toWriter(bw) {
         if (this.witness)
             return this.tx.toWriter(bw);
         return this.tx.toNormalWriter(bw);
-    };
+    }
     /**
      * Serialize tx packet.
      * @returns {Buffer}
      */
-    TXPacket.prototype.toRaw = function () {
+    toRaw() {
         if (this.witness)
             return this.tx.toRaw();
         return this.tx.toNormal();
-    };
+    }
     /**
      * Inject properties from buffer reader.
      * @private
      * @param {BufferReader} br
      */
-    TXPacket.prototype.fromReader = function (br) {
+    fromReader(br) {
         this.tx.fromRaw(br);
         return this;
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    TXPacket.prototype.fromRaw = function (data) {
+    fromRaw(data) {
         this.tx.fromRaw(data);
         return this;
-    };
+    }
     /**
      * Instantiate tx packet from buffer reader.
      * @param {BufferReader} br
      * @returns {TXPacket}
      */
-    TXPacket.fromReader = function (br) {
+    static fromReader(br) {
         return new this().fromReader(br);
-    };
+    }
     /**
      * Instantiate tx packet from serialized data.
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {TXPacket}
      */
-    TXPacket.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data);
-    };
-    return TXPacket;
-}(Packet));
+    }
+}
 /**
  * Reject Packet
  * @extends Packet
@@ -1270,31 +1199,29 @@ var TXPacket = /** @class */ (function (_super) {
  * @property {String?} reason - Reason.
  * @property {(Hash|Buffer)?} data - Transaction or block hash.
  */
-var RejectPacket = /** @class */ (function (_super) {
-    __extends(RejectPacket, _super);
+class RejectPacket extends Packet {
     /**
      * Create reject packet.
      * @constructor
      */
-    function RejectPacket(options) {
-        var _this = _super.call(this) || this;
-        _this.cmd = 'reject';
-        _this.type = exports.types.REJECT;
-        _this.message = '';
-        _this.code = RejectPacket.codes.INVALID;
-        _this.reason = '';
-        _this.hash = null;
+    constructor(options) {
+        super();
+        this.cmd = 'reject';
+        this.type = exports.types.REJECT;
+        this.message = '';
+        this.code = RejectPacket.codes.INVALID;
+        this.reason = '';
+        this.hash = null;
         if (options)
-            _this.fromOptions(options);
-        return _this;
+            this.fromOptions(options);
     }
     /**
      * Inject properties from options object.
      * @private
      * @param {Object} options
      */
-    RejectPacket.prototype.fromOptions = function (options) {
-        var code = options.code;
+    fromOptions(options) {
+        let code = options.code;
         if (options.message)
             this.message = options.message;
         if (code != null) {
@@ -1309,50 +1236,50 @@ var RejectPacket = /** @class */ (function (_super) {
         if (options.hash)
             this.hash = options.hash;
         return this;
-    };
+    }
     /**
      * Instantiate reject packet from options.
      * @param {Object} options
      * @returns {RejectPacket}
      */
-    RejectPacket.fromOptions = function (options) {
+    static fromOptions(options) {
         return new this().fromOptions(options);
-    };
+    }
     /**
      * Get uint256le hash if present.
      * @returns {Hash}
      */
-    RejectPacket.prototype.rhash = function () {
+    rhash() {
         return this.hash ? util.revHex(this.hash) : null;
-    };
+    }
     /**
      * Get symbolic code.
      * @returns {String}
      */
-    RejectPacket.prototype.getCode = function () {
-        var code = RejectPacket.codesByVal[this.code];
+    getCode() {
+        const code = RejectPacket.codesByVal[this.code];
         if (!code)
             return this.code.toString(10);
         return code.toLowerCase();
-    };
+    }
     /**
      * Get serialization size.
      * @returns {Number}
      */
-    RejectPacket.prototype.getSize = function () {
-        var size = 0;
+    getSize() {
+        let size = 0;
         size += encoding.sizeVarString(this.message, 'ascii');
         size += 1;
         size += encoding.sizeVarString(this.reason, 'ascii');
         if (this.hash)
             size += 32;
         return size;
-    };
+    }
     /**
      * Serialize reject packet to writer.
      * @param {BufferWriter} bw
      */
-    RejectPacket.prototype.toWriter = function (bw) {
+    toWriter(bw) {
         assert(this.message.length <= 12);
         assert(this.reason.length <= 111);
         bw.writeVarString(this.message, 'ascii');
@@ -1361,21 +1288,21 @@ var RejectPacket = /** @class */ (function (_super) {
         if (this.hash)
             bw.writeHash(this.hash);
         return bw;
-    };
+    }
     /**
      * Serialize reject packet.
      * @returns {Buffer}
      */
-    RejectPacket.prototype.toRaw = function () {
-        var size = this.getSize();
+    toRaw() {
+        const size = this.getSize();
         return this.toWriter(bio.write(size)).render();
-    };
+    }
     /**
      * Inject properties from buffer reader.
      * @private
      * @param {BufferReader} br
      */
-    RejectPacket.prototype.fromReader = function (br) {
+    fromReader(br) {
         this.message = br.readVarString('ascii', 12);
         this.code = br.readU8();
         this.reason = br.readVarString('ascii', 111);
@@ -1389,34 +1316,34 @@ var RejectPacket = /** @class */ (function (_super) {
                 break;
         }
         return this;
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    RejectPacket.prototype.fromRaw = function (data) {
+    fromRaw(data) {
         return this.fromReader(bio.read(data));
-    };
+    }
     /**
      * Instantiate reject packet from buffer reader.
      * @param {BufferReader} br
      * @returns {RejectPacket}
      */
-    RejectPacket.fromReader = function (br) {
+    static fromReader(br) {
         return new this().fromReader(br);
-    };
+    }
     /**
      * Instantiate reject packet from serialized data.
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {RejectPacket}
      */
-    RejectPacket.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data, enc);
-    };
+    }
     /**
      * Inject properties from reason message and object.
      * @private
@@ -1425,7 +1352,7 @@ var RejectPacket = /** @class */ (function (_super) {
      * @param {String?} msg
      * @param {Hash?} hash
      */
-    RejectPacket.prototype.fromReason = function (code, reason, msg, hash) {
+    fromReason(code, reason, msg, hash) {
         if (typeof code === 'string')
             code = RejectPacket.codes[code.toUpperCase()];
         if (!code)
@@ -1441,7 +1368,7 @@ var RejectPacket = /** @class */ (function (_super) {
             this.hash = hash;
         }
         return this;
-    };
+    }
     /**
      * Instantiate reject packet from reason message.
      * @param {Number} code
@@ -1450,34 +1377,33 @@ var RejectPacket = /** @class */ (function (_super) {
      * @param {Hash?} hash
      * @returns {RejectPacket}
      */
-    RejectPacket.fromReason = function (code, reason, msg, hash) {
+    static fromReason(code, reason, msg, hash) {
         return new this().fromReason(code, reason, msg, hash);
-    };
+    }
     /**
      * Instantiate reject packet from verify error.
      * @param {VerifyError} err
      * @param {(TX|Block)?} obj
      * @returns {RejectPacket}
      */
-    RejectPacket.fromError = function (err, obj) {
+    static fromError(err, obj) {
         return this.fromReason(err.code, err.reason, obj);
-    };
+    }
     /**
      * Inspect reject packet.
      * @returns {String}
      */
-    RejectPacket.prototype[inspectSymbol] = function () {
-        var code = RejectPacket.codesByVal[this.code] || this.code;
-        var hash = this.hash ? util.revHex(this.hash) : null;
+    [inspectSymbol]() {
+        const code = RejectPacket.codesByVal[this.code] || this.code;
+        const hash = this.hash ? util.revHex(this.hash) : null;
         return '<Reject:'
-            + " msg=".concat(this.message)
-            + " code=".concat(code)
-            + " reason=".concat(this.reason)
-            + " hash=".concat(hash)
+            + ` msg=${this.message}`
+            + ` code=${code}`
+            + ` reason=${this.reason}`
+            + ` hash=${hash}`
             + '>';
-    };
-    return RejectPacket;
-}(Packet));
+    }
+}
 /**
  * Reject codes. Note that `internal` and higher
  * are not meant for use on the p2p network.
@@ -1522,211 +1448,200 @@ RejectPacket.codesByVal = {
  * Mempool Packet
  * @extends Packet
  */
-var MempoolPacket = /** @class */ (function (_super) {
-    __extends(MempoolPacket, _super);
+class MempoolPacket extends Packet {
     /**
      * Create a `mempool` packet.
      * @constructor
      */
-    function MempoolPacket() {
-        var _this = _super.call(this) || this;
-        _this.cmd = 'mempool';
-        _this.type = exports.types.MEMPOOL;
-        return _this;
+    constructor() {
+        super();
+        this.cmd = 'mempool';
+        this.type = exports.types.MEMPOOL;
     }
     /**
      * Instantiate mempool packet from buffer reader.
      * @param {BufferReader} br
      * @returns {VerackPacket}
      */
-    MempoolPacket.fromReader = function (br) {
+    static fromReader(br) {
         return new this().fromReader(br);
-    };
+    }
     /**
      * Instantiate mempool packet from serialized data.
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {VerackPacket}
      */
-    MempoolPacket.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data);
-    };
-    return MempoolPacket;
-}(Packet));
+    }
+}
 /**
  * FilterLoad Packet
  * @extends Packet
  */
-var FilterLoadPacket = /** @class */ (function (_super) {
-    __extends(FilterLoadPacket, _super);
+class FilterLoadPacket extends Packet {
     /**
      * Create a `filterload` packet.
      * @constructor
      * @param {BloomFilter|null} filter
      */
-    function FilterLoadPacket(filter) {
-        var _this = _super.call(this) || this;
-        _this.cmd = 'filterload';
-        _this.type = exports.types.FILTERLOAD;
-        _this.filter = filter || new BloomFilter();
-        return _this;
+    constructor(filter) {
+        super();
+        this.cmd = 'filterload';
+        this.type = exports.types.FILTERLOAD;
+        this.filter = filter || new BloomFilter();
     }
     /**
      * Get serialization size.
      * @returns {Number}
      */
-    FilterLoadPacket.prototype.getSize = function () {
+    getSize() {
         return this.filter.getSize();
-    };
+    }
     /**
      * Serialize filterload packet to writer.
      * @param {BufferWriter} bw
      */
-    FilterLoadPacket.prototype.toWriter = function (bw) {
+    toWriter(bw) {
         return this.filter.toWriter(bw);
-    };
+    }
     /**
      * Serialize filterload packet.
      * @returns {Buffer}
      */
-    FilterLoadPacket.prototype.toRaw = function () {
+    toRaw() {
         return this.filter.toRaw();
-    };
+    }
     /**
      * Inject properties from buffer reader.
      * @private
      * @param {BufferReader} br
      */
-    FilterLoadPacket.prototype.fromReader = function (br) {
+    fromReader(br) {
         this.filter.fromReader(br);
         return this;
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    FilterLoadPacket.prototype.fromRaw = function (data) {
+    fromRaw(data) {
         this.filter.fromRaw(data);
         return this;
-    };
+    }
     /**
      * Instantiate filterload packet from buffer reader.
      * @param {BufferReader} br
      * @returns {FilterLoadPacket}
      */
-    FilterLoadPacket.fromReader = function (br) {
+    static fromReader(br) {
         return new this().fromReader(br);
-    };
+    }
     /**
      * Instantiate filterload packet from serialized data.
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {FilterLoadPacket}
      */
-    FilterLoadPacket.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data);
-    };
+    }
     /**
      * Ensure the filter is within the size limits.
      * @returns {Boolean}
      */
-    FilterLoadPacket.prototype.isWithinConstraints = function () {
+    isWithinConstraints() {
         return this.filter.isWithinConstraints();
-    };
-    return FilterLoadPacket;
-}(Packet));
+    }
+}
 /**
  * FilterAdd Packet
  * @extends Packet
  * @property {Buffer} data
  */
-var FilterAddPacket = /** @class */ (function (_super) {
-    __extends(FilterAddPacket, _super);
+class FilterAddPacket extends Packet {
     /**
      * Create a `filteradd` packet.
      * @constructor
      * @param {Buffer?} data
      */
-    function FilterAddPacket(data) {
-        var _this = _super.call(this) || this;
-        _this.cmd = 'filteradd';
-        _this.type = exports.types.FILTERADD;
-        _this.data = data || DUMMY;
-        return _this;
+    constructor(data) {
+        super();
+        this.cmd = 'filteradd';
+        this.type = exports.types.FILTERADD;
+        this.data = data || DUMMY;
     }
     /**
      * Get serialization size.
      * @returns {Number}
      */
-    FilterAddPacket.prototype.getSize = function () {
+    getSize() {
         return encoding.sizeVarBytes(this.data);
-    };
+    }
     /**
      * Serialize filteradd packet to writer.
      * @returns {BufferWriter} bw
      */
-    FilterAddPacket.prototype.toWriter = function (bw) {
+    toWriter(bw) {
         bw.writeVarBytes(this.data);
         return bw;
-    };
+    }
     /**
      * Serialize filteradd packet.
      * @returns {Buffer}
      */
-    FilterAddPacket.prototype.toRaw = function () {
-        var size = this.getSize();
+    toRaw() {
+        const size = this.getSize();
         return this.toWriter(bio.write(size)).render();
-    };
+    }
     /**
      * Inject properties from buffer reader.
      * @private
      * @param {BufferReader} br
      */
-    FilterAddPacket.prototype.fromReader = function (br) {
+    fromReader(br) {
         this.data = br.readVarBytes();
         return this;
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    FilterAddPacket.prototype.fromRaw = function (data) {
+    fromRaw(data) {
         return this.fromReader(bio.read(data));
-    };
+    }
     /**
      * Instantiate filteradd packet from serialized data.
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {FilterAddPacket}
      */
-    FilterAddPacket.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data);
-    };
-    return FilterAddPacket;
-}(Packet));
+    }
+}
 /**
  * FilterClear Packet
  * @extends Packet
  */
-var FilterClearPacket = /** @class */ (function (_super) {
-    __extends(FilterClearPacket, _super);
+class FilterClearPacket extends Packet {
     /**
      * Create a `filterclear` packet.
      * @constructor
      */
-    function FilterClearPacket() {
-        var _this = _super.call(this) || this;
-        _this.cmd = 'filterclear';
-        _this.type = exports.types.FILTERCLEAR;
-        return _this;
+    constructor() {
+        super();
+        this.cmd = 'filterclear';
+        this.type = exports.types.FILTERCLEAR;
     }
     /**
      * Instantiate filterclear packet from serialized data.
@@ -1734,569 +1649,547 @@ var FilterClearPacket = /** @class */ (function (_super) {
      * @param {String?} enc
      * @returns {FilterClearPacket}
      */
-    FilterClearPacket.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data);
-    };
-    return FilterClearPacket;
-}(Packet));
+    }
+}
 /**
  * MerkleBlock Packet
  * @extends Packet
  * @property {MerkleBlock} block
  */
-var MerkleBlockPacket = /** @class */ (function (_super) {
-    __extends(MerkleBlockPacket, _super);
+class MerkleBlockPacket extends Packet {
     /**
      * Create a `merkleblock` packet.
      * @constructor
      * @param {MerkleBlock?} block
      */
-    function MerkleBlockPacket(block) {
-        var _this = _super.call(this) || this;
-        _this.cmd = 'merkleblock';
-        _this.type = exports.types.MERKLEBLOCK;
-        _this.block = block || new MerkleBlock();
-        return _this;
+    constructor(block) {
+        super();
+        this.cmd = 'merkleblock';
+        this.type = exports.types.MERKLEBLOCK;
+        this.block = block || new MerkleBlock();
     }
     /**
      * Get serialization size.
      * @returns {Number}
      */
-    MerkleBlockPacket.prototype.getSize = function () {
+    getSize() {
         return this.block.getSize();
-    };
+    }
     /**
      * Serialize merkleblock packet to writer.
      * @param {BufferWriter} bw
      */
-    MerkleBlockPacket.prototype.toWriter = function (bw) {
+    toWriter(bw) {
         return this.block.toWriter(bw);
-    };
+    }
     /**
      * Serialize merkleblock packet.
      * @returns {Buffer}
      */
-    MerkleBlockPacket.prototype.toRaw = function () {
+    toRaw() {
         return this.block.toRaw();
-    };
+    }
     /**
      * Inject properties from buffer reader.
      * @private
      * @param {BufferReader} br
      */
-    MerkleBlockPacket.prototype.fromReader = function (br) {
+    fromReader(br) {
         this.block.fromReader(br);
         return this;
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    MerkleBlockPacket.prototype.fromRaw = function (data) {
+    fromRaw(data) {
         this.block.fromRaw(data);
         return this;
-    };
+    }
     /**
      * Instantiate merkleblock packet from serialized data.
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {MerkleBlockPacket}
      */
-    MerkleBlockPacket.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data);
-    };
-    return MerkleBlockPacket;
-}(Packet));
+    }
+}
 /**
  * FeeFilter Packet
  * @extends Packet
  * @property {Rate} rate
  */
-var FeeFilterPacket = /** @class */ (function (_super) {
-    __extends(FeeFilterPacket, _super);
+class FeeFilterPacket extends Packet {
     /**
      * Create a `feefilter` packet.
      * @constructor
      * @param {Rate?} rate
      */
-    function FeeFilterPacket(rate) {
-        var _this = _super.call(this) || this;
-        _this.cmd = 'feefilter';
-        _this.type = exports.types.FEEFILTER;
-        _this.rate = rate || 0;
-        return _this;
+    constructor(rate) {
+        super();
+        this.cmd = 'feefilter';
+        this.type = exports.types.FEEFILTER;
+        this.rate = rate || 0;
     }
     /**
      * Get serialization size.
      * @returns {Number}
      */
-    FeeFilterPacket.prototype.getSize = function () {
+    getSize() {
         return 8;
-    };
+    }
     /**
      * Serialize feefilter packet to writer.
      * @param {BufferWriter} bw
      */
-    FeeFilterPacket.prototype.toWriter = function (bw) {
+    toWriter(bw) {
         bw.writeI64(this.rate);
         return bw;
-    };
+    }
     /**
      * Serialize feefilter packet.
      * @returns {Buffer}
      */
-    FeeFilterPacket.prototype.toRaw = function () {
+    toRaw() {
         return this.toWriter(bio.write(8)).render();
-    };
+    }
     /**
      * Inject properties from buffer reader.
      * @private
      * @param {BufferReader} br
      */
-    FeeFilterPacket.prototype.fromReader = function (br) {
+    fromReader(br) {
         this.rate = br.readI64();
         return this;
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    FeeFilterPacket.prototype.fromRaw = function (data) {
+    fromRaw(data) {
         return this.fromReader(bio.read(data));
-    };
+    }
     /**
      * Instantiate feefilter packet from buffer reader.
      * @param {BufferReader} br
      * @returns {FeeFilterPacket}
      */
-    FeeFilterPacket.fromReader = function (br) {
+    static fromReader(br) {
         return new this().fromReader(br);
-    };
+    }
     /**
      * Instantiate feefilter packet from serialized data.
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {FeeFilterPacket}
      */
-    FeeFilterPacket.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data);
-    };
-    return FeeFilterPacket;
-}(Packet));
+    }
+}
 /**
  * SendCmpct Packet
  * @extends Packet
  * @property {Number} mode
  * @property {Number} version
  */
-var SendCmpctPacket = /** @class */ (function (_super) {
-    __extends(SendCmpctPacket, _super);
+class SendCmpctPacket extends Packet {
     /**
      * Create a `sendcmpct` packet.
      * @constructor
      * @param {Number|null} mode
      * @param {Number|null} version
      */
-    function SendCmpctPacket(mode, version) {
-        var _this = _super.call(this) || this;
-        _this.cmd = 'sendcmpct';
-        _this.type = exports.types.SENDCMPCT;
-        _this.mode = mode || 0;
-        _this.version = version || 1;
-        return _this;
+    constructor(mode, version) {
+        super();
+        this.cmd = 'sendcmpct';
+        this.type = exports.types.SENDCMPCT;
+        this.mode = mode || 0;
+        this.version = version || 1;
     }
     /**
      * Get serialization size.
      * @returns {Number}
      */
-    SendCmpctPacket.prototype.getSize = function () {
+    getSize() {
         return 9;
-    };
+    }
     /**
      * Serialize sendcmpct packet to writer.
      * @param {BufferWriter} bw
      */
-    SendCmpctPacket.prototype.toWriter = function (bw) {
+    toWriter(bw) {
         bw.writeU8(this.mode);
         bw.writeU64(this.version);
         return bw;
-    };
+    }
     /**
      * Serialize sendcmpct packet.
      * @returns {Buffer}
      */
-    SendCmpctPacket.prototype.toRaw = function () {
+    toRaw() {
         return this.toWriter(bio.write(9)).render();
-    };
+    }
     /**
      * Inject properties from buffer reader.
      * @private
      * @param {BufferReader} br
      */
-    SendCmpctPacket.prototype.fromReader = function (br) {
+    fromReader(br) {
         this.mode = br.readU8();
         this.version = br.readU64();
         return this;
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    SendCmpctPacket.prototype.fromRaw = function (data) {
+    fromRaw(data) {
         return this.fromReader(bio.read(data));
-    };
+    }
     /**
      * Instantiate sendcmpct packet from buffer reader.
      * @param {BufferReader} br
      * @returns {SendCmpctPacket}
      */
-    SendCmpctPacket.fromReader = function (br) {
+    static fromReader(br) {
         return new this().fromReader(br);
-    };
+    }
     /**
      * Instantiate sendcmpct packet from serialized data.
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {SendCmpctPacket}
      */
-    SendCmpctPacket.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data);
-    };
-    return SendCmpctPacket;
-}(Packet));
+    }
+}
 /**
  * CmpctBlock Packet
  * @extends Packet
  * @property {Block} block
  * @property {Boolean} witness
  */
-var CmpctBlockPacket = /** @class */ (function (_super) {
-    __extends(CmpctBlockPacket, _super);
+class CmpctBlockPacket extends Packet {
     /**
      * Create a `cmpctblock` packet.
      * @constructor
      * @param {Block|null} block
      * @param {Boolean|null} witness
      */
-    function CmpctBlockPacket(block, witness) {
-        var _this = _super.call(this) || this;
-        _this.cmd = 'cmpctblock';
-        _this.type = exports.types.CMPCTBLOCK;
-        _this.block = block || new bip152.CompactBlock();
-        _this.witness = witness || false;
-        return _this;
+    constructor(block, witness) {
+        super();
+        this.cmd = 'cmpctblock';
+        this.type = exports.types.CMPCTBLOCK;
+        this.block = block || new bip152.CompactBlock();
+        this.witness = witness || false;
     }
     /**
      * Serialize cmpctblock packet.
      * @returns {Buffer}
      */
-    CmpctBlockPacket.prototype.getSize = function () {
+    getSize() {
         if (this.witness)
             return this.block.getSize(true);
         return this.block.getSize(false);
-    };
+    }
     /**
      * Serialize cmpctblock packet to writer.
      * @param {BufferWriter} bw
      */
-    CmpctBlockPacket.prototype.toWriter = function (bw) {
+    toWriter(bw) {
         if (this.witness)
             return this.block.toWriter(bw);
         return this.block.toNormalWriter(bw);
-    };
+    }
     /**
      * Serialize cmpctblock packet.
      * @returns {Buffer}
      */
-    CmpctBlockPacket.prototype.toRaw = function () {
+    toRaw() {
         if (this.witness)
             return this.block.toRaw();
         return this.block.toNormal();
-    };
+    }
     /**
      * Inject properties from buffer reader.
      * @private
      * @param {BufferReader} br
      */
-    CmpctBlockPacket.prototype.fromReader = function (br) {
+    fromReader(br) {
         this.block.fromReader(br);
         return this;
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    CmpctBlockPacket.prototype.fromRaw = function (data) {
+    fromRaw(data) {
         this.block.fromRaw(data);
         return this;
-    };
+    }
     /**
      * Instantiate cmpctblock packet from buffer reader.
      * @param {BufferReader} br
      * @returns {CmpctBlockPacket}
      */
-    CmpctBlockPacket.fromReader = function (br) {
+    static fromReader(br) {
         return new this().fromRaw(br);
-    };
+    }
     /**
      * Instantiate cmpctblock packet from serialized data.
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {CmpctBlockPacket}
      */
-    CmpctBlockPacket.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data);
-    };
-    return CmpctBlockPacket;
-}(Packet));
+    }
+}
 /**
  * GetBlockTxn Packet
  * @extends Packet
  * @property {TXRequest} request
  */
-var GetBlockTxnPacket = /** @class */ (function (_super) {
-    __extends(GetBlockTxnPacket, _super);
+class GetBlockTxnPacket extends Packet {
     /**
      * Create a `getblocktxn` packet.
      * @constructor
      * @param {TXRequest?} request
      */
-    function GetBlockTxnPacket(request) {
-        var _this = _super.call(this) || this;
-        _this.cmd = 'getblocktxn';
-        _this.type = exports.types.GETBLOCKTXN;
-        _this.request = request || new bip152.TXRequest();
-        return _this;
+    constructor(request) {
+        super();
+        this.cmd = 'getblocktxn';
+        this.type = exports.types.GETBLOCKTXN;
+        this.request = request || new bip152.TXRequest();
     }
     /**
      * Get serialization size.
      * @returns {Number}
      */
-    GetBlockTxnPacket.prototype.getSize = function () {
+    getSize() {
         return this.request.getSize();
-    };
+    }
     /**
      * Serialize getblocktxn packet to writer.
      * @param {BufferWriter} bw
      */
-    GetBlockTxnPacket.prototype.toWriter = function (bw) {
+    toWriter(bw) {
         return this.request.toWriter(bw);
-    };
+    }
     /**
      * Serialize getblocktxn packet.
      * @returns {Buffer}
      */
-    GetBlockTxnPacket.prototype.toRaw = function () {
+    toRaw() {
         return this.request.toRaw();
-    };
+    }
     /**
      * Inject properties from buffer reader.
      * @private
      * @param {BufferReader} br
      */
-    GetBlockTxnPacket.prototype.fromReader = function (br) {
+    fromReader(br) {
         this.request.fromReader(br);
         return this;
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    GetBlockTxnPacket.prototype.fromRaw = function (data) {
+    fromRaw(data) {
         this.request.fromRaw(data);
         return this;
-    };
+    }
     /**
      * Instantiate getblocktxn packet from buffer reader.
      * @param {BufferReader} br
      * @returns {GetBlockTxnPacket}
      */
-    GetBlockTxnPacket.fromReader = function (br) {
+    static fromReader(br) {
         return new this().fromReader(br);
-    };
+    }
     /**
      * Instantiate getblocktxn packet from serialized data.
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {GetBlockTxnPacket}
      */
-    GetBlockTxnPacket.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data);
-    };
-    return GetBlockTxnPacket;
-}(Packet));
+    }
+}
 /**
  * BlockTxn Packet
  * @extends Packet
  * @property {TXResponse} response
  * @property {Boolean} witness
  */
-var BlockTxnPacket = /** @class */ (function (_super) {
-    __extends(BlockTxnPacket, _super);
+class BlockTxnPacket extends Packet {
     /**
      * Create a `blocktxn` packet.
      * @constructor
      * @param {TXResponse?} response
      * @param {Boolean?} witness
      */
-    function BlockTxnPacket(response, witness) {
-        var _this = _super.call(this) || this;
-        _this.cmd = 'blocktxn';
-        _this.type = exports.types.BLOCKTXN;
-        _this.response = response || new bip152.TXResponse();
-        _this.witness = witness || false;
-        return _this;
+    constructor(response, witness) {
+        super();
+        this.cmd = 'blocktxn';
+        this.type = exports.types.BLOCKTXN;
+        this.response = response || new bip152.TXResponse();
+        this.witness = witness || false;
     }
     /**
      * Get serialization size.
      * @returns {Number}
      */
-    BlockTxnPacket.prototype.getSize = function () {
+    getSize() {
         if (this.witness)
             return this.response.getSize(true);
         return this.response.getSize(false);
-    };
+    }
     /**
      * Serialize blocktxn packet to writer.
      * @param {BufferWriter} bw
      */
-    BlockTxnPacket.prototype.toWriter = function (bw) {
+    toWriter(bw) {
         if (this.witness)
             return this.response.toWriter(bw);
         return this.response.toNormalWriter(bw);
-    };
+    }
     /**
      * Serialize blocktxn packet.
      * @returns {Buffer}
      */
-    BlockTxnPacket.prototype.toRaw = function () {
+    toRaw() {
         if (this.witness)
             return this.response.toRaw();
         return this.response.toNormal();
-    };
+    }
     /**
      * Inject properties from buffer reader.
      * @private
      * @param {BufferReader} br
      */
-    BlockTxnPacket.prototype.fromReader = function (br) {
+    fromReader(br) {
         this.response.fromReader(br);
         return this;
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    BlockTxnPacket.prototype.fromRaw = function (data) {
+    fromRaw(data) {
         this.response.fromRaw(data);
         return this;
-    };
+    }
     /**
      * Instantiate blocktxn packet from buffer reader.
      * @param {BufferReader} br
      * @returns {BlockTxnPacket}
      */
-    BlockTxnPacket.fromReader = function (br) {
+    static fromReader(br) {
         return new this().fromReader(br);
-    };
+    }
     /**
      * Instantiate blocktxn packet from serialized data.
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {BlockTxnPacket}
      */
-    BlockTxnPacket.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data);
-    };
-    return BlockTxnPacket;
-}(Packet));
+    }
+}
 /**
  * Unknown Packet
  * @extends Packet
  * @property {String} cmd
  * @property {Buffer} data
  */
-var UnknownPacket = /** @class */ (function (_super) {
-    __extends(UnknownPacket, _super);
+class UnknownPacket extends Packet {
     /**
      * Create an unknown packet.
      * @constructor
      * @param {String|null} cmd
      * @param {Buffer|null} data
      */
-    function UnknownPacket(cmd, data) {
-        var _this = _super.call(this) || this;
-        _this.cmd = cmd;
-        _this.type = exports.types.UNKNOWN;
-        _this.data = data;
-        return _this;
+    constructor(cmd, data) {
+        super();
+        this.cmd = cmd;
+        this.type = exports.types.UNKNOWN;
+        this.data = data;
     }
     /**
      * Get serialization size.
      * @returns {Number}
      */
-    UnknownPacket.prototype.getSize = function () {
+    getSize() {
         return this.data.length;
-    };
+    }
     /**
      * Serialize unknown packet to writer.
      * @param {BufferWriter} bw
      */
-    UnknownPacket.prototype.toWriter = function (bw) {
+    toWriter(bw) {
         bw.writeBytes(this.data);
         return bw;
-    };
+    }
     /**
      * Serialize unknown packet.
      * @returns {Buffer}
      */
-    UnknownPacket.prototype.toRaw = function () {
+    toRaw() {
         return this.data;
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    UnknownPacket.prototype.fromRaw = function (cmd, data) {
+    fromRaw(cmd, data) {
         assert(Buffer.isBuffer(data));
         this.cmd = cmd;
         this.data = data;
         return this;
-    };
+    }
     /**
      * Instantiate unknown packet from serialized data.
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {UnknownPacket}
      */
-    UnknownPacket.fromRaw = function (cmd, data, enc) {
+    static fromRaw(cmd, data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(cmd, data);
-    };
-    return UnknownPacket;
-}(Packet));
+    }
+}
 /**
  * Parse a payload.
  * @param {String} cmd
@@ -2392,3 +2285,4 @@ exports.CmpctBlockPacket = CmpctBlockPacket;
 exports.GetBlockTxnPacket = GetBlockTxnPacket;
 exports.BlockTxnPacket = BlockTxnPacket;
 exports.UnknownPacket = UnknownPacket;
+//# sourceMappingURL=packets.js.map

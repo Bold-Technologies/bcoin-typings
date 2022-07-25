@@ -15,17 +15,17 @@
  * @exports bcoin
  * @type {Object}
  */
-var bcoin = exports;
+const bcoin = exports;
 /**
  * Define a module for lazy loading.
  * @param {String} name
  * @param {String} path
  */
 bcoin.define = function define(name, path) {
-    var cache = null;
+    let cache = null;
     Object.defineProperty(bcoin, name, {
         enumerable: true,
-        get: function () {
+        get() {
             if (!cache)
                 cache = require(path);
             return cache;
@@ -131,3 +131,4 @@ bcoin.define('workers', './workers');
 bcoin.define('WorkerPool', './workers/workerpool');
 // Package Info
 bcoin.define('pkg', './pkg');
+//# sourceMappingURL=bcoin.js.map

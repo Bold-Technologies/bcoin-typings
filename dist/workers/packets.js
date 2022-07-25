@@ -4,39 +4,24 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
  * @module workers/packets
  */
-var assert = require('bsert');
-var bio = require('bufio');
-var Script = require('../script/script');
-var Witness = require('../script/witness');
-var Output = require('../primitives/output');
-var MTX = require('../primitives/mtx');
-var TX = require('../primitives/tx');
-var KeyRing = require('../primitives/keyring');
-var CoinView = require('../coins/coinview');
-var ScriptError = require('../script/scripterror');
-var encoding = bio.encoding;
+const assert = require('bsert');
+const bio = require('bufio');
+const Script = require('../script/script');
+const Witness = require('../script/witness');
+const Output = require('../primitives/output');
+const MTX = require('../primitives/mtx');
+const TX = require('../primitives/tx');
+const KeyRing = require('../primitives/keyring');
+const CoinView = require('../coins/coinview');
+const ScriptError = require('../script/scripterror');
+const { encoding } = bio;
 /*
  * Constants
  */
-var packetTypes = {
+const packetTypes = {
     ENV: 0,
     EVENT: 1,
     LOG: 2,
@@ -62,128 +47,116 @@ var packetTypes = {
 /**
  * Packet
  */
-var Packet = /** @class */ (function () {
-    function Packet() {
+class Packet {
+    constructor() {
         this.id = ++Packet.id >>> 0;
         this.cmd = -1;
     }
-    Packet.prototype.getSize = function () {
+    getSize() {
         throw new Error('Abstract method.');
-    };
-    Packet.prototype.toWriter = function () {
+    }
+    toWriter() {
         throw new Error('Abstract method.');
-    };
-    Packet.prototype.fromRaw = function () {
+    }
+    fromRaw() {
         throw new Error('Abstract method.');
-    };
-    Packet.fromRaw = function () {
+    }
+    static fromRaw() {
         throw new Error('Abstract method.');
-    };
-    return Packet;
-}());
+    }
+}
 Packet.id = 0;
 /**
  * EnvPacket
  */
-var EnvPacket = /** @class */ (function (_super) {
-    __extends(EnvPacket, _super);
-    function EnvPacket(env) {
-        var _this = _super.call(this) || this;
-        _this.cmd = packetTypes.ENV;
-        _this.env = env || {};
-        _this.json = JSON.stringify(_this.env);
-        return _this;
+class EnvPacket extends Packet {
+    constructor(env) {
+        super();
+        this.cmd = packetTypes.ENV;
+        this.env = env || {};
+        this.json = JSON.stringify(this.env);
     }
-    EnvPacket.prototype.getSize = function () {
+    getSize() {
         return encoding.sizeVarString(this.json, 'utf8');
-    };
-    EnvPacket.prototype.toWriter = function (bw) {
+    }
+    toWriter(bw) {
         bw.writeVarString(this.json, 'utf8');
         return bw;
-    };
-    EnvPacket.prototype.fromRaw = function (data) {
-        var br = bio.read(data, true);
+    }
+    fromRaw(data) {
+        const br = bio.read(data, true);
         this.json = br.readVarString('utf8');
         this.env = JSON.parse(this.json);
         return this;
-    };
-    EnvPacket.fromRaw = function (data) {
+    }
+    static fromRaw(data) {
         return new EnvPacket().fromRaw(data);
-    };
-    return EnvPacket;
-}(Packet));
+    }
+}
 /**
  * EventPacket
  */
-var EventPacket = /** @class */ (function (_super) {
-    __extends(EventPacket, _super);
-    function EventPacket(items) {
-        var _this = _super.call(this) || this;
-        _this.cmd = packetTypes.EVENT;
-        _this.items = items || [];
-        _this.json = JSON.stringify(_this.items);
-        return _this;
+class EventPacket extends Packet {
+    constructor(items) {
+        super();
+        this.cmd = packetTypes.EVENT;
+        this.items = items || [];
+        this.json = JSON.stringify(this.items);
     }
-    EventPacket.prototype.getSize = function () {
+    getSize() {
         return encoding.sizeVarString(this.json, 'utf8');
-    };
-    EventPacket.prototype.toWriter = function (bw) {
+    }
+    toWriter(bw) {
         bw.writeVarString(this.json, 'utf8');
         return bw;
-    };
-    EventPacket.prototype.fromRaw = function (data) {
-        var br = bio.read(data, true);
+    }
+    fromRaw(data) {
+        const br = bio.read(data, true);
         this.json = br.readVarString('utf8');
         this.items = JSON.parse(this.json);
         return this;
-    };
-    EventPacket.fromRaw = function (data) {
+    }
+    static fromRaw(data) {
         return new EventPacket().fromRaw(data);
-    };
-    return EventPacket;
-}(Packet));
+    }
+}
 /**
  * LogPacket
  */
-var LogPacket = /** @class */ (function (_super) {
-    __extends(LogPacket, _super);
-    function LogPacket(text) {
-        var _this = _super.call(this) || this;
-        _this.cmd = packetTypes.LOG;
-        _this.text = text || '';
-        return _this;
+class LogPacket extends Packet {
+    constructor(text) {
+        super();
+        this.cmd = packetTypes.LOG;
+        this.text = text || '';
     }
-    LogPacket.prototype.getSize = function () {
+    getSize() {
         return encoding.sizeVarString(this.text, 'utf8');
-    };
-    LogPacket.prototype.toWriter = function (bw) {
+    }
+    toWriter(bw) {
         bw.writeVarString(this.text, 'utf8');
         return bw;
-    };
-    LogPacket.prototype.fromRaw = function (data) {
-        var br = bio.read(data, true);
+    }
+    fromRaw(data) {
+        const br = bio.read(data, true);
         this.text = br.readVarString('utf8');
         return this;
-    };
-    LogPacket.fromRaw = function (data) {
+    }
+    static fromRaw(data) {
         return new LogPacket().fromRaw(data);
-    };
-    return LogPacket;
-}(Packet));
+    }
+}
 /**
  * ErrorPacket
  */
-var ErrorPacket = /** @class */ (function (_super) {
-    __extends(ErrorPacket, _super);
-    function ErrorPacket(error) {
-        var _this = _super.call(this) || this;
-        _this.cmd = packetTypes.ERROR;
-        _this.error = error || new Error();
-        return _this;
+class ErrorPacket extends Packet {
+    constructor(error) {
+        super();
+        this.cmd = packetTypes.ERROR;
+        this.error = error || new Error();
     }
-    ErrorPacket.prototype.getSize = function () {
-        var err = this.error;
-        var size = 0;
+    getSize() {
+        const err = this.error;
+        let size = 0;
         size += encoding.sizeVarString(stringify(err.message), 'utf8');
         size += encoding.sizeVarString(stringify(err.stack), 'utf8');
         size += encoding.sizeVarString(stringify(err.type), 'utf8');
@@ -201,9 +174,9 @@ var ErrorPacket = /** @class */ (function (_super) {
                 break;
         }
         return size;
-    };
-    ErrorPacket.prototype.toWriter = function (bw) {
-        var err = this.error;
+    }
+    toWriter(bw) {
+        const err = this.error;
         bw.writeVarString(stringify(err.message), 'utf8');
         bw.writeVarString(stringify(err.stack), 'utf8');
         bw.writeVarString(stringify(err.type), 'utf8');
@@ -221,10 +194,10 @@ var ErrorPacket = /** @class */ (function (_super) {
                 break;
         }
         return bw;
-    };
-    ErrorPacket.prototype.fromRaw = function (data) {
-        var br = bio.read(data, true);
-        var err = this.error;
+    }
+    fromRaw(data) {
+        const br = bio.read(data, true);
+        const err = this.error;
         err.message = br.readVarString('utf8');
         err.stack = br.readVarString('utf8');
         err.type = br.readVarString('utf8');
@@ -240,77 +213,68 @@ var ErrorPacket = /** @class */ (function (_super) {
                 break;
         }
         return this;
-    };
-    ErrorPacket.fromRaw = function (data) {
+    }
+    static fromRaw(data) {
         return new ErrorPacket().fromRaw(data);
-    };
-    return ErrorPacket;
-}(Packet));
+    }
+}
 /**
  * ErrorResultPacket
  */
-var ErrorResultPacket = /** @class */ (function (_super) {
-    __extends(ErrorResultPacket, _super);
-    function ErrorResultPacket(error) {
-        var _this = _super.call(this, error) || this;
-        _this.cmd = packetTypes.ERRORRESULT;
-        return _this;
+class ErrorResultPacket extends ErrorPacket {
+    constructor(error) {
+        super(error);
+        this.cmd = packetTypes.ERRORRESULT;
     }
-    ErrorResultPacket.fromRaw = function (data) {
+    static fromRaw(data) {
         return new ErrorResultPacket().fromRaw(data);
-    };
-    return ErrorResultPacket;
-}(ErrorPacket));
+    }
+}
 /**
  * CheckPacket
  */
-var CheckPacket = /** @class */ (function (_super) {
-    __extends(CheckPacket, _super);
-    function CheckPacket(tx, view, flags) {
-        var _this = _super.call(this) || this;
-        _this.cmd = packetTypes.CHECK;
-        _this.tx = tx || null;
-        _this.view = view || null;
-        _this.flags = flags != null ? flags : null;
-        return _this;
+class CheckPacket extends Packet {
+    constructor(tx, view, flags) {
+        super();
+        this.cmd = packetTypes.CHECK;
+        this.tx = tx || null;
+        this.view = view || null;
+        this.flags = flags != null ? flags : null;
     }
-    CheckPacket.prototype.getSize = function () {
+    getSize() {
         return this.tx.getSize() + this.view.getSize(this.tx) + 4;
-    };
-    CheckPacket.prototype.toWriter = function (bw) {
+    }
+    toWriter(bw) {
         this.tx.toWriter(bw);
         this.view.toWriter(bw, this.tx);
         bw.writeI32(this.flags != null ? this.flags : -1);
         return bw;
-    };
-    CheckPacket.prototype.fromRaw = function (data) {
-        var br = bio.read(data, true);
+    }
+    fromRaw(data) {
+        const br = bio.read(data, true);
         this.tx = TX.fromReader(br);
         this.view = CoinView.fromReader(br, this.tx);
         this.flags = br.readI32();
         if (this.flags === -1)
             this.flags = null;
         return this;
-    };
-    CheckPacket.fromRaw = function (data) {
+    }
+    static fromRaw(data) {
         return new CheckPacket().fromRaw(data);
-    };
-    return CheckPacket;
-}(Packet));
+    }
+}
 /**
  * CheckResultPacket
  */
-var CheckResultPacket = /** @class */ (function (_super) {
-    __extends(CheckResultPacket, _super);
-    function CheckResultPacket(error) {
-        var _this = _super.call(this) || this;
-        _this.cmd = packetTypes.CHECKRESULT;
-        _this.error = error || null;
-        return _this;
+class CheckResultPacket extends Packet {
+    constructor(error) {
+        super();
+        this.cmd = packetTypes.CHECKRESULT;
+        this.error = error || null;
     }
-    CheckResultPacket.prototype.getSize = function () {
-        var err = this.error;
-        var size = 0;
+    getSize() {
+        const err = this.error;
+        let size = 0;
         if (!err) {
             size += 1;
             return size;
@@ -322,9 +286,9 @@ var CheckResultPacket = /** @class */ (function (_super) {
         size += 1;
         size += 4;
         return size;
-    };
-    CheckResultPacket.prototype.toWriter = function (bw) {
-        var err = this.error;
+    }
+    toWriter(bw) {
+        const err = this.error;
         if (!err) {
             bw.writeU8(0);
             return bw;
@@ -336,12 +300,12 @@ var CheckResultPacket = /** @class */ (function (_super) {
         bw.writeU8(err.op === -1 ? 0xff : err.op);
         bw.writeU32(err.ip === -1 ? 0xffffffff : err.ip);
         return bw;
-    };
-    CheckResultPacket.prototype.fromRaw = function (data) {
-        var br = bio.read(data, true);
+    }
+    fromRaw(data) {
+        const br = bio.read(data, true);
         if (br.readU8() === 0)
             return this;
-        var err = new ScriptError('');
+        const err = new ScriptError('');
         err.message = br.readVarString('utf8');
         err.stack = br.readVarString('utf8');
         err.code = br.readVarString('utf8');
@@ -353,169 +317,155 @@ var CheckResultPacket = /** @class */ (function (_super) {
             err.ip = -1;
         this.error = err;
         return this;
-    };
-    CheckResultPacket.fromRaw = function (data) {
+    }
+    static fromRaw(data) {
         return new CheckResultPacket().fromRaw(data);
-    };
-    return CheckResultPacket;
-}(Packet));
+    }
+}
 /**
  * SignPacket
  */
-var SignPacket = /** @class */ (function (_super) {
-    __extends(SignPacket, _super);
-    function SignPacket(tx, rings, type) {
-        var _this = _super.call(this) || this;
-        _this.cmd = packetTypes.SIGN;
-        _this.tx = tx || null;
-        _this.rings = rings || [];
-        _this.type = type != null ? type : 1;
-        return _this;
+class SignPacket extends Packet {
+    constructor(tx, rings, type) {
+        super();
+        this.cmd = packetTypes.SIGN;
+        this.tx = tx || null;
+        this.rings = rings || [];
+        this.type = type != null ? type : 1;
     }
-    SignPacket.prototype.getSize = function () {
-        var size = 0;
+    getSize() {
+        let size = 0;
         size += this.tx.getSize();
         size += this.tx.view.getSize(this.tx);
         size += encoding.sizeVarint(this.rings.length);
-        for (var _i = 0, _a = this.rings; _i < _a.length; _i++) {
-            var ring = _a[_i];
+        for (const ring of this.rings)
             size += ring.getSize();
-        }
         size += 1;
         return size;
-    };
-    SignPacket.prototype.toWriter = function (bw) {
+    }
+    toWriter(bw) {
         this.tx.toWriter(bw);
         this.tx.view.toWriter(bw, this.tx);
         bw.writeVarint(this.rings.length);
-        for (var _i = 0, _a = this.rings; _i < _a.length; _i++) {
-            var ring = _a[_i];
+        for (const ring of this.rings)
             ring.toWriter(bw);
-        }
         bw.writeU8(this.type);
         return bw;
-    };
-    SignPacket.prototype.fromRaw = function (data) {
-        var br = bio.read(data, true);
+    }
+    fromRaw(data) {
+        const br = bio.read(data, true);
         this.tx = MTX.fromReader(br);
         this.tx.view.fromReader(br, this.tx);
-        var count = br.readVarint();
-        for (var i = 0; i < count; i++) {
-            var ring = KeyRing.fromReader(br);
+        const count = br.readVarint();
+        for (let i = 0; i < count; i++) {
+            const ring = KeyRing.fromReader(br);
             this.rings.push(ring);
         }
         this.type = br.readU8();
         return this;
-    };
-    SignPacket.fromRaw = function (data) {
+    }
+    static fromRaw(data) {
         return new SignPacket().fromRaw(data);
-    };
-    return SignPacket;
-}(Packet));
+    }
+}
 /**
  * SignResultPacket
  */
-var SignResultPacket = /** @class */ (function (_super) {
-    __extends(SignResultPacket, _super);
-    function SignResultPacket(total, witness, script) {
-        var _this = _super.call(this) || this;
-        _this.cmd = packetTypes.SIGNRESULT;
-        _this.total = total || 0;
-        _this.script = script || [];
-        _this.witness = witness || [];
-        return _this;
+class SignResultPacket extends Packet {
+    constructor(total, witness, script) {
+        super();
+        this.cmd = packetTypes.SIGNRESULT;
+        this.total = total || 0;
+        this.script = script || [];
+        this.witness = witness || [];
     }
-    SignResultPacket.prototype.fromTX = function (tx, total) {
+    fromTX(tx, total) {
         this.total = total;
-        for (var _i = 0, _a = tx.inputs; _i < _a.length; _i++) {
-            var input = _a[_i];
+        for (const input of tx.inputs) {
             this.script.push(input.script);
             this.witness.push(input.witness);
         }
         return this;
-    };
-    SignResultPacket.fromTX = function (tx, total) {
+    }
+    static fromTX(tx, total) {
         return new SignResultPacket().fromTX(tx, total);
-    };
-    SignResultPacket.prototype.getSize = function () {
-        var size = 0;
+    }
+    getSize() {
+        let size = 0;
         size += encoding.sizeVarint(this.total);
         size += encoding.sizeVarint(this.script.length);
-        for (var i = 0; i < this.script.length; i++) {
-            var script = this.script[i];
-            var witness = this.witness[i];
+        for (let i = 0; i < this.script.length; i++) {
+            const script = this.script[i];
+            const witness = this.witness[i];
             size += script.getVarSize();
             size += witness.getVarSize();
         }
         return size;
-    };
-    SignResultPacket.prototype.toWriter = function (bw) {
+    }
+    toWriter(bw) {
         assert(this.script.length === this.witness.length);
         bw.writeVarint(this.total);
         bw.writeVarint(this.script.length);
-        for (var i = 0; i < this.script.length; i++) {
+        for (let i = 0; i < this.script.length; i++) {
             this.script[i].toWriter(bw);
             this.witness[i].toWriter(bw);
         }
         return bw;
-    };
-    SignResultPacket.prototype.inject = function (tx) {
+    }
+    inject(tx) {
         assert(this.script.length === tx.inputs.length);
         assert(this.witness.length === tx.inputs.length);
-        for (var i = 0; i < tx.inputs.length; i++) {
-            var input = tx.inputs[i];
+        for (let i = 0; i < tx.inputs.length; i++) {
+            const input = tx.inputs[i];
             input.script = this.script[i];
             input.witness = this.witness[i];
         }
-    };
-    SignResultPacket.prototype.fromRaw = function (data) {
-        var br = bio.read(data, true);
+    }
+    fromRaw(data) {
+        const br = bio.read(data, true);
         this.total = br.readVarint();
-        var count = br.readVarint();
-        for (var i = 0; i < count; i++) {
+        const count = br.readVarint();
+        for (let i = 0; i < count; i++) {
             this.script.push(Script.fromReader(br));
             this.witness.push(Witness.fromReader(br));
         }
         return this;
-    };
-    SignResultPacket.fromRaw = function (data) {
+    }
+    static fromRaw(data) {
         return new SignResultPacket().fromRaw(data);
-    };
-    return SignResultPacket;
-}(Packet));
+    }
+}
 /**
  * CheckInputPacket
  */
-var CheckInputPacket = /** @class */ (function (_super) {
-    __extends(CheckInputPacket, _super);
-    function CheckInputPacket(tx, index, coin, flags) {
-        var _this = _super.call(this) || this;
-        _this.cmd = packetTypes.CHECKINPUT;
-        _this.tx = tx || null;
-        _this.index = index;
-        _this.coin = coin || null;
-        _this.flags = flags != null ? flags : null;
-        return _this;
+class CheckInputPacket extends Packet {
+    constructor(tx, index, coin, flags) {
+        super();
+        this.cmd = packetTypes.CHECKINPUT;
+        this.tx = tx || null;
+        this.index = index;
+        this.coin = coin || null;
+        this.flags = flags != null ? flags : null;
     }
-    CheckInputPacket.prototype.getSize = function () {
-        var size = 0;
+    getSize() {
+        let size = 0;
         size += this.tx.getSize();
         size += encoding.sizeVarint(this.index);
         size += encoding.sizeVarint(this.coin.value);
         size += this.coin.script.getVarSize();
         size += 4;
         return size;
-    };
-    CheckInputPacket.prototype.toWriter = function (bw) {
+    }
+    toWriter(bw) {
         this.tx.toWriter(bw);
         bw.writeVarint(this.index);
         bw.writeVarint(this.coin.value);
         this.coin.script.toWriter(bw);
         bw.writeI32(this.flags != null ? this.flags : -1);
         return bw;
-    };
-    CheckInputPacket.prototype.fromRaw = function (data) {
-        var br = bio.read(data, true);
+    }
+    fromRaw(data) {
+        const br = bio.read(data, true);
         this.tx = TX.fromReader(br);
         this.index = br.readVarint();
         this.coin = new Output();
@@ -525,44 +475,38 @@ var CheckInputPacket = /** @class */ (function (_super) {
         if (this.flags === -1)
             this.flags = null;
         return this;
-    };
-    CheckInputPacket.fromRaw = function (data) {
+    }
+    static fromRaw(data) {
         return new CheckInputPacket().fromRaw(data);
-    };
-    return CheckInputPacket;
-}(Packet));
+    }
+}
 /**
  * CheckInputResultPacket
  */
-var CheckInputResultPacket = /** @class */ (function (_super) {
-    __extends(CheckInputResultPacket, _super);
-    function CheckInputResultPacket(error) {
-        var _this = _super.call(this, error) || this;
-        _this.cmd = packetTypes.CHECKINPUTRESULT;
-        return _this;
+class CheckInputResultPacket extends CheckResultPacket {
+    constructor(error) {
+        super(error);
+        this.cmd = packetTypes.CHECKINPUTRESULT;
     }
-    CheckInputResultPacket.fromRaw = function (data) {
+    static fromRaw(data) {
         return new CheckInputResultPacket().fromRaw(data);
-    };
-    return CheckInputResultPacket;
-}(CheckResultPacket));
+    }
+}
 /**
  * SignInputPacket
  */
-var SignInputPacket = /** @class */ (function (_super) {
-    __extends(SignInputPacket, _super);
-    function SignInputPacket(tx, index, coin, ring, type) {
-        var _this = _super.call(this) || this;
-        _this.cmd = packetTypes.SIGNINPUT;
-        _this.tx = tx || null;
-        _this.index = index;
-        _this.coin = coin || null;
-        _this.ring = ring || null;
-        _this.type = type != null ? type : 1;
-        return _this;
+class SignInputPacket extends Packet {
+    constructor(tx, index, coin, ring, type) {
+        super();
+        this.cmd = packetTypes.SIGNINPUT;
+        this.tx = tx || null;
+        this.index = index;
+        this.coin = coin || null;
+        this.ring = ring || null;
+        this.type = type != null ? type : 1;
     }
-    SignInputPacket.prototype.getSize = function () {
-        var size = 0;
+    getSize() {
+        let size = 0;
         size += this.tx.getSize();
         size += encoding.sizeVarint(this.index);
         size += encoding.sizeVarint(this.coin.value);
@@ -570,8 +514,8 @@ var SignInputPacket = /** @class */ (function (_super) {
         size += this.ring.getSize();
         size += 1;
         return size;
-    };
-    SignInputPacket.prototype.toWriter = function (bw) {
+    }
+    toWriter(bw) {
         this.tx.toWriter(bw);
         bw.writeVarint(this.index);
         bw.writeVarint(this.coin.value);
@@ -579,9 +523,9 @@ var SignInputPacket = /** @class */ (function (_super) {
         this.ring.toWriter(bw);
         bw.writeU8(this.type);
         return bw;
-    };
-    SignInputPacket.prototype.fromRaw = function (data) {
-        var br = bio.read(data, true);
+    }
+    fromRaw(data) {
+        const br = bio.read(data, true);
         this.tx = MTX.fromReader(br);
         this.index = br.readVarint();
         this.coin = new Output();
@@ -590,283 +534,259 @@ var SignInputPacket = /** @class */ (function (_super) {
         this.ring = KeyRing.fromReader(br);
         this.type = br.readU8();
         return this;
-    };
-    SignInputPacket.fromRaw = function (data) {
+    }
+    static fromRaw(data) {
         return new SignInputPacket().fromRaw(data);
-    };
-    return SignInputPacket;
-}(Packet));
+    }
+}
 /**
  * SignInputResultPacket
  */
-var SignInputResultPacket = /** @class */ (function (_super) {
-    __extends(SignInputResultPacket, _super);
-    function SignInputResultPacket(value, witness, script) {
-        var _this = _super.call(this) || this;
-        _this.cmd = packetTypes.SIGNINPUTRESULT;
-        _this.value = value || false;
-        _this.script = script || null;
-        _this.witness = witness || null;
-        return _this;
+class SignInputResultPacket extends Packet {
+    constructor(value, witness, script) {
+        super();
+        this.cmd = packetTypes.SIGNINPUTRESULT;
+        this.value = value || false;
+        this.script = script || null;
+        this.witness = witness || null;
     }
-    SignInputResultPacket.prototype.fromTX = function (tx, i, value) {
-        var input = tx.inputs[i];
+    fromTX(tx, i, value) {
+        const input = tx.inputs[i];
         assert(input);
         this.value = value;
         this.script = input.script;
         this.witness = input.witness;
         return this;
-    };
-    SignInputResultPacket.fromTX = function (tx, i, value) {
+    }
+    static fromTX(tx, i, value) {
         return new SignInputResultPacket().fromTX(tx, i, value);
-    };
-    SignInputResultPacket.prototype.getSize = function () {
+    }
+    getSize() {
         return 1 + this.script.getVarSize() + this.witness.getVarSize();
-    };
-    SignInputResultPacket.prototype.toWriter = function (bw) {
+    }
+    toWriter(bw) {
         bw.writeU8(this.value ? 1 : 0);
         this.script.toWriter(bw);
         this.witness.toWriter(bw);
         return bw;
-    };
-    SignInputResultPacket.prototype.inject = function (tx, i) {
-        var input = tx.inputs[i];
+    }
+    inject(tx, i) {
+        const input = tx.inputs[i];
         assert(input);
         input.script = this.script;
         input.witness = this.witness;
-    };
-    SignInputResultPacket.prototype.fromRaw = function (data) {
-        var br = bio.read(data, true);
+    }
+    fromRaw(data) {
+        const br = bio.read(data, true);
         this.value = br.readU8() === 1;
         this.script = Script.fromReader(br);
         this.witness = Witness.fromReader(br);
         return this;
-    };
-    SignInputResultPacket.fromRaw = function (data) {
+    }
+    static fromRaw(data) {
         return new SignInputResultPacket().fromRaw(data);
-    };
-    return SignInputResultPacket;
-}(Packet));
+    }
+}
 /**
  * ECVerifyPacket
  */
-var ECVerifyPacket = /** @class */ (function (_super) {
-    __extends(ECVerifyPacket, _super);
-    function ECVerifyPacket(msg, sig, key) {
-        var _this = _super.call(this) || this;
-        _this.cmd = packetTypes.ECVERIFY;
-        _this.msg = msg || null;
-        _this.sig = sig || null;
-        _this.key = key || null;
-        return _this;
+class ECVerifyPacket extends Packet {
+    constructor(msg, sig, key) {
+        super();
+        this.cmd = packetTypes.ECVERIFY;
+        this.msg = msg || null;
+        this.sig = sig || null;
+        this.key = key || null;
     }
-    ECVerifyPacket.prototype.getSize = function () {
-        var size = 0;
+    getSize() {
+        let size = 0;
         size += encoding.sizeVarBytes(this.msg);
         size += encoding.sizeVarBytes(this.sig);
         size += encoding.sizeVarBytes(this.key);
         return size;
-    };
-    ECVerifyPacket.prototype.toWriter = function (bw) {
+    }
+    toWriter(bw) {
         bw.writeVarBytes(this.msg);
         bw.writeVarBytes(this.sig);
         bw.writeVarBytes(this.key);
         return bw;
-    };
-    ECVerifyPacket.prototype.fromRaw = function (data) {
-        var br = bio.read(data, true);
+    }
+    fromRaw(data) {
+        const br = bio.read(data, true);
         this.msg = br.readVarBytes();
         this.sig = br.readVarBytes();
         this.key = br.readVarBytes();
         return this;
-    };
-    ECVerifyPacket.fromRaw = function (data) {
+    }
+    static fromRaw(data) {
         return new ECVerifyPacket().fromRaw(data);
-    };
-    return ECVerifyPacket;
-}(Packet));
+    }
+}
 /**
  * ECVerifyResultPacket
  */
-var ECVerifyResultPacket = /** @class */ (function (_super) {
-    __extends(ECVerifyResultPacket, _super);
-    function ECVerifyResultPacket(value) {
-        var _this = _super.call(this) || this;
-        _this.cmd = packetTypes.ECVERIFYRESULT;
-        _this.value = value;
-        return _this;
+class ECVerifyResultPacket extends Packet {
+    constructor(value) {
+        super();
+        this.cmd = packetTypes.ECVERIFYRESULT;
+        this.value = value;
     }
-    ECVerifyResultPacket.prototype.getSize = function () {
+    getSize() {
         return 1;
-    };
-    ECVerifyResultPacket.prototype.toWriter = function (bw) {
+    }
+    toWriter(bw) {
         bw.writeU8(this.value ? 1 : 0);
         return bw;
-    };
-    ECVerifyResultPacket.prototype.fromRaw = function (data) {
-        var br = bio.read(data, true);
+    }
+    fromRaw(data) {
+        const br = bio.read(data, true);
         this.value = br.readU8() === 1;
         return this;
-    };
-    ECVerifyResultPacket.fromRaw = function (data) {
+    }
+    static fromRaw(data) {
         return new ECVerifyResultPacket().fromRaw(data);
-    };
-    return ECVerifyResultPacket;
-}(Packet));
+    }
+}
 /**
  * ECSignPacket
  */
-var ECSignPacket = /** @class */ (function (_super) {
-    __extends(ECSignPacket, _super);
-    function ECSignPacket(msg, key) {
-        var _this = _super.call(this) || this;
-        _this.cmd = packetTypes.ECSIGN;
-        _this.msg = msg || null;
-        _this.key = key || null;
-        return _this;
+class ECSignPacket extends Packet {
+    constructor(msg, key) {
+        super();
+        this.cmd = packetTypes.ECSIGN;
+        this.msg = msg || null;
+        this.key = key || null;
     }
-    ECSignPacket.prototype.getSize = function () {
-        var size = 0;
+    getSize() {
+        let size = 0;
         size += encoding.sizeVarBytes(this.msg);
         size += encoding.sizeVarBytes(this.key);
         return size;
-    };
-    ECSignPacket.prototype.toWriter = function (bw) {
+    }
+    toWriter(bw) {
         bw.writeVarBytes(this.msg);
         bw.writeVarBytes(this.key);
         return bw;
-    };
-    ECSignPacket.prototype.fromRaw = function (data) {
-        var br = bio.read(data, true);
+    }
+    fromRaw(data) {
+        const br = bio.read(data, true);
         this.msg = br.readVarBytes();
         this.key = br.readVarBytes();
         return this;
-    };
-    ECSignPacket.fromRaw = function (data) {
+    }
+    static fromRaw(data) {
         return new ECSignPacket().fromRaw(data);
-    };
-    return ECSignPacket;
-}(Packet));
+    }
+}
 /**
  * ECSignResultPacket
  */
-var ECSignResultPacket = /** @class */ (function (_super) {
-    __extends(ECSignResultPacket, _super);
-    function ECSignResultPacket(sig) {
-        var _this = _super.call(this) || this;
-        _this.cmd = packetTypes.ECSIGNRESULT;
-        _this.sig = sig;
-        return _this;
+class ECSignResultPacket extends Packet {
+    constructor(sig) {
+        super();
+        this.cmd = packetTypes.ECSIGNRESULT;
+        this.sig = sig;
     }
-    ECSignResultPacket.prototype.getSize = function () {
+    getSize() {
         return encoding.sizeVarBytes(this.sig);
-    };
-    ECSignResultPacket.prototype.toWriter = function (bw) {
+    }
+    toWriter(bw) {
         bw.writeVarBytes(this.sig);
         return bw;
-    };
-    ECSignResultPacket.prototype.fromRaw = function (data) {
-        var br = bio.read(data, true);
+    }
+    fromRaw(data) {
+        const br = bio.read(data, true);
         this.sig = br.readVarBytes();
         return this;
-    };
-    ECSignResultPacket.fromRaw = function (data) {
+    }
+    static fromRaw(data) {
         return new ECSignResultPacket().fromRaw(data);
-    };
-    return ECSignResultPacket;
-}(Packet));
+    }
+}
 /**
  * MinePacket
  */
-var MinePacket = /** @class */ (function (_super) {
-    __extends(MinePacket, _super);
-    function MinePacket(data, target, min, max) {
-        var _this = _super.call(this) || this;
-        _this.cmd = packetTypes.MINE;
-        _this.data = data || null;
-        _this.target = target || null;
-        _this.min = min != null ? min : -1;
-        _this.max = max != null ? max : -1;
-        return _this;
+class MinePacket extends Packet {
+    constructor(data, target, min, max) {
+        super();
+        this.cmd = packetTypes.MINE;
+        this.data = data || null;
+        this.target = target || null;
+        this.min = min != null ? min : -1;
+        this.max = max != null ? max : -1;
     }
-    MinePacket.prototype.getSize = function () {
+    getSize() {
         return 120;
-    };
-    MinePacket.prototype.toWriter = function (bw) {
+    }
+    toWriter(bw) {
         bw.writeBytes(this.data);
         bw.writeBytes(this.target);
         bw.writeU32(this.min);
         bw.writeU32(this.max);
         return bw;
-    };
-    MinePacket.prototype.fromRaw = function (data) {
-        var br = bio.read(data, true);
+    }
+    fromRaw(data) {
+        const br = bio.read(data, true);
         this.data = br.readBytes(80);
         this.target = br.readBytes(32);
         this.min = br.readU32();
         this.max = br.readU32();
         return this;
-    };
-    MinePacket.fromRaw = function (data) {
+    }
+    static fromRaw(data) {
         return new MinePacket().fromRaw(data);
-    };
-    return MinePacket;
-}(Packet));
+    }
+}
 /**
  * MineResultPacket
  */
-var MineResultPacket = /** @class */ (function (_super) {
-    __extends(MineResultPacket, _super);
-    function MineResultPacket(nonce) {
-        var _this = _super.call(this) || this;
-        _this.cmd = packetTypes.MINERESULT;
-        _this.nonce = nonce != null ? nonce : -1;
-        return _this;
+class MineResultPacket extends Packet {
+    constructor(nonce) {
+        super();
+        this.cmd = packetTypes.MINERESULT;
+        this.nonce = nonce != null ? nonce : -1;
     }
-    MineResultPacket.prototype.getSize = function () {
+    getSize() {
         return 5;
-    };
-    MineResultPacket.prototype.toWriter = function (bw) {
+    }
+    toWriter(bw) {
         bw.writeU8(this.nonce !== -1 ? 1 : 0);
         bw.writeU32(this.nonce);
         return bw;
-    };
-    MineResultPacket.prototype.fromRaw = function (data) {
-        var br = bio.read(data, true);
+    }
+    fromRaw(data) {
+        const br = bio.read(data, true);
         this.nonce = -1;
         if (br.readU8() === 1)
             this.nonce = br.readU32();
         return this;
-    };
-    MineResultPacket.fromRaw = function (data) {
+    }
+    static fromRaw(data) {
         return new MineResultPacket().fromRaw(data);
-    };
-    return MineResultPacket;
-}(Packet));
+    }
+}
 /**
  * ScryptPacket
  */
-var ScryptPacket = /** @class */ (function (_super) {
-    __extends(ScryptPacket, _super);
-    function ScryptPacket(passwd, salt, N, r, p, len) {
-        var _this = _super.call(this) || this;
-        _this.cmd = packetTypes.SCRYPT;
-        _this.passwd = passwd || null;
-        _this.salt = salt || null;
-        _this.N = N != null ? N : -1;
-        _this.r = r != null ? r : -1;
-        _this.p = p != null ? p : -1;
-        _this.len = len != null ? len : -1;
-        return _this;
+class ScryptPacket extends Packet {
+    constructor(passwd, salt, N, r, p, len) {
+        super();
+        this.cmd = packetTypes.SCRYPT;
+        this.passwd = passwd || null;
+        this.salt = salt || null;
+        this.N = N != null ? N : -1;
+        this.r = r != null ? r : -1;
+        this.p = p != null ? p : -1;
+        this.len = len != null ? len : -1;
     }
-    ScryptPacket.prototype.getSize = function () {
-        var size = 0;
+    getSize() {
+        let size = 0;
         size += encoding.sizeVarBytes(this.passwd);
         size += encoding.sizeVarBytes(this.salt);
         size += 16;
         return size;
-    };
-    ScryptPacket.prototype.toWriter = function (bw) {
+    }
+    toWriter(bw) {
         bw.writeVarBytes(this.passwd);
         bw.writeVarBytes(this.salt);
         bw.writeU32(this.N);
@@ -874,9 +794,9 @@ var ScryptPacket = /** @class */ (function (_super) {
         bw.writeU32(this.p);
         bw.writeU32(this.len);
         return bw;
-    };
-    ScryptPacket.prototype.fromRaw = function (data) {
-        var br = bio.read(data, true);
+    }
+    fromRaw(data) {
+        const br = bio.read(data, true);
         this.passwd = br.readVarBytes();
         this.salt = br.readVarBytes();
         this.N = br.readU32();
@@ -884,40 +804,36 @@ var ScryptPacket = /** @class */ (function (_super) {
         this.p = br.readU32();
         this.len = br.readU32();
         return this;
-    };
-    ScryptPacket.fromRaw = function (data) {
+    }
+    static fromRaw(data) {
         return new ScryptPacket().fromRaw(data);
-    };
-    return ScryptPacket;
-}(Packet));
+    }
+}
 /**
  * ScryptResultPacket
  */
-var ScryptResultPacket = /** @class */ (function (_super) {
-    __extends(ScryptResultPacket, _super);
-    function ScryptResultPacket(key) {
-        var _this = _super.call(this) || this;
-        _this.cmd = packetTypes.SCRYPTRESULT;
-        _this.key = key || null;
-        return _this;
+class ScryptResultPacket extends Packet {
+    constructor(key) {
+        super();
+        this.cmd = packetTypes.SCRYPTRESULT;
+        this.key = key || null;
     }
-    ScryptResultPacket.prototype.getSize = function () {
+    getSize() {
         return encoding.sizeVarBytes(this.key);
-    };
-    ScryptResultPacket.prototype.toWriter = function (bw) {
+    }
+    toWriter(bw) {
         bw.writeVarBytes(this.key);
         return bw;
-    };
-    ScryptResultPacket.prototype.fromRaw = function (data) {
-        var br = bio.read(data, true);
+    }
+    fromRaw(data) {
+        const br = bio.read(data, true);
         this.key = br.readVarBytes();
         return this;
-    };
-    ScryptResultPacket.fromRaw = function (data) {
+    }
+    static fromRaw(data) {
         return new ScryptResultPacket().fromRaw(data);
-    };
-    return ScryptResultPacket;
-}(Packet));
+    }
+}
 /*
  * Helpers
  */
@@ -951,3 +867,4 @@ exports.MinePacket = MinePacket;
 exports.MineResultPacket = MineResultPacket;
 exports.ScryptPacket = ScryptPacket;
 exports.ScryptResultPacket = ScryptResultPacket;
+//# sourceMappingURL=packets.js.map

@@ -5,84 +5,67 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-var assert = require('bsert');
-var EventEmitter = require('events');
-var packets = require('./packets');
+const assert = require('bsert');
+const EventEmitter = require('events');
+const packets = require('./packets');
 /**
  * Parser
  * @alias module:workers.Parser
  * @extends EventEmitter
  */
-var Parser = /** @class */ (function (_super) {
-    __extends(Parser, _super);
+class Parser extends EventEmitter {
     /**
      * Create a parser.
      * @constructor
      */
-    function Parser() {
-        var _this = _super.call(this) || this;
-        _this.waiting = 9;
-        _this.header = null;
-        _this.pending = [];
-        _this.total = 0;
-        return _this;
+    constructor() {
+        super();
+        this.waiting = 9;
+        this.header = null;
+        this.pending = [];
+        this.total = 0;
     }
-    Parser.prototype.feed = function (data) {
+    feed(data) {
         this.total += data.length;
         this.pending.push(data);
         while (this.total >= this.waiting) {
-            var chunk = this.read(this.waiting);
+            const chunk = this.read(this.waiting);
             this.parse(chunk);
         }
-    };
-    Parser.prototype.read = function (size) {
+    }
+    read(size) {
         assert(this.total >= size, 'Reading too much.');
         if (size === 0)
             return Buffer.alloc(0);
-        var pending = this.pending[0];
+        const pending = this.pending[0];
         if (pending.length > size) {
-            var chunk_1 = pending.slice(0, size);
+            const chunk = pending.slice(0, size);
             this.pending[0] = pending.slice(size);
-            this.total -= chunk_1.length;
-            return chunk_1;
+            this.total -= chunk.length;
+            return chunk;
         }
         if (pending.length === size) {
-            var chunk_2 = this.pending.shift();
-            this.total -= chunk_2.length;
-            return chunk_2;
+            const chunk = this.pending.shift();
+            this.total -= chunk.length;
+            return chunk;
         }
-        var chunk = Buffer.allocUnsafe(size);
-        var off = 0;
+        const chunk = Buffer.allocUnsafe(size);
+        let off = 0;
         while (off < chunk.length) {
-            var pending_1 = this.pending[0];
-            var len = pending_1.copy(chunk, off);
-            if (len === pending_1.length)
+            const pending = this.pending[0];
+            const len = pending.copy(chunk, off);
+            if (len === pending.length)
                 this.pending.shift();
             else
-                this.pending[0] = pending_1.slice(len);
+                this.pending[0] = pending.slice(len);
             off += len;
         }
         assert.strictEqual(off, chunk.length);
         this.total -= chunk.length;
         return chunk;
-    };
-    Parser.prototype.parse = function (data) {
-        var header = this.header;
+    }
+    parse(data) {
+        let header = this.header;
         if (!header) {
             try {
                 header = this.parseHeader(data);
@@ -97,7 +80,7 @@ var Parser = /** @class */ (function (_super) {
         }
         this.waiting = 9;
         this.header = null;
-        var packet;
+        let packet;
         try {
             packet = this.parsePacket(header, data);
         }
@@ -111,14 +94,14 @@ var Parser = /** @class */ (function (_super) {
         }
         packet.id = header.id;
         this.emit('packet', packet);
-    };
-    Parser.prototype.parseHeader = function (data) {
-        var id = data.readUInt32LE(0, true);
-        var cmd = data.readUInt8(4, true);
-        var size = data.readUInt32LE(5, true);
+    }
+    parseHeader(data) {
+        const id = data.readUInt32LE(0, true);
+        const cmd = data.readUInt8(4, true);
+        const size = data.readUInt32LE(5, true);
         return new Header(id, cmd, size);
-    };
-    Parser.prototype.parsePacket = function (header, data) {
+    }
+    parsePacket(header, data) {
         switch (header.cmd) {
             case packets.types.ENV:
                 return packets.EnvPacket.fromRaw(data);
@@ -165,26 +148,25 @@ var Parser = /** @class */ (function (_super) {
             default:
                 throw new Error('Unknown packet.');
         }
-    };
-    return Parser;
-}(EventEmitter));
+    }
+}
 /**
  * Header
  * @ignore
  */
-var Header = /** @class */ (function () {
+class Header {
     /**
      * Create a header.
      * @constructor
      */
-    function Header(id, cmd, size) {
+    constructor(id, cmd, size) {
         this.id = id;
         this.cmd = cmd;
         this.size = size;
     }
-    return Header;
-}());
+}
 /*
  * Expose
  */
 module.exports = Parser;
+//# sourceMappingURL=parser.js.map

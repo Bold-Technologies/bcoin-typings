@@ -21,8 +21,8 @@ declare class CPUMiner {
     stopping: boolean;
     job: any;
     stopJob: {
-        resolve: any;
-        reject: any;
+        resolve: (value: any) => void;
+        reject: (reason?: any) => void;
     };
     /**
      * Initialize the miner.

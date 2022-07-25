@@ -12,3 +12,4 @@ exports.CPUMiner = require('./cpuminer');
 exports.mine = require('./mine');
 exports.Miner = require('./miner');
 exports.BlockTemplate = require('./template');
+//# sourceMappingURL=index.js.map

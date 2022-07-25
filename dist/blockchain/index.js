@@ -12,3 +12,4 @@ exports.ChainEntry = require('./chainentry');
 exports.Chain = require('./chain');
 exports.common = require('./common');
 exports.layout = require('./layout');
+//# sourceMappingURL=index.js.map

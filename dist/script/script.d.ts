@@ -763,6 +763,11 @@ declare class Script {
      * @param {Buffer}
      */
     private fromRaw;
+    /**
+     * Instantiate a value-only iterator.
+     * @returns {ScriptIterator}
+     */
+    [Symbol.iterator](): ScriptIterator;
 }
 declare namespace Script {
     /**

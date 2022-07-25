@@ -9,7 +9,7 @@ declare class WalletClient {
      * @param {Object?} options
      */
     constructor(options: any | null);
-    wallets: any;
+    wallets: Map<any, any>;
     /**
      * Open the client.
      * @private

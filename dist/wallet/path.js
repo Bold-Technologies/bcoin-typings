@@ -4,11 +4,11 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var assert = require('bsert');
-var bio = require('bufio');
-var Address = require('../primitives/address');
-var encoding = bio.encoding;
-var inspectSymbol = require('../utils').inspectSymbol;
+const assert = require('bsert');
+const bio = require('bufio');
+const Address = require('../primitives/address');
+const { encoding } = bio;
+const { inspectSymbol } = require('../utils');
 /**
  * Path
  * @alias module:wallet.Path
@@ -17,13 +17,13 @@ var inspectSymbol = require('../utils').inspectSymbol;
  * @property {Number} branch - Branch index.
  * @property {Number} index - Address index.
  */
-var Path = /** @class */ (function () {
+class Path {
     /**
      * Create a path.
      * @constructor
      * @param {Object?} options
      */
-    function Path(options) {
+    constructor(options) {
         this.keyType = Path.types.HD;
         this.name = null; // Passed in by caller.
         this.account = 0;
@@ -43,7 +43,7 @@ var Path = /** @class */ (function () {
      * @param {Object} options
      * @returns {Path}
      */
-    Path.prototype.fromOptions = function (options) {
+    fromOptions(options) {
         this.keyType = options.keyType;
         this.name = options.name;
         this.account = options.account;
@@ -55,21 +55,21 @@ var Path = /** @class */ (function () {
         this.version = options.version;
         this.hash = options.hash;
         return this;
-    };
+    }
     /**
      * Instantiate path from options object.
      * @param {Object} options
      * @returns {Path}
      */
-    Path.fromOptions = function (options) {
+    static fromOptions(options) {
         return new this().fromOptions(options);
-    };
+    }
     /**
      * Clone the path object.
      * @returns {Path}
      */
-    Path.prototype.clone = function () {
-        var path = new this.constructor();
+    clone() {
+        const path = new this.constructor();
         path.keyType = this.keyType;
         path.name = this.name;
         path.account = this.account;
@@ -81,17 +81,17 @@ var Path = /** @class */ (function () {
         path.version = this.version;
         path.hash = this.hash;
         return path;
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    Path.prototype.fromRaw = function (data) {
-        var br = bio.read(data);
+    fromRaw(data) {
+        const br = bio.read(data);
         this.account = br.readU32();
         this.keyType = br.readU8();
-        var flags = br.readU8();
+        const flags = br.readU8();
         this.type = flags & 7;
         this.version = flags >>> 3;
         if (this.version === 0x1f)
@@ -113,21 +113,21 @@ var Path = /** @class */ (function () {
                 break;
         }
         return this;
-    };
+    }
     /**
      * Instantiate path from serialized data.
      * @param {Buffer} data
      * @returns {Path}
      */
-    Path.fromRaw = function (data) {
+    static fromRaw(data) {
         return new this().fromRaw(data);
-    };
+    }
     /**
      * Calculate serialization size.
      * @returns {Number}
      */
-    Path.prototype.getSize = function () {
-        var size = 0;
+    getSize() {
+        let size = 0;
         size += 6;
         switch (this.keyType) {
             case Path.types.HD:
@@ -139,20 +139,20 @@ var Path = /** @class */ (function () {
                 break;
         }
         return size;
-    };
+    }
     /**
      * Serialize path.
      * @returns {Buffer}
      */
-    Path.prototype.toRaw = function () {
-        var size = this.getSize();
-        var bw = bio.write(size);
+    toRaw() {
+        const size = this.getSize();
+        const bw = bio.write(size);
         bw.writeU32(this.account);
         bw.writeU8(this.keyType);
-        var version = this.version;
+        let version = this.version;
         if (version === -1)
             version = 0x1f;
-        var flags = (version << 3) | this.type;
+        const flags = (version << 3) | this.type;
         bw.writeU8(flags);
         switch (this.keyType) {
             case Path.types.HD:
@@ -176,14 +176,14 @@ var Path = /** @class */ (function () {
                 break;
         }
         return bw.render();
-    };
+    }
     /**
      * Inject properties from address.
      * @private
      * @param {Account} account
      * @param {Address} address
      */
-    Path.prototype.fromAddress = function (account, address) {
+    fromAddress(account, address) {
         this.keyType = Path.types.ADDRESS;
         this.name = account.name;
         this.account = account.accountIndex;
@@ -191,53 +191,52 @@ var Path = /** @class */ (function () {
         this.type = address.type;
         this.hash = address.getHash();
         return this;
-    };
+    }
     /**
      * Instantiate path from address.
      * @param {Account} account
      * @param {Address} address
      * @returns {Path}
      */
-    Path.fromAddress = function (account, address) {
+    static fromAddress(account, address) {
         return new this().fromAddress(account, address);
-    };
+    }
     /**
      * Convert path object to string derivation path.
      * @returns {String}
      */
-    Path.prototype.toPath = function () {
+    toPath() {
         if (this.keyType !== Path.types.HD)
             return null;
-        return "m/".concat(this.account, "'/").concat(this.branch, "/").concat(this.index);
-    };
+        return `m/${this.account}'/${this.branch}/${this.index}`;
+    }
     /**
      * Convert path object to an address (currently unused).
      * @returns {Address}
      */
-    Path.prototype.toAddress = function () {
+    toAddress() {
         return Address.fromHash(this.hash, this.type, this.version);
-    };
+    }
     /**
      * Convert path to a json-friendly object.
      * @returns {Object}
      */
-    Path.prototype.toJSON = function () {
+    toJSON() {
         return {
             name: this.name,
             account: this.account,
             change: this.branch === 1,
             derivation: this.toPath()
         };
-    };
+    }
     /**
      * Inspect the path.
      * @returns {String}
      */
-    Path.prototype[inspectSymbol] = function () {
-        return "<Path: ".concat(this.name, ":").concat(this.toPath(), ">");
-    };
-    return Path;
-}());
+    [inspectSymbol]() {
+        return `<Path: ${this.name}:${this.toPath()}>`;
+    }
+}
 /**
  * Path types.
  * @enum {Number}
@@ -262,3 +261,4 @@ Path.typesByVal = [
  * Expose
  */
 module.exports = Path;
+//# sourceMappingURL=path.js.map

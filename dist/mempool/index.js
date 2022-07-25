@@ -11,3 +11,4 @@ exports.Fees = require('./fees');
 exports.layout = require('./layout');
 exports.MempoolEntry = require('./mempoolentry');
 exports.Mempool = require('./mempool');
+//# sourceMappingURL=index.js.map

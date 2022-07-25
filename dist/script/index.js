@@ -16,3 +16,4 @@ exports.ScriptNum = require('./scriptnum');
 exports.sigcache = require('./sigcache');
 exports.Stack = require('./stack');
 exports.Witness = require('./witness');
+//# sourceMappingURL=index.js.map

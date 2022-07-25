@@ -5,25 +5,10 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-var bio = require('bufio');
-var util = require('../utils/util');
-var AbstractBlock = require('./abstractblock');
-var inspectSymbol = require('../utils').inspectSymbol;
+const bio = require('bufio');
+const util = require('../utils/util');
+const AbstractBlock = require('./abstractblock');
+const { inspectSymbol } = require('../utils');
 /**
  * Headers
  * Represents block headers obtained
@@ -31,106 +16,104 @@ var inspectSymbol = require('../utils').inspectSymbol;
  * @alias module:primitives.Headers
  * @extends AbstractBlock
  */
-var Headers = /** @class */ (function (_super) {
-    __extends(Headers, _super);
+class Headers extends AbstractBlock {
     /**
      * Create headers.
      * @constructor
      * @param {Object} options
      */
-    function Headers(options) {
-        var _this = _super.call(this) || this;
+    constructor(options) {
+        super();
         if (options)
-            _this.parseOptions(options);
-        return _this;
+            this.parseOptions(options);
     }
     /**
      * Perform non-contextual
      * verification on the headers.
      * @returns {Boolean}
      */
-    Headers.prototype.verifyBody = function () {
+    verifyBody() {
         return true;
-    };
+    }
     /**
      * Get size of the headers.
      * @returns {Number}
      */
-    Headers.prototype.getSize = function () {
+    getSize() {
         return 81;
-    };
+    }
     /**
      * Serialize the headers to a buffer writer.
      * @param {BufferWriter} bw
      */
-    Headers.prototype.toWriter = function (bw) {
+    toWriter(bw) {
         this.writeHead(bw);
         bw.writeVarint(0);
         return bw;
-    };
+    }
     /**
      * Serialize the headers.
      * @returns {Buffer|String}
      */
-    Headers.prototype.toRaw = function () {
-        var size = this.getSize();
+    toRaw() {
+        const size = this.getSize();
         return this.toWriter(bio.write(size)).render();
-    };
+    }
     /**
      * Inject properties from buffer reader.
      * @private
      * @param {Buffer} data
      */
-    Headers.prototype.fromReader = function (br) {
+    fromReader(br) {
         this.readHead(br);
         br.readVarint();
         return this;
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    Headers.prototype.fromRaw = function (data) {
+    fromRaw(data) {
         return this.fromReader(bio.read(data));
-    };
+    }
     /**
      * Instantiate headers from buffer reader.
      * @param {BufferReader} br
      * @returns {Headers}
      */
-    Headers.fromReader = function (br) {
+    static fromReader(br) {
         return new this().fromReader(br);
-    };
+    }
     /**
      * Instantiate headers from serialized data.
      * @param {Buffer} data
      * @param {String?} enc - Encoding, can be `'hex'` or null.
      * @returns {Headers}
      */
-    Headers.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data);
-    };
+    }
     /**
      * Instantiate headers from serialized data.
      * @param {Buffer} data
      * @param {String?} enc - Encoding, can be `'hex'` or null.
      * @returns {Headers}
      */
-    Headers.fromHead = function (data, enc) {
+    static fromHead(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromHead(data);
-    };
+    }
     /**
      * Instantiate headers from a chain entry.
      * @param {ChainEntry} entry
      * @returns {Headers}
      */
-    Headers.fromEntry = function (entry) {
-        var headers = new this();
+    static fromEntry(entry) {
+        const headers = new this();
         headers.version = entry.version;
         headers.prevBlock = entry.prevBlock;
         headers.merkleRoot = entry.merkleRoot;
@@ -140,33 +123,33 @@ var Headers = /** @class */ (function (_super) {
         headers._hash = entry.hash;
         headers._hhash = entry.hash;
         return headers;
-    };
+    }
     /**
      * Convert the block to a headers object.
      * @returns {Headers}
      */
-    Headers.prototype.toHeaders = function () {
+    toHeaders() {
         return this;
-    };
+    }
     /**
      * Convert the block to a headers object.
      * @param {Block|MerkleBlock} block
      * @returns {Headers}
      */
-    Headers.fromBlock = function (block) {
-        var headers = new this(block);
+    static fromBlock(block) {
+        const headers = new this(block);
         headers._hash = block._hash;
         headers._hhash = block._hhash;
         return headers;
-    };
+    }
     /**
      * Convert the block to an object suitable
      * for JSON serialization.
      * @returns {Object}
      */
-    Headers.prototype.toJSON = function () {
+    toJSON() {
         return this.getJSON();
-    };
+    }
     /**
      * Convert the block to an object suitable
      * for JSON serialization. Note that the hashes
@@ -177,7 +160,7 @@ var Headers = /** @class */ (function (_super) {
      * @param {Number} height
      * @returns {Object}
      */
-    Headers.prototype.getJSON = function (network, view, height) {
+    getJSON(network, view, height) {
         return {
             hash: this.rhash(),
             height: height,
@@ -188,32 +171,32 @@ var Headers = /** @class */ (function (_super) {
             bits: this.bits,
             nonce: this.nonce
         };
-    };
+    }
     /**
      * Inject properties from json object.
      * @private
      * @param {Object} json
      */
-    Headers.prototype.fromJSON = function (json) {
+    fromJSON(json) {
         this.parseJSON(json);
         return this;
-    };
+    }
     /**
      * Instantiate a merkle block from a jsonified block object.
      * @param {Object} json - The jsonified block object.
      * @returns {Headers}
      */
-    Headers.fromJSON = function (json) {
+    static fromJSON(json) {
         return new this().fromJSON(json);
-    };
+    }
     /**
      * Inspect the headers and return a more
      * user-friendly representation of the data.
      * @returns {Object}
      */
-    Headers.prototype[inspectSymbol] = function () {
+    [inspectSymbol]() {
         return this.format();
-    };
+    }
     /**
      * Inspect the headers and return a more
      * user-friendly representation of the data.
@@ -221,7 +204,7 @@ var Headers = /** @class */ (function (_super) {
      * @param {Number} height
      * @returns {Object}
      */
-    Headers.prototype.format = function (view, height) {
+    format(view, height) {
         return {
             hash: this.rhash(),
             height: height != null ? height : -1,
@@ -233,18 +216,18 @@ var Headers = /** @class */ (function (_super) {
             bits: this.bits,
             nonce: this.nonce
         };
-    };
+    }
     /**
      * Test an object to see if it is a Headers object.
      * @param {Object} obj
      * @returns {Boolean}
      */
-    Headers.isHeaders = function (obj) {
+    static isHeaders(obj) {
         return obj instanceof Headers;
-    };
-    return Headers;
-}(AbstractBlock));
+    }
+}
 /*
  * Expose
  */
 module.exports = Headers;
+//# sourceMappingURL=headers.js.map

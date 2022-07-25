@@ -4,9 +4,9 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var assert = require('bsert');
-var bio = require('bufio');
-var CoinEntry = require('../coins/coinentry');
+const assert = require('bsert');
+const bio = require('bufio');
+const CoinEntry = require('../coins/coinentry');
 /**
  * Undo Coins
  * Coins need to be resurrected from somewhere
@@ -16,12 +16,12 @@ var CoinEntry = require('../coins/coinentry');
  * @alias module:coins.UndoCoins
  * @property {UndoCoin[]} items
  */
-var UndoCoins = /** @class */ (function () {
+class UndoCoins {
     /**
      * Create undo coins.
      * @constructor
      */
-    function UndoCoins() {
+    constructor() {
         this.items = [];
     }
     /**
@@ -29,86 +29,82 @@ var UndoCoins = /** @class */ (function () {
      * @param {CoinEntry}
      * @returns {Number}
      */
-    UndoCoins.prototype.push = function (coin) {
+    push(coin) {
         return this.items.push(coin);
-    };
+    }
     /**
      * Calculate undo coins size.
      * @returns {Number}
      */
-    UndoCoins.prototype.getSize = function () {
-        var size = 0;
+    getSize() {
+        let size = 0;
         size += 4;
-        for (var _i = 0, _a = this.items; _i < _a.length; _i++) {
-            var coin = _a[_i];
+        for (const coin of this.items)
             size += coin.getSize();
-        }
         return size;
-    };
+    }
     /**
      * Serialize all undo coins.
      * @returns {Buffer}
      */
-    UndoCoins.prototype.toRaw = function () {
-        var size = this.getSize();
-        var bw = bio.write(size);
+    toRaw() {
+        const size = this.getSize();
+        const bw = bio.write(size);
         bw.writeU32(this.items.length);
-        for (var _i = 0, _a = this.items; _i < _a.length; _i++) {
-            var coin = _a[_i];
+        for (const coin of this.items)
             coin.toWriter(bw);
-        }
         return bw.render();
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      * @returns {UndoCoins}
      */
-    UndoCoins.prototype.fromRaw = function (data) {
-        var br = bio.read(data);
-        var count = br.readU32();
-        for (var i = 0; i < count; i++)
+    fromRaw(data) {
+        const br = bio.read(data);
+        const count = br.readU32();
+        for (let i = 0; i < count; i++)
             this.items.push(CoinEntry.fromReader(br));
         return this;
-    };
+    }
     /**
      * Instantiate undo coins from serialized data.
      * @param {Buffer} data
      * @returns {UndoCoins}
      */
-    UndoCoins.fromRaw = function (data) {
+    static fromRaw(data) {
         return new this().fromRaw(data);
-    };
+    }
     /**
      * Test whether the undo coins have any members.
      * @returns {Boolean}
      */
-    UndoCoins.prototype.isEmpty = function () {
+    isEmpty() {
         return this.items.length === 0;
-    };
+    }
     /**
      * Render the undo coins.
      * @returns {Buffer}
      */
-    UndoCoins.prototype.commit = function () {
-        var raw = this.toRaw();
+    commit() {
+        const raw = this.toRaw();
         this.items.length = 0;
         return raw;
-    };
+    }
     /**
      * Re-apply undo coins to a view, effectively unspending them.
      * @param {CoinView} view
      * @param {Outpoint} prevout
      */
-    UndoCoins.prototype.apply = function (view, prevout) {
-        var undo = this.items.pop();
+    apply(view, prevout) {
+        const undo = this.items.pop();
         assert(undo);
         view.addEntry(prevout, undo);
-    };
-    return UndoCoins;
-}());
+    }
+}
 /*
  * Expose
  */
 module.exports = UndoCoins;
+//# sourceMappingURL=undocoins.js.map

@@ -5,21 +5,21 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var assert = require('bsert');
-var bio = require('bufio');
-var base58 = require('bcrypto/lib/encoding/base58');
-var bech32 = require('bcrypto/lib/encoding/bech32');
-var bech32m = require('bcrypto/lib/encoding/bech32m');
-var sha256 = require('bcrypto/lib/sha256');
-var hash160 = require('bcrypto/lib/hash160');
-var hash256 = require('bcrypto/lib/hash256');
-var Network = require('../protocol/network');
-var consensus = require('../protocol/consensus');
-var inspectSymbol = require('../utils').inspectSymbol;
+const assert = require('bsert');
+const bio = require('bufio');
+const base58 = require('bcrypto/lib/encoding/base58');
+const bech32 = require('bcrypto/lib/encoding/bech32');
+const bech32m = require('bcrypto/lib/encoding/bech32m');
+const sha256 = require('bcrypto/lib/sha256');
+const hash160 = require('bcrypto/lib/hash160');
+const hash256 = require('bcrypto/lib/hash256');
+const Network = require('../protocol/network');
+const consensus = require('../protocol/consensus');
+const { inspectSymbol } = require('../utils');
 /*
  * Constants
  */
-var ZERO_HASH160 = Buffer.alloc(20, 0x00);
+const ZERO_HASH160 = Buffer.alloc(20, 0x00);
 /**
  * Address
  * Represents an address.
@@ -28,13 +28,13 @@ var ZERO_HASH160 = Buffer.alloc(20, 0x00);
  * @property {AddressPrefix} type
  * @property {Number} version
  */
-var Address = /** @class */ (function () {
+class Address {
     /**
      * Create an address.
      * @constructor
      * @param {Object?} options
      */
-    function Address(options, network) {
+    constructor(options, network) {
         this.type = Address.types.PUBKEYHASH;
         this.version = -1;
         this.hash = ZERO_HASH160;
@@ -46,64 +46,64 @@ var Address = /** @class */ (function () {
      * @private
      * @param {Object} options
      */
-    Address.prototype.fromOptions = function (options, network) {
+    fromOptions(options, network) {
         if (typeof options === 'string')
             return this.fromString(options, network);
         assert(options);
-        var hash = options.hash, type = options.type, version = options.version;
+        const { hash, type, version } = options;
         return this.fromHash(hash, type, version);
-    };
+    }
     /**
      * Insantiate address from options.
      * @param {Object} options
      * @returns {Address}
      */
-    Address.fromOptions = function (options, network) {
+    static fromOptions(options, network) {
         return new this().fromOptions(options, network);
-    };
+    }
     /**
      * Get the address hash.
      * @param {String?} enc - Can be `"hex"` or `null`.
      * @returns {Hash|Buffer}
      */
-    Address.prototype.getHash = function (enc) {
+    getHash(enc) {
         if (enc === 'hex')
             return this.hash.toString('hex');
         return this.hash;
-    };
+    }
     /**
      * Test whether the address is null.
      * @returns {Boolean}
      */
-    Address.prototype.isNull = function () {
+    isNull() {
         if (this.hash.length === 20)
             return this.hash.equals(ZERO_HASH160);
         if (this.hash.length === 32)
             return this.hash.equals(consensus.ZERO_HASH);
-        for (var i = 0; i < this.hash.length; i++) {
+        for (let i = 0; i < this.hash.length; i++) {
             if (this.hash[i] !== 0)
                 return false;
         }
         return true;
-    };
+    }
     /**
      * Test equality against another address.
      * @param {Address} addr
      * @returns {Boolean}
      */
-    Address.prototype.equals = function (addr) {
+    equals(addr) {
         assert(addr instanceof Address);
         return this.type === addr.type
             && this.version === addr.version
             && this.hash.equals(addr.hash);
-    };
+    }
     /**
      * Get the address type as a string.
      * @returns {String}
      */
-    Address.prototype.getType = function () {
+    getType() {
         return Address.typesByVal[this.type].toLowerCase();
-    };
+    }
     /**
      * Get prefix for indexers
      * It's a single byte encoded as follows:
@@ -112,20 +112,20 @@ var Address = /** @class */ (function () {
      * @param {Network|String} network
      * @returns {Number}
      */
-    Address.prototype.getPrefix = function (network) {
+    getPrefix(network) {
         if (this.isProgram())
             return this.version;
         // Note: -1 | 0x80 = -1
         return 0x80 | this.getBase58Prefix(network);
-    };
+    }
     /**
      * Get a network address prefix for the address.
      * @param {Network?} network
      * @returns {Number}
      */
-    Address.prototype.getBase58Prefix = function (network) {
+    getBase58Prefix(network) {
         network = Network.get(network);
-        var prefixes = network.addressPrefix;
+        const prefixes = network.addressPrefix;
         switch (this.type) {
             case Address.types.PUBKEYHASH:
                 return prefixes.pubkeyhash;
@@ -133,27 +133,27 @@ var Address = /** @class */ (function () {
                 return prefixes.scripthash;
         }
         return -1;
-    };
+    }
     /**
      * Calculate size of serialized address.
      * @returns {Number}
      */
-    Address.prototype.getSize = function () {
-        var size = 5 + this.hash.length;
+    getSize() {
+        let size = 5 + this.hash.length;
         if (this.version !== -1)
             size += 2;
         return size;
-    };
+    }
     /**
      * Compile the address object to its raw serialization.
      * @param {{NetworkType|Network)?} network
      * @returns {Buffer}
      * @throws Error on bad hash/prefix.
      */
-    Address.prototype.toRaw = function (network) {
-        var size = this.getSize();
-        var bw = bio.write(size);
-        var prefix = this.getBase58Prefix(network);
+    toRaw(network) {
+        const size = this.getSize();
+        const bw = bio.write(size);
+        const prefix = this.getBase58Prefix(network);
         assert(prefix !== -1, 'Not a valid address prefix.');
         bw.writeU8(prefix);
         if (this.version !== -1) {
@@ -163,46 +163,46 @@ var Address = /** @class */ (function () {
         bw.writeBytes(this.hash);
         bw.writeChecksum(hash256.digest);
         return bw.render();
-    };
+    }
     /**
      * Compile the address object to a base58 address.
      * @param {{NetworkType|Network)?} network
      * @returns {AddressString}
      * @throws Error on bad hash/prefix.
      */
-    Address.prototype.toBase58 = function (network) {
+    toBase58(network) {
         return base58.encode(this.toRaw(network));
-    };
+    }
     /**
      * Compile the address object to a bech32 address.
      * @param {{NetworkType|Network)?} network
      * @returns {String}
      * @throws Error on bad hash/prefix.
      */
-    Address.prototype.toBech32 = function (network) {
-        var version = this.version;
-        var hash = this.hash;
+    toBech32(network) {
+        const version = this.version;
+        const hash = this.hash;
         assert(version !== -1, 'Cannot convert non-program address to bech32.');
         assert(version === 0, 'Cannot convert program version > 0 to bech32 address.');
         network = Network.get(network);
-        var hrp = network.addressPrefix.bech32;
+        const hrp = network.addressPrefix.bech32;
         return bech32.encode(hrp, version, hash);
-    };
+    }
     /**
      * Compile the address object to a bech32m address.
      * @param {{NetworkType|Network)?} network
      * @returns {String}
      * @throws Error on bad hash/prefix.
      */
-    Address.prototype.toBech32m = function (network) {
-        var version = this.version;
-        var hash = this.hash;
+    toBech32m(network) {
+        const version = this.version;
+        const hash = this.hash;
         assert(version !== -1, 'Cannot convert non-program address to bech32m.');
         assert(version !== 0, 'Cannot convert version 0 program to bech32m address.');
         network = Network.get(network);
-        var hrp = network.addressPrefix.bech32;
+        const hrp = network.addressPrefix.bech32;
         return bech32m.encode(hrp, version, hash);
-    };
+    }
     /**
      * Inject properties from string.
      * @private
@@ -210,7 +210,7 @@ var Address = /** @class */ (function () {
      * @param {(Network|NetworkType)?} network
      * @returns {Address}
      */
-    Address.prototype.fromString = function (addr, network) {
+    fromString(addr, network) {
         assert(typeof addr === 'string');
         assert(addr.length > 0);
         assert(addr.length <= 100);
@@ -230,66 +230,66 @@ var Address = /** @class */ (function () {
         catch (e) {
             return this.fromBase58(addr, network);
         }
-    };
+    }
     /**
      * Instantiate address from string.
      * @param {String} addr
      * @param {(Network|NetworkType)?} network
      * @returns {Address}
      */
-    Address.fromString = function (addr, network) {
+    static fromString(addr, network) {
         return new this().fromString(addr, network);
-    };
+    }
     /**
      * Convert the Address to a string.
      * @param {(Network|NetworkType)?} network
      * @returns {AddressString}
      */
-    Address.prototype.toString = function (network) {
+    toString(network) {
         if (this.version !== -1) {
             if (this.version === 0)
                 return this.toBech32(network);
             return this.toBech32m(network);
         }
         return this.toBase58(network);
-    };
+    }
     /**
      * Inspect the Address.
      * @returns {Object}
      */
-    Address.prototype[inspectSymbol] = function () {
+    [inspectSymbol]() {
         return '<Address:'
-            + " type=".concat(this.getType())
-            + " version=".concat(this.version)
-            + " str=".concat(this.toString())
+            + ` type=${this.getType()}`
+            + ` version=${this.version}`
+            + ` str=${this.toString()}`
             + '>';
-    };
+    }
     /**
      * Decode base58.
      * @private
      * @param {Buffer} data
      * @throws Parse error
      */
-    Address.prototype.fromRaw = function (data, network) {
-        var br = bio.read(data, true);
-        var prefix = br.readU8();
+    fromRaw(data, network) {
+        const br = bio.read(data, true);
+        const prefix = br.readU8();
         network = Network.fromBase58(prefix, network);
-        var type = Address.getType(prefix, network);
+        const type = Address.getType(prefix, network);
         if (data.length !== 25)
             throw new Error('Address is too long.');
-        var hash = br.readBytes(br.left() - 4);
+        const hash = br.readBytes(br.left() - 4);
         br.verifyChecksum(hash256.digest);
         return this.fromHash(hash, type);
-    };
+    }
     /**
      * Create an address object from a serialized address.
      * @param {Buffer} data
      * @returns {Address}
      * @throws Parse error.
      */
-    Address.fromRaw = function (data, network) {
+    static fromRaw(data, network) {
         return new this().fromRaw(data, network);
-    };
+    }
     /**
      * Inject properties from base58 address.
      * @private
@@ -297,12 +297,12 @@ var Address = /** @class */ (function () {
      * @param {Network?} network
      * @throws Parse error
      */
-    Address.prototype.fromBase58 = function (data, network) {
+    fromBase58(data, network) {
         assert(typeof data === 'string');
         if (data.length > 55)
             throw new Error('Address is too long.');
         return this.fromRaw(base58.decode(data), network);
-    };
+    }
     /**
      * Create an address object from a base58 address.
      * @param {AddressString} data
@@ -310,9 +310,9 @@ var Address = /** @class */ (function () {
      * @returns {Address}
      * @throws Parse error.
      */
-    Address.fromBase58 = function (data, network) {
+    static fromBase58(data, network) {
         return new this().fromBase58(data, network);
-    };
+    }
     /**
      * Inject properties from bech32 address.
      * @private
@@ -320,16 +320,16 @@ var Address = /** @class */ (function () {
      * @param {Network?} network
      * @throws Parse error
      */
-    Address.prototype.fromBech32 = function (data, network) {
-        var type = Address.types.WITNESS;
+    fromBech32(data, network) {
+        const type = Address.types.WITNESS;
         assert(typeof data === 'string');
-        var _a = bech32.decode(data), hrp = _a[0], version = _a[1], hash = _a[2];
+        const [hrp, version, hash] = bech32.decode(data);
         assert(version !== -1, 'Cannot convert non-program address to bech32');
         assert(version === 0, 'Cannot convert program version > 0 to bech32');
         // make sure HRP is correct.
         Network.fromBech32(hrp, network);
         return this.fromHash(hash, type, version);
-    };
+    }
     /**
      * Create an address object from a bech32 address.
      * @param {String} data
@@ -337,9 +337,9 @@ var Address = /** @class */ (function () {
      * @returns {Address}
      * @throws Parse error.
      */
-    Address.fromBech32 = function (data, network) {
+    static fromBech32(data, network) {
         return new this().fromBech32(data, network);
-    };
+    }
     /**
      * Inject properties from bech32m address.
      * @private
@@ -347,16 +347,16 @@ var Address = /** @class */ (function () {
      * @param {Network?} network
      * @throws Parse error
      */
-    Address.prototype.fromBech32m = function (data, network) {
-        var type = Address.types.WITNESS;
+    fromBech32m(data, network) {
+        const type = Address.types.WITNESS;
         assert(typeof data === 'string');
-        var _a = bech32m.decode(data), hrp = _a[0], version = _a[1], hash = _a[2];
+        const [hrp, version, hash] = bech32m.decode(data);
         assert(version !== -1, 'Cannot convert non-program address to bech32m');
         assert(version > 0, 'Cannot convert program version 0 to bech32m.');
         // make sure HRP is correct.
         Network.fromBech32m(hrp, network);
         return this.fromHash(hash, type, version);
-    };
+    }
     /**
      * Create an address object from a bech32m address.
      * @param {String} data
@@ -364,37 +364,37 @@ var Address = /** @class */ (function () {
      * @returns {Address}
      * @throws Parse error.
      */
-    Address.fromBech32m = function (data, network) {
+    static fromBech32m(data, network) {
         return new this().fromBech32m(data, network);
-    };
+    }
     /**
      * Inject properties from output script.
      * @private
      * @param {Script} script
      */
-    Address.prototype.fromScript = function (script) {
-        var pk = script.getPubkey();
+    fromScript(script) {
+        const pk = script.getPubkey();
         if (pk) {
             this.hash = hash160.digest(pk);
             this.type = Address.types.PUBKEYHASH;
             this.version = -1;
             return this;
         }
-        var pkh = script.getPubkeyhash();
+        const pkh = script.getPubkeyhash();
         if (pkh) {
             this.hash = pkh;
             this.type = Address.types.PUBKEYHASH;
             this.version = -1;
             return this;
         }
-        var sh = script.getScripthash();
+        const sh = script.getScripthash();
         if (sh) {
             this.hash = sh;
             this.type = Address.types.SCRIPTHASH;
             this.version = -1;
             return this;
         }
-        var program = script.getProgram();
+        const program = script.getProgram();
         if (program && !program.isMalformed()) {
             this.hash = program.data;
             this.type = Address.types.WITNESS;
@@ -409,14 +409,14 @@ var Address = /** @class */ (function () {
             return this;
         }
         return null;
-    };
+    }
     /**
      * Inject properties from witness.
      * @private
      * @param {Witness} witness
      */
-    Address.prototype.fromWitness = function (witness) {
-        var _a = witness.getPubkeyhashInput(), pk = _a[1];
+    fromWitness(witness) {
+        const [, pk] = witness.getPubkeyhashInput();
         // We're pretty much screwed here
         // since we can't get the version.
         if (pk) {
@@ -425,7 +425,7 @@ var Address = /** @class */ (function () {
             this.version = 0;
             return this;
         }
-        var redeem = witness.getScripthashInput();
+        const redeem = witness.getScripthashInput();
         if (redeem) {
             this.hash = sha256.digest(redeem);
             this.type = Address.types.WITNESS;
@@ -433,21 +433,21 @@ var Address = /** @class */ (function () {
             return this;
         }
         return null;
-    };
+    }
     /**
      * Inject properties from input script.
      * @private
      * @param {Script} script
      */
-    Address.prototype.fromInputScript = function (script) {
-        var _a = script.getPubkeyhashInput(), pk = _a[1];
+    fromInputScript(script) {
+        const [, pk] = script.getPubkeyhashInput();
         if (pk) {
             this.hash = hash160.digest(pk);
             this.type = Address.types.PUBKEYHASH;
             this.version = -1;
             return this;
         }
-        var redeem = script.getScripthashInput();
+        const redeem = script.getScripthashInput();
         if (redeem) {
             this.hash = hash160.digest(redeem);
             this.type = Address.types.SCRIPTHASH;
@@ -455,7 +455,7 @@ var Address = /** @class */ (function () {
             return this;
         }
         return null;
-    };
+    }
     /**
      * Create an Address from a witness.
      * Attempt to extract address
@@ -463,9 +463,9 @@ var Address = /** @class */ (function () {
      * @param {Witness}
      * @returns {Address|null}
      */
-    Address.fromWitness = function (witness) {
+    static fromWitness(witness) {
         return new this().fromWitness(witness);
-    };
+    }
     /**
      * Create an Address from an input script.
      * Attempt to extract address
@@ -473,9 +473,9 @@ var Address = /** @class */ (function () {
      * @param {Script}
      * @returns {Address|null}
      */
-    Address.fromInputScript = function (script) {
+    static fromInputScript(script) {
         return new this().fromInputScript(script);
-    };
+    }
     /**
      * Create an Address from an output script.
      * Parse an output script and extract address
@@ -484,9 +484,9 @@ var Address = /** @class */ (function () {
      * @param {Script}
      * @returns {Address|null}
      */
-    Address.fromScript = function (script) {
+    static fromScript(script) {
         return new this().fromScript(script);
-    };
+    }
     /**
      * Inject properties from a hash.
      * @private
@@ -495,7 +495,7 @@ var Address = /** @class */ (function () {
      * @param {Number} [version=-1]
      * @throws on bad hash size
      */
-    Address.prototype.fromHash = function (hash, type, version) {
+    fromHash(hash, type, version) {
         if (typeof type === 'string') {
             type = Address.types[type.toUpperCase()];
             assert(type != null, 'Not a valid address type.');
@@ -524,7 +524,7 @@ var Address = /** @class */ (function () {
         this.type = type;
         this.version = version;
         return this;
-    };
+    }
     /**
      * Create a naked address from hash/type/version.
      * @param {Hash} hash
@@ -533,85 +533,85 @@ var Address = /** @class */ (function () {
      * @returns {Address}
      * @throws on bad hash size
      */
-    Address.fromHash = function (hash, type, version) {
+    static fromHash(hash, type, version) {
         return new this().fromHash(hash, type, version);
-    };
+    }
     /**
      * Inject properties from pubkeyhash.
      * @private
      * @param {Buffer} hash
      * @returns {Address}
      */
-    Address.prototype.fromPubkeyhash = function (hash) {
-        var type = Address.types.PUBKEYHASH;
+    fromPubkeyhash(hash) {
+        const type = Address.types.PUBKEYHASH;
         assert(hash.length === 20, 'P2PKH must be 20 bytes.');
         return this.fromHash(hash, type, -1);
-    };
+    }
     /**
      * Instantiate address from pubkeyhash.
      * @param {Buffer} hash
      * @returns {Address}
      */
-    Address.fromPubkeyhash = function (hash) {
+    static fromPubkeyhash(hash) {
         return new this().fromPubkeyhash(hash);
-    };
+    }
     /**
      * Inject properties from scripthash.
      * @private
      * @param {Buffer} hash
      * @returns {Address}
      */
-    Address.prototype.fromScripthash = function (hash) {
-        var type = Address.types.SCRIPTHASH;
+    fromScripthash(hash) {
+        const type = Address.types.SCRIPTHASH;
         assert(hash && hash.length === 20, 'P2SH must be 20 bytes.');
         return this.fromHash(hash, type, -1);
-    };
+    }
     /**
      * Instantiate address from scripthash.
      * @param {Buffer} hash
      * @returns {Address}
      */
-    Address.fromScripthash = function (hash) {
+    static fromScripthash(hash) {
         return new this().fromScripthash(hash);
-    };
+    }
     /**
      * Inject properties from witness pubkeyhash.
      * @private
      * @param {Buffer} hash
      * @returns {Address}
      */
-    Address.prototype.fromWitnessPubkeyhash = function (hash) {
-        var type = Address.types.WITNESS;
+    fromWitnessPubkeyhash(hash) {
+        const type = Address.types.WITNESS;
         assert(hash && hash.length === 20, 'P2WPKH must be 20 bytes.');
         return this.fromHash(hash, type, 0);
-    };
+    }
     /**
      * Instantiate address from witness pubkeyhash.
      * @param {Buffer} hash
      * @returns {Address}
      */
-    Address.fromWitnessPubkeyhash = function (hash) {
+    static fromWitnessPubkeyhash(hash) {
         return new this().fromWitnessPubkeyhash(hash);
-    };
+    }
     /**
      * Inject properties from witness scripthash.
      * @private
      * @param {Buffer} hash
      * @returns {Address}
      */
-    Address.prototype.fromWitnessScripthash = function (hash) {
-        var type = Address.types.WITNESS;
+    fromWitnessScripthash(hash) {
+        const type = Address.types.WITNESS;
         assert(hash && hash.length === 32, 'P2WPKH must be 32 bytes.');
         return this.fromHash(hash, type, 0);
-    };
+    }
     /**
      * Instantiate address from witness scripthash.
      * @param {Buffer} hash
      * @returns {Address}
      */
-    Address.fromWitnessScripthash = function (hash) {
+    static fromWitnessScripthash(hash) {
         return new this().fromWitnessScripthash(hash);
-    };
+    }
     /**
      * Inject properties from witness program.
      * @private
@@ -619,65 +619,65 @@ var Address = /** @class */ (function () {
      * @param {Buffer} hash
      * @returns {Address}
      */
-    Address.prototype.fromProgram = function (version, hash) {
-        var type = Address.types.WITNESS;
+    fromProgram(version, hash) {
+        const type = Address.types.WITNESS;
         assert(version >= 0, 'Bad version for witness program.');
         return this.fromHash(hash, type, version);
-    };
+    }
     /**
      * Instantiate address from witness program.
      * @param {Number} version
      * @param {Buffer} hash
      * @returns {Address}
      */
-    Address.fromProgram = function (version, hash) {
+    static fromProgram(version, hash) {
         return new this().fromProgram(version, hash);
-    };
+    }
     /**
      * Test whether the address is pubkeyhash.
      * @returns {Boolean}
      */
-    Address.prototype.isPubkeyhash = function () {
+    isPubkeyhash() {
         return this.type === Address.types.PUBKEYHASH;
-    };
+    }
     /**
      * Test whether the address is scripthash.
      * @returns {Boolean}
      */
-    Address.prototype.isScripthash = function () {
+    isScripthash() {
         return this.type === Address.types.SCRIPTHASH;
-    };
+    }
     /**
      * Test whether the address is witness pubkeyhash.
      * @returns {Boolean}
      */
-    Address.prototype.isWitnessPubkeyhash = function () {
+    isWitnessPubkeyhash() {
         return this.version === 0 && this.hash.length === 20;
-    };
+    }
     /**
      * Test whether the address is witness scripthash.
      * @returns {Boolean}
      */
-    Address.prototype.isWitnessScripthash = function () {
+    isWitnessScripthash() {
         return this.version === 0 && this.hash.length === 32;
-    };
+    }
     /**
      * Test whether the address is a witness program.
      * @returns {Boolean}
      */
-    Address.prototype.isProgram = function () {
+    isProgram() {
         return this.version !== -1;
-    };
+    }
     /**
      * Get the hash of a base58 address or address-related object.
      * @param {String|Address|Hash} data
      * @param {String?} enc - Can be `"hex"` or `null`.
      * @returns {Hash}
      */
-    Address.getHash = function (data, enc) {
+    static getHash(data, enc) {
         if (!data)
             throw new Error('Object is not an address.');
-        var hash;
+        let hash;
         if (Buffer.isBuffer(data)) {
             hash = data;
         }
@@ -690,15 +690,15 @@ var Address = /** @class */ (function () {
         if (enc === 'hex')
             return hash.toString('hex');
         return hash;
-    };
+    }
     /**
      * Get an address type for a specified network address prefix.
      * @param {Number} prefix
      * @param {Network} network
      * @returns {AddressType}
      */
-    Address.getType = function (prefix, network) {
-        var prefixes = network.addressPrefix;
+    static getType(prefix, network) {
+        const prefixes = network.addressPrefix;
         switch (prefix) {
             case prefixes.pubkeyhash:
                 return Address.types.PUBKEYHASH;
@@ -707,9 +707,8 @@ var Address = /** @class */ (function () {
             default:
                 throw new Error('Unknown address prefix.');
         }
-    };
-    return Address;
-}());
+    }
+}
 /**
  * Address types.
  * @enum {Number}
@@ -732,10 +731,10 @@ Address.typesByVal = [
  * Helpers
  */
 function isMixedCase(str) {
-    var lower = false;
-    var upper = false;
-    for (var i = 0; i < str.length; i++) {
-        var ch = str.charCodeAt(i);
+    let lower = false;
+    let upper = false;
+    for (let i = 0; i < str.length; i++) {
+        const ch = str.charCodeAt(i);
         if (ch >= 0x30 && ch <= 0x39)
             continue;
         if (ch & 32) {
@@ -755,3 +754,4 @@ function isMixedCase(str) {
  * Expose
  */
 module.exports = Address;
+//# sourceMappingURL=address.js.map

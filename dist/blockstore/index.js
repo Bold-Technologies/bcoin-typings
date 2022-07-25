@@ -4,14 +4,14 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var join = require('path').join;
-var AbstractBlockStore = require('./abstract');
-var LevelBlockStore = require('./level');
-var FileBlockStore = require('./file');
+const { join } = require('path');
+const AbstractBlockStore = require('./abstract');
+const LevelBlockStore = require('./level');
+const FileBlockStore = require('./file');
 /**
  * @module blockstore
  */
-exports.create = function (options) {
+exports.create = (options) => {
     if (options.memory) {
         return new LevelBlockStore({
             network: options.network,
@@ -20,7 +20,7 @@ exports.create = function (options) {
             memory: options.memory
         });
     }
-    var location = join(options.prefix, 'blocks');
+    const location = join(options.prefix, 'blocks');
     return new FileBlockStore({
         network: options.network,
         logger: options.logger,
@@ -31,3 +31,4 @@ exports.create = function (options) {
 exports.AbstractBlockStore = AbstractBlockStore;
 exports.FileBlockStore = FileBlockStore;
 exports.LevelBlockStore = LevelBlockStore;
+//# sourceMappingURL=index.js.map

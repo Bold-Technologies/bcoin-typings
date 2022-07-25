@@ -4,11 +4,11 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var assert = require('bsert');
-var bio = require('bufio');
-var util = require('../utils/util');
-var consensus = require('../protocol/consensus');
-var inspectSymbol = require('../utils').inspectSymbol;
+const assert = require('bsert');
+const bio = require('bufio');
+const util = require('../utils/util');
+const consensus = require('../protocol/consensus');
+const { inspectSymbol } = require('../utils');
 /**
  * Outpoint
  * Represents a COutPoint.
@@ -16,14 +16,14 @@ var inspectSymbol = require('../utils').inspectSymbol;
  * @property {Hash} hash
  * @property {Number} index
  */
-var Outpoint = /** @class */ (function () {
+class Outpoint {
     /**
      * Create an outpoint.
      * @constructor
      * @param {Hash?} hash
      * @param {Number?} index
      */
-    function Outpoint(hash, index) {
+    constructor(hash, index) {
         this.hash = consensus.ZERO_HASH;
         this.index = 0xffffffff;
         if (hash != null) {
@@ -38,173 +38,173 @@ var Outpoint = /** @class */ (function () {
      * @private
      * @param {Object} options
      */
-    Outpoint.prototype.fromOptions = function (options) {
+    fromOptions(options) {
         assert(options, 'Outpoint data is required.');
         assert(Buffer.isBuffer(options.hash));
         assert((options.index >>> 0) === options.index, 'Index must be a uint32.');
         this.hash = options.hash;
         this.index = options.index;
         return this;
-    };
+    }
     /**
      * Instantate outpoint from options object.
      * @param {Object} options
      * @returns {Outpoint}
      */
-    Outpoint.fromOptions = function (options) {
+    static fromOptions(options) {
         return new this().fromOptions(options);
-    };
+    }
     /**
      * Clone the outpoint.
      * @returns {Outpoint}
      */
-    Outpoint.prototype.clone = function () {
-        var outpoint = new this.constructor();
+    clone() {
+        const outpoint = new this.constructor();
         outpoint.hash = this.hash;
         outpoint.index = this.index;
         return outpoint;
-    };
+    }
     /**
      * Test equality against another outpoint.
      * @param {Outpoint} prevout
      * @returns {Boolean}
      */
-    Outpoint.prototype.equals = function (prevout) {
+    equals(prevout) {
         assert(Outpoint.isOutpoint(prevout));
         return this.hash.equals(prevout.hash)
             && this.index === prevout.index;
-    };
+    }
     /**
      * Compare against another outpoint (BIP69).
      * @param {Outpoint} prevout
      * @returns {Number}
      */
-    Outpoint.prototype.compare = function (prevout) {
+    compare(prevout) {
         assert(Outpoint.isOutpoint(prevout));
-        var cmp = strcmp(this.txid(), prevout.txid());
+        const cmp = strcmp(this.txid(), prevout.txid());
         if (cmp !== 0)
             return cmp;
         return this.index - prevout.index;
-    };
+    }
     /**
      * Test whether the outpoint is null (hash of zeroes
      * with max-u32 index). Used to detect coinbases.
      * @returns {Boolean}
      */
-    Outpoint.prototype.isNull = function () {
+    isNull() {
         return this.index === 0xffffffff && this.hash.equals(consensus.ZERO_HASH);
-    };
+    }
     /**
      * Get little-endian hash.
      * @returns {Hash}
      */
-    Outpoint.prototype.rhash = function () {
+    rhash() {
         return util.revHex(this.hash);
-    };
+    }
     /**
      * Get little-endian hash.
      * @returns {Hash}
      */
-    Outpoint.prototype.txid = function () {
+    txid() {
         return this.rhash();
-    };
+    }
     /**
      * Serialize outpoint to a key
      * suitable for a hash table.
      * @returns {String}
      */
-    Outpoint.prototype.toKey = function () {
+    toKey() {
         return this.toRaw();
-    };
+    }
     /**
      * Inject properties from hash table key.
      * @private
      * @param {String} key
      * @returns {Outpoint}
      */
-    Outpoint.prototype.fromKey = function (key) {
+    fromKey(key) {
         this.hash = key.slice(0, 32);
         this.index = bio.readU32(key, 32);
         return this;
-    };
+    }
     /**
      * Instantiate outpoint from hash table key.
      * @param {String} key
      * @returns {Outpoint}
      */
-    Outpoint.fromKey = function (key) {
+    static fromKey(key) {
         return new this().fromKey(key);
-    };
+    }
     /**
      * Write outpoint to a buffer writer.
      * @param {BufferWriter} bw
      */
-    Outpoint.prototype.toWriter = function (bw) {
+    toWriter(bw) {
         bw.writeHash(this.hash);
         bw.writeU32(this.index);
         return bw;
-    };
+    }
     /**
      * Calculate size of outpoint.
      * @returns {Number}
      */
-    Outpoint.prototype.getSize = function () {
+    getSize() {
         return 36;
-    };
+    }
     /**
      * Serialize outpoint.
      * @returns {Buffer}
      */
-    Outpoint.prototype.toRaw = function () {
+    toRaw() {
         return this.toWriter(bio.write(36)).render();
-    };
+    }
     /**
      * Inject properties from buffer reader.
      * @private
      * @param {BufferReader} br
      */
-    Outpoint.prototype.fromReader = function (br) {
+    fromReader(br) {
         this.hash = br.readHash();
         this.index = br.readU32();
         return this;
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    Outpoint.prototype.fromRaw = function (data) {
+    fromRaw(data) {
         return this.fromReader(bio.read(data));
-    };
+    }
     /**
      * Instantiate outpoint from a buffer reader.
      * @param {BufferReader} br
      * @returns {Outpoint}
      */
-    Outpoint.fromReader = function (br) {
+    static fromReader(br) {
         return new this().fromReader(br);
-    };
+    }
     /**
      * Instantiate outpoint from serialized data.
      * @param {Buffer} data
      * @returns {Outpoint}
      */
-    Outpoint.fromRaw = function (data) {
+    static fromRaw(data) {
         return new this().fromRaw(data);
-    };
+    }
     /**
      * Inject properties from json object.
      * @private
      * @params {Object} json
      */
-    Outpoint.prototype.fromJSON = function (json) {
+    fromJSON(json) {
         assert(json, 'Outpoint data is required.');
         assert(typeof json.hash === 'string', 'Hash must be a string.');
         assert((json.index >>> 0) === json.index, 'Index must be a uint32.');
         this.hash = util.fromRev(json.hash);
         this.index = json.index;
         return this;
-    };
+    }
     /**
      * Convert the outpoint to an object suitable
      * for JSON serialization. Note that the hash
@@ -212,43 +212,43 @@ var Outpoint = /** @class */ (function () {
      * of little-endian uint256s.
      * @returns {Object}
      */
-    Outpoint.prototype.toJSON = function () {
+    toJSON() {
         return {
             hash: util.revHex(this.hash),
             index: this.index
         };
-    };
+    }
     /**
      * Instantiate outpoint from json object.
      * @param {Object} json
      * @returns {Outpoint}
      */
-    Outpoint.fromJSON = function (json) {
+    static fromJSON(json) {
         return new this().fromJSON(json);
-    };
+    }
     /**
      * Inject properties from tx.
      * @private
      * @param {TX} tx
      * @param {Number} index
      */
-    Outpoint.prototype.fromTX = function (tx, index) {
+    fromTX(tx, index) {
         assert(tx);
         assert(typeof index === 'number');
         assert(index >= 0);
         this.hash = tx.hash();
         this.index = index;
         return this;
-    };
+    }
     /**
      * Instantiate outpoint from tx.
      * @param {TX} tx
      * @param {Number} index
      * @returns {Outpoint}
      */
-    Outpoint.fromTX = function (tx, index) {
+    static fromTX(tx, index) {
         return new this().fromTX(tx, index);
-    };
+    }
     /**
      * Serialize outpoint to a key
      * suitable for a hash table.
@@ -256,32 +256,31 @@ var Outpoint = /** @class */ (function () {
      * @param {Number} index
      * @returns {String}
      */
-    Outpoint.toKey = function (hash, index) {
+    static toKey(hash, index) {
         return new Outpoint(hash, index).toKey();
-    };
+    }
     /**
      * Convert the outpoint to a user-friendly string.
      * @returns {String}
      */
-    Outpoint.prototype[inspectSymbol] = function () {
-        return "<Outpoint: ".concat(this.rhash(), "/").concat(this.index, ">");
-    };
+    [inspectSymbol]() {
+        return `<Outpoint: ${this.rhash()}/${this.index}>`;
+    }
     /**
      * Test an object to see if it is an outpoint.
      * @param {Object} obj
      * @returns {Boolean}
      */
-    Outpoint.isOutpoint = function (obj) {
+    static isOutpoint(obj) {
         return obj instanceof Outpoint;
-    };
-    return Outpoint;
-}());
+    }
+}
 /*
  * Helpers
  */
 function strcmp(a, b) {
-    var len = Math.min(a.length, b.length);
-    for (var i = 0; i < len; i++) {
+    const len = Math.min(a.length, b.length);
+    for (let i = 0; i < len; i++) {
         if (a[i] < b[i])
             return -1;
         if (a[i] > b[i])
@@ -297,3 +296,4 @@ function strcmp(a, b) {
  * Expose
  */
 module.exports = Outpoint;
+//# sourceMappingURL=outpoint.js.map

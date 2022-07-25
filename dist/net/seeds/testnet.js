@@ -658,3 +658,4 @@ module.exports = [
     '211.184.136.132:18333',
     '[2001:0:dcfa:40e1:14a6:14b2:53ea:f543]:18333'
 ];
+//# sourceMappingURL=testnet.js.map

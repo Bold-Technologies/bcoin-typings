@@ -27,3 +27,4 @@ exports.prefixes = {
     3: 'blf',
     4: 'blm'
 };
+//# sourceMappingURL=common.js.map

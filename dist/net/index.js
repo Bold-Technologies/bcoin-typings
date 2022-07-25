@@ -16,3 +16,4 @@ exports.packets = require('./packets');
 exports.Parser = require('./parser');
 exports.Peer = require('./peer');
 exports.Pool = require('./pool');
+//# sourceMappingURL=index.js.map

@@ -4,7 +4,7 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var assert = require('bsert');
+const assert = require('bsert');
 /**
  * Convert int to fixed number string and reduce by a
  * power of ten (uses no floating point arithmetic).
@@ -14,14 +14,14 @@ var assert = require('bsert');
  */
 exports.encode = function encode(num, exp) {
     assert(Number.isSafeInteger(num), 'Invalid integer value.');
-    var sign = '';
+    let sign = '';
     if (num < 0) {
         num = -num;
         sign = '-';
     }
-    var mult = pow10(exp);
-    var lo = num % mult;
-    var hi = (num - lo) / mult;
+    const mult = pow10(exp);
+    let lo = num % mult;
+    let hi = (num - lo) / mult;
     lo = lo.toString(10);
     hi = hi.toString(10);
     while (lo.length < exp)
@@ -31,8 +31,8 @@ exports.encode = function encode(num, exp) {
     if (lo.length === 0)
         lo = '0';
     if (exp === 0)
-        return "".concat(sign).concat(hi);
-    return "".concat(sign).concat(hi, ".").concat(lo);
+        return `${sign}${hi}`;
+    return `${sign}${hi}.${lo}`;
 };
 /**
  * Parse a fixed number string and multiply by a
@@ -44,14 +44,14 @@ exports.encode = function encode(num, exp) {
 exports.decode = function decode(str, exp) {
     assert(typeof str === 'string');
     assert(str.length <= 32, 'Fixed number string too large.');
-    var sign = 1;
+    let sign = 1;
     if (str.length > 0 && str[0] === '-') {
         str = str.substring(1);
         sign = -1;
     }
-    var hi = str;
-    var lo = '0';
-    var index = str.indexOf('.');
+    let hi = str;
+    let lo = '0';
+    const index = str.indexOf('.');
     if (index !== -1) {
         hi = str.substring(0, index);
         lo = str.substring(index + 1);
@@ -69,9 +69,9 @@ exports.decode = function decode(str, exp) {
     assert(/^\d+$/.test(hi) && /^\d+$/.test(lo), 'Non-numeric characters in fixed number string.');
     hi = parseInt(hi, 10);
     lo = parseInt(lo, 10);
-    var mult = pow10(exp);
-    var maxLo = modSafe(mult);
-    var maxHi = divSafe(mult);
+    const mult = pow10(exp);
+    const maxLo = modSafe(mult);
+    const maxHi = divSafe(mult);
     assert(hi < maxHi || (hi === maxHi && lo <= maxLo), 'Fixed number string exceeds 2^53-1.');
     return sign * (hi * mult + lo);
 };
@@ -169,3 +169,4 @@ function divSafe(div) {
     }
     throw new Error('Exponent is too large.');
 }
+//# sourceMappingURL=fixed.js.map

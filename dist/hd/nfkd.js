@@ -17,3 +17,4 @@ function nfkd(str) {
  * Expose
  */
 module.exports = nfkd;
+//# sourceMappingURL=nfkd.js.map

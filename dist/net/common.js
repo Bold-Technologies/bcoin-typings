@@ -8,8 +8,8 @@
 /**
  * @module net/common
  */
-var random = require('bcrypto/lib/random');
-var pkg = require('../pkg');
+const random = require('bcrypto/lib/random');
+const pkg = require('../pkg');
 /**
  * Default protocol version.
  * @const {Number}
@@ -101,7 +101,7 @@ exports.REQUIRED_SERVICES = 0
  * @const {String}
  * @default
  */
-exports.USER_AGENT = "/bcoin:".concat(pkg.version, "/");
+exports.USER_AGENT = `/bcoin:${pkg.version}/`;
 /**
  * Max message size (~4mb with segwit, formerly 2mb)
  * @const {Number}
@@ -169,3 +169,4 @@ exports.MAX_BLOCK_REQUEST = 50000 + 1000;
  * @default
  */
 exports.MAX_TX_REQUEST = 10000;
+//# sourceMappingURL=common.js.map

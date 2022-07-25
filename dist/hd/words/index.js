@@ -13,3 +13,4 @@ exports.french = require('./french.js');
 exports.italian = require('./italian.js');
 exports.japanese = require('./japanese.js');
 exports.spanish = require('./spanish.js');
+//# sourceMappingURL=index.js.map

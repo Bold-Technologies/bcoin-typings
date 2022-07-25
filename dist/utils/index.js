@@ -11,5 +11,6 @@ exports.binary = require('./binary');
 exports.fixed = require('./fixed');
 exports.util = require('./util');
 exports.message = require('./message');
-var custom = require('util').inspect.custom;
+const { inspect: { custom } } = require('util');
 exports.inspectSymbol = custom || 'inspect';
+//# sourceMappingURL=index.js.map

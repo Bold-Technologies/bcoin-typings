@@ -4,8 +4,8 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var assert = require('bsert');
-var hash256 = require('bcrypto/lib/hash256');
+const assert = require('bsert');
+const hash256 = require('bcrypto/lib/hash256');
 /**
  * Hash until the nonce overflows.
  * @alias module:mining.mine
@@ -16,7 +16,7 @@ var hash256 = require('bcrypto/lib/hash256');
  * @returns {Number} Nonce or -1.
  */
 function mine(data, target, min, max) {
-    var nonce = min;
+    let nonce = min;
     data.writeUInt32LE(nonce, 76, true);
     // The heart and soul of the miner: match the target.
     while (nonce <= max) {
@@ -40,7 +40,7 @@ function mine(data, target, min, max) {
  */
 function rcmp(a, b) {
     assert(a.length === b.length);
-    for (var i = a.length - 1; i >= 0; i--) {
+    for (let i = a.length - 1; i >= 0; i--) {
         if (a[i] < b[i])
             return -1;
         if (a[i] > b[i])
@@ -52,3 +52,4 @@ function rcmp(a, b) {
  * Expose
  */
 module.exports = mine;
+//# sourceMappingURL=mine.js.map

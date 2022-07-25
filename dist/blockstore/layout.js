@@ -4,7 +4,7 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var bdb = require('bdb');
+const bdb = require('bdb');
 /*
  * Database Layout:
  *   V -> db version
@@ -12,7 +12,7 @@ var bdb = require('bdb');
  *   f[type][fileno] -> file record by type and file number
  *   b[type][hash] -> block record by type and block hash
  */
-var layout = {
+const layout = {
     V: bdb.key('V'),
     F: bdb.key('F', ['uint32']),
     f: bdb.key('f', ['uint32', 'uint32']),
@@ -22,3 +22,4 @@ var layout = {
  * Expose
  */
 module.exports = layout;
+//# sourceMappingURL=layout.js.map

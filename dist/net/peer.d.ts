@@ -116,7 +116,7 @@ declare class Peer {
     invFilter: any;
     blockMap: any;
     txMap: any;
-    responseMap: any;
+    responseMap: Map<any, any>;
     compactBlocks: any;
     /**
      * Begin peer initialization.

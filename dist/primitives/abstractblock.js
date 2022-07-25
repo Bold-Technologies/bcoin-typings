@@ -5,12 +5,12 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var assert = require('bsert');
-var hash256 = require('bcrypto/lib/hash256');
-var bio = require('bufio');
-var util = require('../utils/util');
-var InvItem = require('./invitem');
-var consensus = require('../protocol/consensus');
+const assert = require('bsert');
+const hash256 = require('bcrypto/lib/hash256');
+const bio = require('bufio');
+const util = require('../utils/util');
+const InvItem = require('./invitem');
+const consensus = require('../protocol/consensus');
 /**
  * Abstract Block
  * The class which all block-like objects inherit from.
@@ -23,12 +23,12 @@ var consensus = require('../protocol/consensus');
  * @property {Number} bits
  * @property {Number} nonce
  */
-var AbstractBlock = /** @class */ (function () {
+class AbstractBlock {
     /**
      * Create an abstract block.
      * @constructor
      */
-    function AbstractBlock() {
+    constructor() {
         this.version = 1;
         this.prevBlock = consensus.ZERO_HASH;
         this.merkleRoot = consensus.ZERO_HASH;
@@ -44,7 +44,7 @@ var AbstractBlock = /** @class */ (function () {
      * @private
      * @param {Object} options
      */
-    AbstractBlock.prototype.parseOptions = function (options) {
+    parseOptions(options) {
         assert(options, 'Block data is required.');
         assert((options.version >>> 0) === options.version);
         assert(Buffer.isBuffer(options.prevBlock));
@@ -63,13 +63,13 @@ var AbstractBlock = /** @class */ (function () {
             this.mutable = options.mutable;
         }
         return this;
-    };
+    }
     /**
      * Inject properties from json object.
      * @private
      * @param {Object} json
      */
-    AbstractBlock.prototype.parseJSON = function (json) {
+    parseJSON(json) {
         assert(json, 'Block data is required.');
         assert((json.version >>> 0) === json.version);
         assert(typeof json.prevBlock === 'string');
@@ -84,41 +84,41 @@ var AbstractBlock = /** @class */ (function () {
         this.bits = json.bits;
         this.nonce = json.nonce;
         return this;
-    };
+    }
     /**
      * Test whether the block is a memblock.
      * @returns {Boolean}
      */
-    AbstractBlock.prototype.isMemory = function () {
+    isMemory() {
         return false;
-    };
+    }
     /**
      * Clear any cached values (abstract).
      */
-    AbstractBlock.prototype._refresh = function () {
+    _refresh() {
         this._hash = null;
         this._hhash = null;
-    };
+    }
     /**
      * Clear any cached values.
      */
-    AbstractBlock.prototype.refresh = function () {
+    refresh() {
         return this._refresh();
-    };
+    }
     /**
      * Hash the block headers.
      * @param {String?} enc - Can be `'hex'` or `null`.
      * @returns {Hash|Buffer} hash
      */
-    AbstractBlock.prototype.hash = function (enc) {
-        var h = this._hash;
+    hash(enc) {
+        let h = this._hash;
         if (!h) {
             h = hash256.digest(this.toHead());
             if (!this.mutable)
                 this._hash = h;
         }
         if (enc === 'hex') {
-            var hex = this._hhash;
+            let hex = this._hhash;
             if (!hex) {
                 hex = h.toString('hex');
                 if (!this.mutable)
@@ -127,27 +127,27 @@ var AbstractBlock = /** @class */ (function () {
             h = hex;
         }
         return h;
-    };
+    }
     /**
      * Serialize the block headers.
      * @returns {Buffer}
      */
-    AbstractBlock.prototype.toHead = function () {
+    toHead() {
         return this.writeHead(bio.write(80)).render();
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    AbstractBlock.prototype.fromHead = function (data) {
+    fromHead(data) {
         return this.readHead(bio.read(data));
-    };
+    }
     /**
      * Serialize the block headers.
      * @param {BufferWriter} bw
      */
-    AbstractBlock.prototype.writeHead = function (bw) {
+    writeHead(bw) {
         bw.writeU32(this.version);
         bw.writeHash(this.prevBlock);
         bw.writeHash(this.merkleRoot);
@@ -155,12 +155,12 @@ var AbstractBlock = /** @class */ (function () {
         bw.writeU32(this.bits);
         bw.writeU32(this.nonce);
         return bw;
-    };
+    }
     /**
      * Parse the block headers.
      * @param {BufferReader} br
      */
-    AbstractBlock.prototype.readHead = function (br) {
+    readHead(br) {
         this.version = br.readU32();
         this.prevBlock = br.readHash();
         this.merkleRoot = br.readHash();
@@ -168,49 +168,49 @@ var AbstractBlock = /** @class */ (function () {
         this.bits = br.readU32();
         this.nonce = br.readU32();
         return this;
-    };
+    }
     /**
      * Verify the block.
      * @returns {Boolean}
      */
-    AbstractBlock.prototype.verify = function () {
+    verify() {
         if (!this.verifyPOW())
             return false;
         if (!this.verifyBody())
             return false;
         return true;
-    };
+    }
     /**
      * Verify proof-of-work.
      * @returns {Boolean}
      */
-    AbstractBlock.prototype.verifyPOW = function () {
+    verifyPOW() {
         return consensus.verifyPOW(this.hash(), this.bits);
-    };
+    }
     /**
      * Verify the block.
      * @returns {Boolean}
      */
-    AbstractBlock.prototype.verifyBody = function () {
+    verifyBody() {
         throw new Error('Abstract method.');
-    };
+    }
     /**
      * Get little-endian block hash.
      * @returns {Hash}
      */
-    AbstractBlock.prototype.rhash = function () {
+    rhash() {
         return util.revHex(this.hash());
-    };
+    }
     /**
      * Convert the block to an inv item.
      * @returns {InvItem}
      */
-    AbstractBlock.prototype.toInv = function () {
+    toInv() {
         return new InvItem(InvItem.types.BLOCK, this.hash());
-    };
-    return AbstractBlock;
-}());
+    }
+}
 /*
  * Expose
  */
 module.exports = AbstractBlock;
+//# sourceMappingURL=abstractblock.js.map

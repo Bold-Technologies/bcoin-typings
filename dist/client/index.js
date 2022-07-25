@@ -9,3 +9,4 @@
  */
 exports.NodeClient = require('./node');
 exports.WalletClient = require('./wallet');
+//# sourceMappingURL=index.js.map

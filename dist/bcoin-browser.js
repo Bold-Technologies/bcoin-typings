@@ -15,7 +15,7 @@ process.env.NODE_BACKEND = 'js';
  * @exports bcoin
  * @type {Object}
  */
-var bcoin = exports;
+const bcoin = exports;
 /**
  * Set the default network.
  * @param {String} network
@@ -112,3 +112,4 @@ bcoin.workers = require('./workers');
 bcoin.WorkerPool = require('./workers/workerpool');
 // Package Info
 bcoin.pkg = require('./pkg');
+//# sourceMappingURL=bcoin-browser.js.map

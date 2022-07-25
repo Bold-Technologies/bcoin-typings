@@ -4,9 +4,9 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var assert = require('bsert');
-var BufferMap = require('buffer-map').BufferMap;
-var secp256k1 = require('bcrypto/lib/secp256k1');
+const assert = require('bsert');
+const { BufferMap } = require('buffer-map');
+const secp256k1 = require('bcrypto/lib/secp256k1');
 /**
  * Signature cache.
  * @alias module:script.SigCache
@@ -14,13 +14,13 @@ var secp256k1 = require('bcrypto/lib/secp256k1');
  * @property {Hash[]} keys
  * @property {Object} valid
  */
-var SigCache = /** @class */ (function () {
+class SigCache {
     /**
      * Create a signature cache.
      * @constructor
      * @param {Number} [size=10000]
      */
-    function SigCache(size) {
+    constructor(size) {
         if (size == null)
             size = 10000;
         assert((size >>> 0) === size);
@@ -32,12 +32,12 @@ var SigCache = /** @class */ (function () {
      * Resize the sigcache.
      * @param {Number} size
      */
-    SigCache.prototype.resize = function (size) {
+    resize(size) {
         assert((size >>> 0) === size);
         this.size = size;
         this.keys.length = 0;
         this.valid.clear();
-    };
+    }
     /**
      * Add item to the sigcache.
      * Potentially evict a random member.
@@ -45,20 +45,20 @@ var SigCache = /** @class */ (function () {
      * @param {Buffer} sig
      * @param {Buffer} key
      */
-    SigCache.prototype.add = function (msg, sig, key) {
+    add(msg, sig, key) {
         if (this.size === 0)
             return;
         this.valid.set(msg, new SigCacheEntry(sig, key));
         if (this.keys.length >= this.size) {
-            var i = Math.floor(Math.random() * this.keys.length);
-            var k = this.keys[i];
-            this.valid["delete"](k);
+            const i = Math.floor(Math.random() * this.keys.length);
+            const k = this.keys[i];
+            this.valid.delete(k);
             this.keys[i] = msg;
         }
         else {
             this.keys.push(msg);
         }
-    };
+    }
     /**
      * Test whether the sig exists.
      * @param {Hash} msg - Sig hash.
@@ -66,12 +66,12 @@ var SigCache = /** @class */ (function () {
      * @param {Buffer} key
      * @returns {Boolean}
      */
-    SigCache.prototype.has = function (msg, sig, key) {
-        var entry = this.valid.get(msg);
+    has(msg, sig, key) {
+        const entry = this.valid.get(msg);
         if (!entry)
             return false;
         return entry.equals(sig, key);
-    };
+    }
     /**
      * Verify a signature, testing
      * it against the cache first.
@@ -80,33 +80,32 @@ var SigCache = /** @class */ (function () {
      * @param {Buffer} key
      * @returns {Boolean}
      */
-    SigCache.prototype.verify = function (msg, sig, key) {
+    verify(msg, sig, key) {
         if (this.size === 0)
             return secp256k1.verifyDER(msg, sig, key);
         if (this.has(msg, sig, key))
             return true;
-        var result = secp256k1.verifyDER(msg, sig, key);
+        const result = secp256k1.verifyDER(msg, sig, key);
         if (!result)
             return false;
         this.add(msg, sig, key);
         return true;
-    };
-    return SigCache;
-}());
+    }
+}
 /**
  * Signature Cache Entry
  * @ignore
  * @property {Buffer} sig
  * @property {Buffer} key
  */
-var SigCacheEntry = /** @class */ (function () {
+class SigCacheEntry {
     /**
      * Create a cache entry.
      * @constructor
      * @param {Buffer} sig
      * @param {Buffer} key
      */
-    function SigCacheEntry(sig, key) {
+    constructor(sig, key) {
         this.sig = Buffer.from(sig);
         this.key = Buffer.from(key);
     }
@@ -116,12 +115,12 @@ var SigCacheEntry = /** @class */ (function () {
      * @param {Buffer} key
      * @returns {Boolean}
      */
-    SigCacheEntry.prototype.equals = function (sig, key) {
+    equals(sig, key) {
         return this.sig.equals(sig) && this.key.equals(key);
-    };
-    return SigCacheEntry;
-}());
+    }
+}
 /*
  * Expose
  */
 module.exports = SigCache;
+//# sourceMappingURL=sigcache.js.map

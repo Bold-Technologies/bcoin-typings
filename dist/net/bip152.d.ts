@@ -43,7 +43,7 @@ export class CompactBlock extends AbstractBlock {
     ids: any[];
     ptx: any[];
     available: any[];
-    idMap: any;
+    idMap: Map<any, any>;
     count: number;
     sipKey: any;
     totalTX: number;

@@ -50,71 +50,70 @@
  * [full GPL license]: http://www.gnu.org/licenses/gpl-2.0-standalone.html
 */
 'use strict';
-var udata = require('./udata.json');
-var DEFAULT_FEATURE = [null, 0, {}];
-var CACHE_THRESHOLD = 10;
-var SBase = 0xac00;
-var LBase = 0x1100;
-var VBase = 0x1161;
-var TBase = 0x11a7;
-var LCount = 19;
-var VCount = 21;
-var TCount = 28;
-var NCount = VCount * TCount; // 588
-var SCount = LCount * NCount; // 11172
-var cache = {};
-var cacheCounter = [];
-for (var i = 0; i <= 0xff; i++)
+const udata = require('./udata.json');
+const DEFAULT_FEATURE = [null, 0, {}];
+const CACHE_THRESHOLD = 10;
+const SBase = 0xac00;
+const LBase = 0x1100;
+const VBase = 0x1161;
+const TBase = 0x11a7;
+const LCount = 19;
+const VCount = 21;
+const TCount = 28;
+const NCount = VCount * TCount; // 588
+const SCount = LCount * NCount; // 11172
+const cache = {};
+const cacheCounter = [];
+for (let i = 0; i <= 0xff; i++)
     cacheCounter[i] = 0;
-var fromCharCode = null;
-var UChar = /** @class */ (function () {
-    function UChar(cp, feature) {
+let fromCharCode = null;
+class UChar {
+    constructor(cp, feature) {
         this.codepoint = cp;
         this.feature = feature;
     }
-    UChar.isHighSurrogate = function (cp) {
+    static isHighSurrogate(cp) {
         return cp >= 0xd800 && cp <= 0xdbff;
-    };
-    UChar.isLowSurrogate = function (cp) {
+    }
+    static isLowSurrogate(cp) {
         return cp >= 0xdc00 && cp <= 0xdfff;
-    };
-    UChar.prototype.prepFeature = function () {
+    }
+    prepFeature() {
         if (!this.feature)
             this.feature = fromCharCode(this.codepoint, true).feature;
-    };
-    UChar.prototype.toString = function () {
+    }
+    toString() {
         if (this.codepoint < 0x10000)
             return String.fromCharCode(this.codepoint);
-        var x = this.codepoint - 0x10000;
+        const x = this.codepoint - 0x10000;
         return String.fromCharCode(Math.floor(x / 0x400) + 0xd800, x % 0x400 + 0xdc00);
-    };
-    UChar.prototype.getDecomp = function () {
+    }
+    getDecomp() {
         this.prepFeature();
         return this.feature[0] || null;
-    };
-    UChar.prototype.isCompatibility = function () {
+    }
+    isCompatibility() {
         this.prepFeature();
         return Boolean(this.feature[1]) && (this.feature[1] & (1 << 8)) !== 0;
-    };
-    UChar.prototype.isExclude = function () {
+    }
+    isExclude() {
         this.prepFeature();
         return Boolean(this.feature[1]) && (this.feature[1] & (1 << 9)) !== 0;
-    };
-    UChar.prototype.getCanonicalClass = function () {
+    }
+    getCanonicalClass() {
         this.prepFeature();
         return this.feature[1] ? (this.feature[1] & 0xff) : 0;
-    };
-    UChar.prototype.getComposite = function (following) {
+    }
+    getComposite(following) {
         this.prepFeature();
         if (!this.feature[2])
             return null;
-        var cp = this.feature[2][following.codepoint];
+        const cp = this.feature[2][following.codepoint];
         return cp ? fromCharCode(cp) : null;
-    };
-    return UChar;
-}());
+    }
+}
 function fromCache(next, cp, needFeature) {
-    var ret = cache[cp];
+    let ret = cache[cp];
     if (!ret) {
         ret = next(cp, needFeature);
         if (ret.feature && ++cacheCounter[(cp >> 8) & 0xff] > CACHE_THRESHOLD)
@@ -123,9 +122,9 @@ function fromCache(next, cp, needFeature) {
     return ret;
 }
 function fromData(next, cp, needFeature) {
-    var hash = cp & 0xff00;
-    var dunit = udata[hash] || {};
-    var f = dunit[cp];
+    const hash = cp & 0xff00;
+    const dunit = udata[hash] || {};
+    const f = dunit[cp];
     return f ? new UChar(cp, f) : new UChar(cp, DEFAULT_FEATURE);
 }
 function fromCpOnly(next, cp, needFeature) {
@@ -138,15 +137,15 @@ function fromRuleBasedJamo(next, cp, needFeature) {
         return next(cp, needFeature);
     }
     if (LBase <= cp && cp < LBase + LCount) {
-        var c = {};
-        var base = (cp - LBase) * VCount;
-        for (var j = 0; j < VCount; j++)
+        const c = {};
+        const base = (cp - LBase) * VCount;
+        for (let j = 0; j < VCount; j++)
             c[VBase + j] = SBase + TCount * (j + base);
         return new UChar(cp, [null, null, c]);
     }
-    var SIndex = cp - SBase;
-    var TIndex = SIndex % TCount;
-    var feature = [];
+    const SIndex = cp - SBase;
+    const TIndex = SIndex % TCount;
+    const feature = [];
     if (TIndex !== 0) {
         feature[0] = [SBase + SIndex - TIndex, TBase + TIndex];
     }
@@ -156,7 +155,7 @@ function fromRuleBasedJamo(next, cp, needFeature) {
             VBase + Math.floor((SIndex % NCount) / TCount)
         ];
         feature[2] = {};
-        for (var j = 1; j < TCount; j++)
+        for (let j = 1; j < TCount; j++)
             feature[2][TBase + j] = cp + j;
     }
     return new UChar(cp, feature);
@@ -166,28 +165,28 @@ function fromCpFilter(next, cp, needFeature) {
         ? new UChar(cp, DEFAULT_FEATURE)
         : next(cp, needFeature);
 }
-var strategies = [
+const strategies = [
     fromCpFilter,
     fromCache,
     fromCpOnly,
     fromRuleBasedJamo,
     fromData
 ];
-fromCharCode = strategies.reduceRight(function (next, strategy) {
-    return function (cp, needFeature) {
+fromCharCode = strategies.reduceRight((next, strategy) => {
+    return (cp, needFeature) => {
         return strategy(next, cp, needFeature);
     };
 }, null);
-var UCharIterator = /** @class */ (function () {
-    function UCharIterator(str) {
+class UCharIterator {
+    constructor(str) {
         this.str = str;
         this.cursor = 0;
     }
-    UCharIterator.prototype.next = function () {
+    next() {
         if (this.str && this.cursor < this.str.length) {
-            var cp = this.str.charCodeAt(this.cursor++);
+            let cp = this.str.charCodeAt(this.cursor++);
             if (UChar.isHighSurrogate(cp) && this.cursor < this.str.length) {
-                var d = this.str.charCodeAt(this.cursor);
+                const d = this.str.charCodeAt(this.cursor);
                 if (UChar.isLowSurrogate(d)) {
                     cp = (cp - 0xd800) * 0x400 + (d - 0xdc00) + 0x10000;
                     this.cursor += 1;
@@ -197,56 +196,54 @@ var UCharIterator = /** @class */ (function () {
         }
         this.str = null;
         return null;
-    };
-    return UCharIterator;
-}());
-var RecursDecompIterator = /** @class */ (function () {
-    function RecursDecompIterator(it, cano) {
+    }
+}
+class RecursDecompIterator {
+    constructor(it, cano) {
         this.it = it;
         this.canonical = cano;
         this.resBuf = [];
     }
-    RecursDecompIterator.prototype.recursiveDecomp = function (uchar) {
-        var cano = this.canonical;
-        var decomp = uchar.getDecomp();
+    recursiveDecomp(uchar) {
+        const cano = this.canonical;
+        const decomp = uchar.getDecomp();
         if (decomp && !(cano && uchar.isCompatibility())) {
-            var ret = [];
-            for (var i = 0; i < decomp.length; i++) {
-                var a = this.recursiveDecomp(fromCharCode(decomp[i]));
+            let ret = [];
+            for (let i = 0; i < decomp.length; i++) {
+                const a = this.recursiveDecomp(fromCharCode(decomp[i]));
                 ret = ret.concat(a);
             }
             return ret;
         }
         return [uchar];
-    };
-    RecursDecompIterator.prototype.next = function () {
+    }
+    next() {
         if (this.resBuf.length === 0) {
-            var uchar = this.it.next();
+            const uchar = this.it.next();
             if (!uchar)
                 return null;
             this.resBuf = this.recursiveDecomp(uchar);
         }
         return this.resBuf.shift();
-    };
-    return RecursDecompIterator;
-}());
-var DecompIterator = /** @class */ (function () {
-    function DecompIterator(it) {
+    }
+}
+class DecompIterator {
+    constructor(it) {
         this.it = it;
         this.resBuf = [];
     }
-    DecompIterator.prototype.next = function () {
+    next() {
         if (this.resBuf.length === 0) {
             for (;;) {
-                var uchar = this.it.next();
+                const uchar = this.it.next();
                 if (!uchar)
                     break;
-                var cc = uchar.getCanonicalClass();
-                var inspt = this.resBuf.length;
+                const cc = uchar.getCanonicalClass();
+                let inspt = this.resBuf.length;
                 if (cc !== 0) {
                     while (inspt > 0) {
-                        var uchar2 = this.resBuf[inspt - 1];
-                        var cc2 = uchar2.getCanonicalClass();
+                        const uchar2 = this.resBuf[inspt - 1];
+                        const cc2 = uchar2.getCanonicalClass();
                         if (cc2 <= cc)
                             break;
                         inspt -= 1;
@@ -258,19 +255,18 @@ var DecompIterator = /** @class */ (function () {
             }
         }
         return this.resBuf.shift();
-    };
-    return DecompIterator;
-}());
-var CompIterator = /** @class */ (function () {
-    function CompIterator(it) {
+    }
+}
+class CompIterator {
+    constructor(it) {
         this.it = it;
         this.procBuf = [];
         this.resBuf = [];
         this.lastClass = null;
     }
-    CompIterator.prototype.next = function () {
+    next() {
         while (this.resBuf.length === 0) {
-            var uchar = this.it.next();
+            const uchar = this.it.next();
             if (!uchar) {
                 this.resBuf = this.procBuf;
                 this.procBuf = [];
@@ -281,9 +277,9 @@ var CompIterator = /** @class */ (function () {
                 this.procBuf.push(uchar);
                 continue;
             }
-            var starter = this.procBuf[0];
-            var composite = starter.getComposite(uchar);
-            var cc = uchar.getCanonicalClass();
+            const starter = this.procBuf[0];
+            const composite = starter.getComposite(uchar);
+            const cc = uchar.getCanonicalClass();
             if (composite && (this.lastClass < cc || this.lastClass === 0)) {
                 this.procBuf[0] = composite;
                 continue;
@@ -296,40 +292,39 @@ var CompIterator = /** @class */ (function () {
             this.procBuf.push(uchar);
         }
         return this.resBuf.shift();
-    };
-    return CompIterator;
-}());
+    }
+}
 function createIterator(mode, str) {
     switch (mode) {
         case 'NFD': {
-            var it1 = new UCharIterator(str);
-            var it2 = new RecursDecompIterator(it1, true);
+            const it1 = new UCharIterator(str);
+            const it2 = new RecursDecompIterator(it1, true);
             return new DecompIterator(it2);
         }
         case 'NFKD': {
-            var it1 = new UCharIterator(str);
-            var it2 = new RecursDecompIterator(it1, false);
+            const it1 = new UCharIterator(str);
+            const it2 = new RecursDecompIterator(it1, false);
             return new DecompIterator(it2);
         }
         case 'NFC': {
-            var it1 = new UCharIterator(str);
-            var it2 = new RecursDecompIterator(it1, true);
-            var it3 = new DecompIterator(it2);
+            const it1 = new UCharIterator(str);
+            const it2 = new RecursDecompIterator(it1, true);
+            const it3 = new DecompIterator(it2);
             return new CompIterator(it3);
         }
         case 'NFKC': {
-            var it1 = new UCharIterator(str);
-            var it2 = new RecursDecompIterator(it1, false);
-            var it3 = new DecompIterator(it2);
+            const it1 = new UCharIterator(str);
+            const it2 = new RecursDecompIterator(it1, false);
+            const it3 = new DecompIterator(it2);
             return new CompIterator(it3);
         }
     }
-    throw new Error("".concat(mode, " is invalid."));
+    throw new Error(`${mode} is invalid.`);
 }
 function normalize(mode, str) {
-    var it = createIterator(mode, str);
-    var ret = '';
-    var uchar;
+    const it = createIterator(mode, str);
+    let ret = '';
+    let uchar;
     for (;;) {
         uchar = it.next();
         if (!uchar)
@@ -355,3 +350,4 @@ exports.nfc = nfc;
 exports.nfd = nfd;
 exports.nfkc = nfkc;
 exports.nfkd = nfkd;
+//# sourceMappingURL=unorm.js.map

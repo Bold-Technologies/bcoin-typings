@@ -4,7 +4,7 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var unorm = require('./unorm');
+const unorm = require('./unorm');
 function nfkd(str) {
     if (str.normalize)
         return str.normalize('NFKD');
@@ -14,3 +14,4 @@ function nfkd(str) {
  * Expose
  */
 module.exports = nfkd;
+//# sourceMappingURL=nfkd-compat.js.map

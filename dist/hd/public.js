@@ -4,17 +4,17 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var assert = require('bsert');
-var bio = require('bufio');
-var base58 = require('bcrypto/lib/encoding/base58');
-var sha512 = require('bcrypto/lib/sha512');
-var hash160 = require('bcrypto/lib/hash160');
-var hash256 = require('bcrypto/lib/hash256');
-var cleanse = require('bcrypto/lib/cleanse');
-var secp256k1 = require('bcrypto/lib/secp256k1');
-var Network = require('../protocol/network');
-var consensus = require('../protocol/consensus');
-var common = require('./common');
+const assert = require('bsert');
+const bio = require('bufio');
+const base58 = require('bcrypto/lib/encoding/base58');
+const sha512 = require('bcrypto/lib/sha512');
+const hash160 = require('bcrypto/lib/hash160');
+const hash256 = require('bcrypto/lib/hash256');
+const cleanse = require('bcrypto/lib/cleanse');
+const secp256k1 = require('bcrypto/lib/secp256k1');
+const Network = require('../protocol/network');
+const consensus = require('../protocol/consensus');
+const common = require('./common');
 /**
  * HDPublicKey
  * @alias module:hd.PublicKey
@@ -24,7 +24,7 @@ var common = require('./common');
  * @property {Buffer} chainCode
  * @property {Buffer} publicKey
  */
-var HDPublicKey = /** @class */ (function () {
+class HDPublicKey {
     /**
      * Create an HD public key.
      * @constructor
@@ -36,7 +36,7 @@ var HDPublicKey = /** @class */ (function () {
      * @param {Buffer?} options.chainCode
      * @param {Buffer?} options.publicKey
      */
-    function HDPublicKey(options) {
+    constructor(options) {
         this.depth = 0;
         this.parentFingerPrint = 0;
         this.childIndex = 0;
@@ -51,7 +51,7 @@ var HDPublicKey = /** @class */ (function () {
      * @private
      * @param {Object} options
      */
-    HDPublicKey.prototype.fromOptions = function (options) {
+    fromOptions(options) {
         assert(options, 'No options for HDPublicKey');
         assert((options.depth & 0xff) === options.depth);
         assert((options.parentFingerPrint >>> 0) === options.parentFingerPrint);
@@ -64,47 +64,47 @@ var HDPublicKey = /** @class */ (function () {
         this.chainCode = options.chainCode;
         this.publicKey = options.publicKey;
         return this;
-    };
+    }
     /**
      * Instantiate HD public key from options object.
      * @param {Object} options
      * @returns {HDPublicKey}
      */
-    HDPublicKey.fromOptions = function (options) {
+    static fromOptions(options) {
         return new this().fromOptions(options);
-    };
+    }
     /**
      * Get HD public key (self).
      * @returns {HDPublicKey}
      */
-    HDPublicKey.prototype.toPublic = function () {
+    toPublic() {
         return this;
-    };
+    }
     /**
      * Get cached base58 xprivkey (always null here).
      * @returns {null}
      */
-    HDPublicKey.prototype.xprivkey = function (network) {
+    xprivkey(network) {
         return null;
-    };
+    }
     /**
      * Get cached base58 xpubkey.
      * @returns {Base58String}
      */
-    HDPublicKey.prototype.xpubkey = function (network) {
+    xpubkey(network) {
         return this.toBase58(network);
-    };
+    }
     /**
      * Destroy the key (zeroes chain code and pubkey).
      */
-    HDPublicKey.prototype.destroy = function () {
+    destroy() {
         this.depth = 0;
         this.childIndex = 0;
         this.parentFingerPrint = 0;
         cleanse(this.chainCode);
         cleanse(this.publicKey);
         this.fingerPrint = -1;
-    };
+    }
     /**
      * Derive a child key.
      * @param {Number} index - Derivation index.
@@ -113,7 +113,7 @@ var HDPublicKey = /** @class */ (function () {
      * @returns {HDPrivateKey}
      * @throws on `hardened`
      */
-    HDPublicKey.prototype.derive = function (index, hardened) {
+    derive(index, hardened) {
         assert(typeof index === 'number');
         if ((index >>> 0) !== index)
             throw new Error('Index out of range.');
@@ -121,18 +121,18 @@ var HDPublicKey = /** @class */ (function () {
             throw new Error('Cannot derive hardened.');
         if (this.depth >= 0xff)
             throw new Error('Depth too high.');
-        var id = this.getID(index);
-        var cache = common.cache.get(id);
+        const id = this.getID(index);
+        const cache = common.cache.get(id);
         if (cache)
             return cache;
-        var bw = bio.pool(37);
+        const bw = bio.pool(37);
         bw.writeBytes(this.publicKey);
         bw.writeU32BE(index);
-        var data = bw.render();
-        var hash = sha512.mac(data, this.chainCode);
-        var left = hash.slice(0, 32);
-        var right = hash.slice(32, 64);
-        var key;
+        const data = bw.render();
+        const hash = sha512.mac(data, this.chainCode);
+        const left = hash.slice(0, 32);
+        const right = hash.slice(32, 64);
+        let key;
         try {
             key = secp256k1.publicKeyTweakAdd(this.publicKey, left, true);
         }
@@ -140,10 +140,10 @@ var HDPublicKey = /** @class */ (function () {
             return this.derive(index + 1);
         }
         if (this.fingerPrint === -1) {
-            var fp = hash160.digest(this.publicKey);
+            const fp = hash160.digest(this.publicKey);
             this.fingerPrint = fp.readUInt32BE(0, true);
         }
-        var child = new this.constructor();
+        const child = new this.constructor();
         child.depth = this.depth + 1;
         child.parentFingerPrint = this.fingerPrint;
         child.childIndex = index;
@@ -151,16 +151,16 @@ var HDPublicKey = /** @class */ (function () {
         child.publicKey = key;
         common.cache.set(id, child);
         return child;
-    };
+    }
     /**
      * Unique HD key ID.
      * @private
      * @param {Number} index
      * @returns {String}
      */
-    HDPublicKey.prototype.getID = function (index) {
+    getID(index) {
         return 'b' + this.publicKey.toString('hex') + index;
-    };
+    }
     /**
      * Derive a BIP44 account key (does not derive, only ensures account key).
      * @method
@@ -170,37 +170,37 @@ var HDPublicKey = /** @class */ (function () {
      * @returns {HDPublicKey}
      * @throws Error if key is not already an account key.
      */
-    HDPublicKey.prototype.deriveAccount = function (purpose, type, account) {
+    deriveAccount(purpose, type, account) {
         assert((purpose >>> 0) === purpose);
         assert((type >>> 0) === type);
         assert((account >>> 0) === account);
         assert(this.isAccount(account), 'Cannot derive account index.');
         return this;
-    };
+    }
     /**
      * Test whether the key is a master key.
      * @method
      * @returns {Boolean}
      */
-    HDPublicKey.prototype.isMaster = function () {
+    isMaster() {
         return common.isMaster(this);
-    };
+    }
     /**
      * Test whether the key is (most likely) a BIP44 account key.
      * @method
      * @param {Number?} account
      * @returns {Boolean}
      */
-    HDPublicKey.prototype.isAccount = function (account) {
+    isAccount(account) {
         return common.isAccount(this, account);
-    };
+    }
     /**
      * Test whether a string is a valid path.
      * @param {String} path
      * @param {Boolean?} hardened
      * @returns {Boolean}
      */
-    HDPublicKey.isValidPath = function (path) {
+    static isValidPath(path) {
         try {
             common.parsePath(path, false);
             return true;
@@ -208,7 +208,7 @@ var HDPublicKey = /** @class */ (function () {
         catch (e) {
             return false;
         }
-    };
+    }
     /**
      * Derive a key from a derivation path.
      * @param {String} path
@@ -216,36 +216,34 @@ var HDPublicKey = /** @class */ (function () {
      * @throws Error if `path` is not a valid path.
      * @throws Error if hardened.
      */
-    HDPublicKey.prototype.derivePath = function (path) {
-        var indexes = common.parsePath(path, false);
-        var key = this;
-        for (var _i = 0, indexes_1 = indexes; _i < indexes_1.length; _i++) {
-            var index = indexes_1[_i];
+    derivePath(path) {
+        const indexes = common.parsePath(path, false);
+        let key = this;
+        for (const index of indexes)
             key = key.derive(index);
-        }
         return key;
-    };
+    }
     /**
      * Compare a key against an object.
      * @param {Object} obj
      * @returns {Boolean}
      */
-    HDPublicKey.prototype.equals = function (obj) {
+    equals(obj) {
         assert(HDPublicKey.isHDPublicKey(obj));
         return this.depth === obj.depth
             && this.parentFingerPrint === obj.parentFingerPrint
             && this.childIndex === obj.childIndex
             && this.chainCode.equals(obj.chainCode)
             && this.publicKey.equals(obj.publicKey);
-    };
+    }
     /**
      * Compare a key against an object.
      * @param {Object} obj
      * @returns {Boolean}
      */
-    HDPublicKey.prototype.compare = function (key) {
+    compare(key) {
         assert(HDPublicKey.isHDPublicKey(key));
-        var cmp = this.depth - key.depth;
+        let cmp = this.depth - key.depth;
         if (cmp !== 0)
             return cmp;
         cmp = this.parentFingerPrint - key.parentFingerPrint;
@@ -261,48 +259,48 @@ var HDPublicKey = /** @class */ (function () {
         if (cmp !== 0)
             return cmp;
         return 0;
-    };
+    }
     /**
      * Convert key to a more json-friendly object.
      * @returns {Object}
      */
-    HDPublicKey.prototype.toJSON = function (network) {
+    toJSON(network) {
         return {
             xpubkey: this.xpubkey(network)
         };
-    };
+    }
     /**
      * Inject properties from json object.
      * @private
      * @param {Object} json
      * @param {Network?} network
      */
-    HDPublicKey.prototype.fromJSON = function (json, network) {
+    fromJSON(json, network) {
         assert(json.xpubkey, 'Could not handle HD key JSON.');
         this.fromBase58(json.xpubkey, network);
         return this;
-    };
+    }
     /**
      * Instantiate an HDPublicKey from a jsonified key object.
      * @param {Object} json - The jsonified transaction object.
      * @param {Network?} network
      * @returns {HDPrivateKey}
      */
-    HDPublicKey.fromJSON = function (json, network) {
+    static fromJSON(json, network) {
         return new this().fromJSON(json, network);
-    };
+    }
     /**
      * Test whether an object is in the form of a base58 xpubkey.
      * @param {String} data
      * @param {(Network|NetworkType)?} network
      * @returns {Boolean}
      */
-    HDPublicKey.isBase58 = function (data, network) {
+    static isBase58(data, network) {
         if (typeof data !== 'string')
             return false;
         if (data.length < 4)
             return false;
-        var prefix = data.substring(0, 4);
+        const prefix = data.substring(0, 4);
         try {
             Network.fromPublic58(prefix, network);
             return true;
@@ -310,19 +308,19 @@ var HDPublicKey = /** @class */ (function () {
         catch (e) {
             return false;
         }
-    };
+    }
     /**
      * Test whether a buffer has a valid network prefix.
      * @param {Buffer} data
      * @param {(Network|NetworkType)?} network
      * @returns {NetworkType}
      */
-    HDPublicKey.isRaw = function (data, network) {
+    static isRaw(data, network) {
         if (!Buffer.isBuffer(data))
             return false;
         if (data.length < 4)
             return false;
-        var version = data.readUInt32BE(0, true);
+        const version = data.readUInt32BE(0, true);
         try {
             Network.fromPublic(version, network);
             return true;
@@ -330,25 +328,25 @@ var HDPublicKey = /** @class */ (function () {
         catch (e) {
             return false;
         }
-    };
+    }
     /**
      * Inject properties from a base58 key.
      * @private
      * @param {Base58String} xkey
      * @param {Network?} network
      */
-    HDPublicKey.prototype.fromBase58 = function (xkey, network) {
+    fromBase58(xkey, network) {
         assert(typeof xkey === 'string');
         return this.fromRaw(base58.decode(xkey), network);
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {BufferReader} br
      * @param {(Network|NetworkType)?} network
      */
-    HDPublicKey.prototype.fromReader = function (br, network) {
-        var version = br.readU32BE();
+    fromReader(br, network) {
+        const version = br.readU32BE();
         Network.fromPublic(version, network);
         this.depth = br.readU8();
         this.parentFingerPrint = br.readU32BE();
@@ -357,30 +355,30 @@ var HDPublicKey = /** @class */ (function () {
         this.publicKey = br.readBytes(33);
         br.verifyChecksum(hash256.digest);
         return this;
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      * @param {(Network|NetworkType)?} network
      */
-    HDPublicKey.prototype.fromRaw = function (data, network) {
+    fromRaw(data, network) {
         return this.fromReader(bio.read(data), network);
-    };
+    }
     /**
      * Serialize key data to base58 extended key.
      * @param {(Network|NetworkType)?} network
      * @returns {Base58String}
      */
-    HDPublicKey.prototype.toBase58 = function (network) {
+    toBase58(network) {
         return base58.encode(this.toRaw(network));
-    };
+    }
     /**
      * Write the key to a buffer writer.
      * @param {BufferWriter} bw
      * @param {(Network|NetworkType)?} network
      */
-    HDPublicKey.prototype.toWriter = function (bw, network) {
+    toWriter(bw, network) {
         network = Network.get(network);
         bw.writeU32BE(network.keyPrefix.xpubkey);
         bw.writeU8(this.depth);
@@ -390,60 +388,60 @@ var HDPublicKey = /** @class */ (function () {
         bw.writeBytes(this.publicKey);
         bw.writeChecksum(hash256.digest);
         return bw;
-    };
+    }
     /**
      * Calculate serialization size.
      * @returns {Number}
      */
-    HDPublicKey.prototype.getSize = function () {
+    getSize() {
         return 82;
-    };
+    }
     /**
      * Serialize the key.
      * @param {(Network|NetworkType)?} network
      * @returns {Buffer}
      */
-    HDPublicKey.prototype.toRaw = function (network) {
+    toRaw(network) {
         return this.toWriter(bio.write(82), network).render();
-    };
+    }
     /**
      * Instantiate an HD public key from a base58 string.
      * @param {Base58String} xkey
      * @param {Network?} network
      * @returns {HDPublicKey}
      */
-    HDPublicKey.fromBase58 = function (xkey, network) {
+    static fromBase58(xkey, network) {
         return new this().fromBase58(xkey, network);
-    };
+    }
     /**
      * Instantiate key from serialized data.
      * @param {BufferReader} br
      * @param {(Network|NetworkType)?} network
      * @returns {HDPublicKey}
      */
-    HDPublicKey.fromReader = function (br, network) {
+    static fromReader(br, network) {
         return new this().fromReader(br, network);
-    };
+    }
     /**
      * Instantiate key from serialized data.
      * @param {Buffer} data
      * @param {(Network|NetworkType)?} network
      * @returns {HDPublicKey}
      */
-    HDPublicKey.fromRaw = function (data, network) {
+    static fromRaw(data, network) {
         return new this().fromRaw(data, network);
-    };
+    }
     /**
      * Test whether an object is a HDPublicKey.
      * @param {Object} obj
      * @returns {Boolean}
      */
-    HDPublicKey.isHDPublicKey = function (obj) {
+    static isHDPublicKey(obj) {
         return obj instanceof HDPublicKey;
-    };
-    return HDPublicKey;
-}());
+    }
+}
 /*
  * Expose
  */
 module.exports = HDPublicKey;
+//# sourceMappingURL=public.js.map

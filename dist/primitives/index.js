@@ -22,3 +22,4 @@ exports.Outpoint = require('./outpoint');
 exports.Output = require('./output');
 exports.TX = require('./tx');
 exports.TXMeta = require('./txmeta');
+//# sourceMappingURL=index.js.map

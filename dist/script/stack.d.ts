@@ -175,6 +175,11 @@ declare class Stack {
     pushBool(value: any): number;
     unshiftBool(value: any): number;
     insertBool(index: any, value: any): Buffer;
+    /**
+     * Instantiate a value-only iterator.
+     * @returns {StackIterator}
+     */
+    [Symbol.iterator](): StackIterator;
 }
 import ScriptNum = require("./scriptnum");
 //# sourceMappingURL=stack.d.ts.map

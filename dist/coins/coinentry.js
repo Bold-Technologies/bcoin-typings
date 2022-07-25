@@ -4,17 +4,17 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var assert = require('bsert');
-var bio = require('bufio');
-var Coin = require('../primitives/coin');
-var Output = require('../primitives/output');
-var compress = require('./compress');
-var encoding = bio.encoding;
+const assert = require('bsert');
+const bio = require('bufio');
+const Coin = require('../primitives/coin');
+const Output = require('../primitives/output');
+const compress = require('./compress');
+const { encoding } = bio;
 /*
  * Constants
  */
-var NUM_FLAGS = 1;
-var MAX_HEIGHT = ((1 << (32 - NUM_FLAGS)) >>> 0) - 1;
+const NUM_FLAGS = 1;
+const MAX_HEIGHT = ((1 << (32 - NUM_FLAGS)) >>> 0) - 1;
 /**
  * Coin Entry
  * Represents an unspent output.
@@ -27,12 +27,12 @@ var MAX_HEIGHT = ((1 << (32 - NUM_FLAGS)) >>> 0) - 1;
  * @property {Boolean} spent
  * @property {Buffer} raw
  */
-var CoinEntry = /** @class */ (function () {
+class CoinEntry {
     /**
      * Create a coin entry.
      * @constructor
      */
-    function CoinEntry() {
+    constructor() {
         this.version = 1;
         this.height = -1;
         this.coinbase = false;
@@ -44,16 +44,16 @@ var CoinEntry = /** @class */ (function () {
      * Convert coin entry to an output.
      * @returns {Output}
      */
-    CoinEntry.prototype.toOutput = function () {
+    toOutput() {
         return this.output;
-    };
+    }
     /**
      * Convert coin entry to a coin.
      * @param {Outpoint} prevout
      * @returns {Coin}
      */
-    CoinEntry.prototype.toCoin = function (prevout) {
-        var coin = new Coin();
+    toCoin(prevout) {
+        const coin = new Coin();
         coin.version = this.version;
         coin.height = this.height;
         coin.coinbase = this.coinbase;
@@ -62,53 +62,53 @@ var CoinEntry = /** @class */ (function () {
         coin.hash = prevout.hash;
         coin.index = prevout.index;
         return coin;
-    };
+    }
     /**
      * Inject properties from TX.
      * @param {TX} tx
      * @param {Number} index
      */
-    CoinEntry.prototype.fromOutput = function (output) {
+    fromOutput(output) {
         this.output = output;
         return this;
-    };
+    }
     /**
      * Instantiate a coin from a TX
      * @param {TX} tx
      * @param {Number} index - Output index.
      * @returns {CoinEntry}
      */
-    CoinEntry.fromOutput = function (output) {
+    static fromOutput(output) {
         return new this().fromOutput(output);
-    };
+    }
     /**
      * Inject properties from TX.
      * @param {TX} tx
      * @param {Number} index
      */
-    CoinEntry.prototype.fromCoin = function (coin) {
+    fromCoin(coin) {
         this.version = coin.version;
         this.height = coin.height;
         this.coinbase = coin.coinbase;
         this.output.script = coin.script;
         this.output.value = coin.value;
         return this;
-    };
+    }
     /**
      * Instantiate a coin from a TX
      * @param {TX} tx
      * @param {Number} index - Output index.
      * @returns {CoinEntry}
      */
-    CoinEntry.fromCoin = function (coin) {
+    static fromCoin(coin) {
         return new this().fromCoin(coin);
-    };
+    }
     /**
      * Inject properties from TX.
      * @param {TX} tx
      * @param {Number} index
      */
-    CoinEntry.prototype.fromTX = function (tx, index, height) {
+    fromTX(tx, index, height) {
         assert(typeof index === 'number');
         assert(typeof height === 'number');
         assert(index >= 0 && index < tx.outputs.length);
@@ -117,40 +117,40 @@ var CoinEntry = /** @class */ (function () {
         this.coinbase = tx.isCoinbase();
         this.output = tx.outputs[index];
         return this;
-    };
+    }
     /**
      * Instantiate a coin from a TX
      * @param {TX} tx
      * @param {Number} index - Output index.
      * @returns {CoinEntry}
      */
-    CoinEntry.fromTX = function (tx, index, height) {
+    static fromTX(tx, index, height) {
         return new this().fromTX(tx, index, height);
-    };
+    }
     /**
      * Calculate size of coin.
      * @returns {Number}
      */
-    CoinEntry.prototype.getSize = function () {
+    getSize() {
         if (this.raw)
             return this.raw.length;
-        var size = 0;
+        let size = 0;
         size += encoding.sizeVarint(this.version);
         size += 4;
         size += compress.size(this.output);
         return size;
-    };
+    }
     /**
      * Write the coin to a buffer writer.
      * @param {BufferWriter} bw
      */
-    CoinEntry.prototype.toWriter = function (bw) {
+    toWriter(bw) {
         if (this.raw) {
             bw.writeBytes(this.raw);
             return bw;
         }
-        var height = this.height;
-        var field = 0;
+        let height = this.height;
+        let field = 0;
         if (this.coinbase)
             field |= 1;
         if (height === -1)
@@ -160,29 +160,29 @@ var CoinEntry = /** @class */ (function () {
         bw.writeU32(field);
         compress.pack(this.output, bw);
         return bw;
-    };
+    }
     /**
      * Serialize the coin.
      * @returns {Buffer}
      */
-    CoinEntry.prototype.toRaw = function () {
+    toRaw() {
         if (this.raw)
             return this.raw;
-        var size = this.getSize();
-        var bw = bio.write(size);
+        const size = this.getSize();
+        const bw = bio.write(size);
         this.toWriter(bw);
         this.raw = bw.render();
         return this.raw;
-    };
+    }
     /**
      * Inject properties from serialized buffer writer.
      * @private
      * @param {BufferReader} br
      */
-    CoinEntry.prototype.fromReader = function (br) {
-        var version = br.readVarint();
-        var field = br.readU32();
-        var height = field >>> NUM_FLAGS;
+    fromReader(br) {
+        const version = br.readVarint();
+        const field = br.readU32();
+        let height = field >>> NUM_FLAGS;
         if (height === MAX_HEIGHT)
             height = -1;
         this.version = version;
@@ -190,36 +190,36 @@ var CoinEntry = /** @class */ (function () {
         this.height = height;
         compress.unpack(this.output, br);
         return this;
-    };
+    }
     /**
      * Instantiate a coin from a serialized Buffer.
      * @param {Buffer} data
      * @returns {CoinEntry}
      */
-    CoinEntry.fromReader = function (data) {
+    static fromReader(data) {
         return new this().fromReader(data);
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      */
-    CoinEntry.prototype.fromRaw = function (data) {
+    fromRaw(data) {
         this.fromReader(bio.read(data));
         this.raw = data;
         return this;
-    };
+    }
     /**
      * Instantiate a coin from a serialized Buffer.
      * @param {Buffer} data
      * @returns {CoinEntry}
      */
-    CoinEntry.fromRaw = function (data) {
+    static fromRaw(data) {
         return new this().fromRaw(data);
-    };
-    return CoinEntry;
-}());
+    }
+}
 /*
  * Expose
  */
 module.exports = CoinEntry;
+//# sourceMappingURL=coinentry.js.map

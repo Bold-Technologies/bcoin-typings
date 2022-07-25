@@ -13,7 +13,7 @@ declare class Coins {
      * @returns {Coins}
      */
     static fromTX(tx: TX, height: number): Coins;
-    outputs: any;
+    outputs: Map<any, any>;
     /**
      * Add a single entry to the collection.
      * @param {Number} index

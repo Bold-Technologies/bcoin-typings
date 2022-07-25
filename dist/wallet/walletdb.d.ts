@@ -22,7 +22,7 @@ declare class WalletDB {
     state: records.ChainState;
     confirming: boolean;
     height: number;
-    wallets: any;
+    wallets: Map<any, any>;
     depth: number;
     rescanning: boolean;
     filterSent: boolean;

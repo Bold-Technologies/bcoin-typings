@@ -4,29 +4,14 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-var assert = require('bsert');
-var I64 = require('n64').I64;
-var ScriptError = require('./scripterror');
-var inspectSymbol = require('../utils').inspectSymbol;
+const assert = require('bsert');
+const { I64 } = require('n64');
+const ScriptError = require('./scripterror');
+const { inspectSymbol } = require('../utils');
 /*
  * Constants
  */
-var EMPTY_ARRAY = Buffer.alloc(0);
+const EMPTY_ARRAY = Buffer.alloc(0);
 /**
  * Script Number
  * @see https://github.com/chjj/n64
@@ -35,50 +20,49 @@ var EMPTY_ARRAY = Buffer.alloc(0);
  * @property {Number} lo
  * @property {Number} sign
  */
-var ScriptNum = /** @class */ (function (_super) {
-    __extends(ScriptNum, _super);
+class ScriptNum extends I64 {
     /**
      * Create a script number.
      * @constructor
      * @param {(Number|String|Buffer|Object)?} num
      * @param {(String|Number)?} base
      */
-    function ScriptNum(num, base) {
-        return _super.call(this, num, base) || this;
+    constructor(num, base) {
+        super(num, base);
     }
     /**
      * Cast to int32.
      * @returns {Number}
      */
-    ScriptNum.prototype.getInt = function () {
+    getInt() {
         if (this.lt(I64.INT32_MIN))
             return I64.LONG_MIN;
         if (this.gt(I64.INT32_MAX))
             return I64.LONG_MAX;
         return this.toInt();
-    };
+    }
     /**
      * Serialize script number.
      * @returns {Buffer}
      */
-    ScriptNum.prototype.toRaw = function () {
-        var num = this;
+    toRaw() {
+        let num = this;
         // Zeroes are always empty arrays.
         if (num.isZero())
             return EMPTY_ARRAY;
         // Need to append sign bit.
-        var neg = false;
+        let neg = false;
         if (num.isNeg()) {
             num = num.neg();
             neg = true;
         }
         // Calculate size.
-        var size = num.byteLength();
-        var offset = 0;
+        const size = num.byteLength();
+        let offset = 0;
         if (num.testn((size * 8) - 1))
             offset = 1;
         // Write number.
-        var data = Buffer.allocUnsafe(size + offset);
+        const data = Buffer.allocUnsafe(size + offset);
         switch (size) {
             case 8:
                 data[7] = (num.hi >>> 24) & 0xff;
@@ -113,14 +97,14 @@ var ScriptNum = /** @class */ (function (_super) {
             assert(data.length === size);
         }
         return data;
-    };
+    }
     /**
      * Instantiate script number from serialized data.
      * @private
      * @param {Buffer} data
      * @returns {ScriptNum}
      */
-    ScriptNum.prototype.fromRaw = function (data) {
+    fromRaw(data) {
         assert(Buffer.isBuffer(data));
         // Empty arrays are always zero.
         if (data.length === 0)
@@ -145,7 +129,7 @@ var ScriptNum = /** @class */ (function (_super) {
                 this.lo |= data[0];
                 break;
             default:
-                for (var i = 0; i < data.length; i++)
+                for (let i = 0; i < data.length; i++)
                     this.orb(i, data[i]);
                 break;
         }
@@ -155,14 +139,14 @@ var ScriptNum = /** @class */ (function (_super) {
             this.ineg();
         }
         return this;
-    };
+    }
     /**
      * Serialize script number.
      * @returns {Buffer}
      */
-    ScriptNum.prototype.encode = function () {
+    encode() {
         return this.toRaw();
-    };
+    }
     /**
      * Decode and verify script number.
      * @private
@@ -171,28 +155,28 @@ var ScriptNum = /** @class */ (function (_super) {
      * @param {Number?} limit - Size limit.
      * @returns {ScriptNum}
      */
-    ScriptNum.prototype.decode = function (data, minimal, limit) {
+    decode(data, minimal, limit) {
         assert(Buffer.isBuffer(data));
         if (limit != null && data.length > limit)
             throw new ScriptError('UNKNOWN_ERROR', 'Script number overflow.');
         if (minimal && !ScriptNum.isMinimal(data))
             throw new ScriptError('UNKNOWN_ERROR', 'Non-minimal script number.');
         return this.fromRaw(data);
-    };
+    }
     /**
      * Inspect script number.
      * @returns {String}
      */
-    ScriptNum.prototype[inspectSymbol] = function () {
-        return "<ScriptNum: ".concat(this.toString(10), ">");
-    };
+    [inspectSymbol]() {
+        return `<ScriptNum: ${this.toString(10)}>`;
+    }
     /**
      * Test wether a serialized script
      * number is in its most minimal form.
      * @param {Buffer} data
      * @returns {Boolean}
      */
-    ScriptNum.isMinimal = function (data) {
+    static isMinimal(data) {
         assert(Buffer.isBuffer(data));
         if (data.length === 0)
             return true;
@@ -203,7 +187,7 @@ var ScriptNum = /** @class */ (function (_super) {
                 return false;
         }
         return true;
-    };
+    }
     /**
      * Decode and verify script number.
      * @param {Buffer} data
@@ -211,20 +195,20 @@ var ScriptNum = /** @class */ (function (_super) {
      * @param {Number?} limit - Size limit.
      * @returns {ScriptNum}
      */
-    ScriptNum.decode = function (data, minimal, limit) {
+    static decode(data, minimal, limit) {
         return new this().decode(data, minimal, limit);
-    };
+    }
     /**
      * Test whether object is a script number.
      * @param {Object} obj
      * @returns {Boolean}
      */
-    ScriptNum.isScriptNum = function (obj) {
+    static isScriptNum(obj) {
         return obj instanceof ScriptNum;
-    };
-    return ScriptNum;
-}(I64));
+    }
+}
 /*
  * Expose
  */
 module.exports = ScriptNum;
+//# sourceMappingURL=scriptnum.js.map

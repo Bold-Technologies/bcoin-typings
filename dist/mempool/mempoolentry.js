@@ -4,11 +4,11 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var bio = require('bufio');
-var policy = require('../protocol/policy');
-var util = require('../utils/util');
-var Script = require('../script/script');
-var TX = require('../primitives/tx');
+const bio = require('bufio');
+const policy = require('../protocol/policy');
+const util = require('../utils/util');
+const Script = require('../script/script');
+const TX = require('../primitives/tx');
 /**
  * Mempool Entry
  * Represents a mempool entry.
@@ -19,7 +19,7 @@ var TX = require('../primitives/tx');
  * @property {Number} time
  * @property  {SatoshiAmount} value
  */
-var MempoolEntry = /** @class */ (function () {
+class MempoolEntry {
     /**
      * Create a mempool entry.
      * @constructor
@@ -30,7 +30,7 @@ var MempoolEntry = /** @class */ (function () {
      * @param {Number} options.time - Entry time.
      * @param {SatoshiAmount} options.value - Value of on-chain coins.
      */
-    function MempoolEntry(options) {
+    constructor(options) {
         this.tx = null;
         this.height = -1;
         this.size = 0;
@@ -52,7 +52,7 @@ var MempoolEntry = /** @class */ (function () {
      * @private
      * @param {Object} options
      */
-    MempoolEntry.prototype.fromOptions = function (options) {
+    fromOptions(options) {
         this.tx = options.tx;
         this.height = options.height;
         this.size = options.size;
@@ -67,32 +67,31 @@ var MempoolEntry = /** @class */ (function () {
         this.descFee = options.descFee;
         this.descSize = options.descSize;
         return this;
-    };
+    }
     /**
      * Instantiate mempool entry from options.
      * @param {Object} options
      * @returns {MempoolEntry}
      */
-    MempoolEntry.fromOptions = function (options) {
+    static fromOptions(options) {
         return new this().fromOptions(options);
-    };
+    }
     /**
      * Inject properties from transaction.
      * @private
      * @param {TX} tx
      * @param {Number} height
      */
-    MempoolEntry.prototype.fromTX = function (tx, view, height) {
-        var flags = Script.flags.STANDARD_VERIFY_FLAGS;
-        var value = tx.getChainValue(view);
-        var sigops = tx.getSigopsCost(view, flags);
-        var size = tx.getSigopsSize(sigops);
-        var priority = tx.getPriority(view, height, size);
-        var fee = tx.getFee(view);
-        var dependencies = false;
-        var coinbase = false;
-        for (var _i = 0, _a = tx.inputs; _i < _a.length; _i++) {
-            var prevout = _a[_i].prevout;
+    fromTX(tx, view, height) {
+        const flags = Script.flags.STANDARD_VERIFY_FLAGS;
+        const value = tx.getChainValue(view);
+        const sigops = tx.getSigopsCost(view, flags);
+        const size = tx.getSigopsSize(sigops);
+        const priority = tx.getPriority(view, height, size);
+        const fee = tx.getFee(view);
+        let dependencies = false;
+        let coinbase = false;
+        for (const { prevout } of tx.inputs) {
             if (view.isCoinbase(prevout))
                 coinbase = true;
             if (view.getHeight(prevout) === -1)
@@ -112,31 +111,31 @@ var MempoolEntry = /** @class */ (function () {
         this.descFee = fee;
         this.descSize = size;
         return this;
-    };
+    }
     /**
      * Create a mempool entry from a TX.
      * @param {TX} tx
      * @param {Number} height - Entry height.
      * @returns {MempoolEntry}
      */
-    MempoolEntry.fromTX = function (tx, view, height) {
+    static fromTX(tx, view, height) {
         return new this().fromTX(tx, view, height);
-    };
+    }
     /**
      * Calculate transaction hash.
      * @param {String?} enc
      * @returns {Hash}
      */
-    MempoolEntry.prototype.hash = function (enc) {
+    hash(enc) {
         return this.tx.hash(enc);
-    };
+    }
     /**
      * Calculate reverse transaction hash.
      * @returns {Hash}
      */
-    MempoolEntry.prototype.txid = function () {
+    txid() {
         return this.tx.txid();
-    };
+    }
     /**
      * Calculate priority, taking into account
      * the entry height delta, modified size,
@@ -144,49 +143,49 @@ var MempoolEntry = /** @class */ (function () {
      * @param {Number} height
      * @returns {Number} Priority.
      */
-    MempoolEntry.prototype.getPriority = function (height) {
-        var delta = height - this.height;
-        var priority = (delta * this.value) / this.size;
-        var result = this.priority + Math.floor(priority);
+    getPriority(height) {
+        const delta = height - this.height;
+        const priority = (delta * this.value) / this.size;
+        let result = this.priority + Math.floor(priority);
         if (result < 0)
             result = 0;
         return result;
-    };
+    }
     /**
      * Get fee.
      * @returns {SatoshiAmount}
      */
-    MempoolEntry.prototype.getFee = function () {
+    getFee() {
         return this.fee;
-    };
+    }
     /**
      * Get delta fee.
      * @returns {SatoshiAmount}
      */
-    MempoolEntry.prototype.getDeltaFee = function () {
+    getDeltaFee() {
         return this.deltaFee;
-    };
+    }
     /**
      * Calculate fee rate.
      * @returns {Rate}
      */
-    MempoolEntry.prototype.getRate = function () {
+    getRate() {
         return policy.getRate(this.size, this.fee);
-    };
+    }
     /**
      * Calculate delta fee rate.
      * @returns {Rate}
      */
-    MempoolEntry.prototype.getDeltaRate = function () {
+    getDeltaRate() {
         return policy.getRate(this.size, this.deltaFee);
-    };
+    }
     /**
      * Calculate fee cumulative descendant rate.
      * @returns {Rate}
      */
-    MempoolEntry.prototype.getDescRate = function () {
+    getDescRate() {
         return policy.getRate(this.descSize, this.descFee);
-    };
+    }
     /**
      * Calculate the memory usage of a transaction.
      * Note that this only calculates the JS heap
@@ -196,9 +195,9 @@ var MempoolEntry = /** @class */ (function () {
      * of TX objects.
      * @returns {Number} Usage in bytes.
      */
-    MempoolEntry.prototype.memUsage = function () {
-        var tx = this.tx;
-        var total = 0;
+    memUsage() {
+        const tx = this.tx;
+        let total = 0;
         total += 176; // mempool entry
         total += 48; // coinbase
         total += 48; // dependencies
@@ -209,8 +208,7 @@ var MempoolEntry = /** @class */ (function () {
         total += 80; // _whash
         total += 48; // mutable
         total += 32; // input array
-        for (var _i = 0, _a = tx.inputs; _i < _a.length; _i++) {
-            var input = _a[_i];
+        for (const input of tx.inputs) {
             total += 120; // input
             total += 104; // prevout
             total += 88; // prevout hash
@@ -218,8 +216,7 @@ var MempoolEntry = /** @class */ (function () {
             total += 80; // script raw buffer
             total += 32; // script code array
             total += input.script.code.length * 40; // opcodes
-            for (var _b = 0, _c = input.script.code; _b < _c.length; _b++) {
-                var op = _c[_b];
+            for (const op of input.script.code) {
                 if (op.data)
                     total += 80; // op buffers
             }
@@ -228,21 +225,19 @@ var MempoolEntry = /** @class */ (function () {
             total += input.witness.items.length * 80; // witness buffers
         }
         total += 32; // output array
-        for (var _d = 0, _e = tx.outputs; _d < _e.length; _d++) {
-            var output = _e[_d];
+        for (const output of tx.outputs) {
             total += 104; // output
             total += 40; // script
             total += 80; // script raw buffer
             total += 32; // script code array
             total += output.script.code.length * 40; // opcodes
-            for (var _f = 0, _g = output.script.code; _f < _g.length; _f++) {
-                var op = _g[_f];
+            for (const op of output.script.code) {
                 if (op.data)
                     total += 80; // op buffers
             }
         }
         return total;
-    };
+    }
     /**
      * Test whether the entry is free with
      * the current priority (calculated by
@@ -250,23 +245,23 @@ var MempoolEntry = /** @class */ (function () {
      * @param {Number} height
      * @returns {Boolean}
      */
-    MempoolEntry.prototype.isFree = function (height) {
-        var priority = this.getPriority(height);
+    isFree(height) {
+        const priority = this.getPriority(height);
         return priority > policy.FREE_THRESHOLD;
-    };
+    }
     /**
      * Get entry serialization size.
      * @returns {Number}
      */
-    MempoolEntry.prototype.getSize = function () {
+    getSize() {
         return this.tx.getSize() + 42;
-    };
+    }
     /**
      * Serialize entry to a buffer.
      * @returns {Buffer}
      */
-    MempoolEntry.prototype.toRaw = function () {
-        var bw = bio.write(this.getSize());
+    toRaw() {
+        const bw = bio.write(this.getSize());
         bw.writeBytes(this.tx.toRaw());
         bw.writeU32(this.height);
         bw.writeU32(this.size);
@@ -278,15 +273,15 @@ var MempoolEntry = /** @class */ (function () {
         bw.writeU8(this.coinbase ? 1 : 0);
         bw.writeU8(this.dependencies ? 1 : 0);
         return bw.render();
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      * @returns {MempoolEntry}
      */
-    MempoolEntry.prototype.fromRaw = function (data) {
-        var br = bio.read(data);
+    fromRaw(data) {
+        const br = bio.read(data);
         this.tx = TX.fromReader(br);
         this.height = br.readU32();
         this.size = br.readU32();
@@ -301,18 +296,18 @@ var MempoolEntry = /** @class */ (function () {
         this.descFee = this.fee;
         this.descSize = this.size;
         return this;
-    };
+    }
     /**
      * Instantiate entry from serialized data.
      * @param {Buffer} data
      * @returns {MempoolEntry}
      */
-    MempoolEntry.fromRaw = function (data) {
+    static fromRaw(data) {
         return new this().fromRaw(data);
-    };
-    return MempoolEntry;
-}());
+    }
+}
 /*
  * Expose
  */
 module.exports = MempoolEntry;
+//# sourceMappingURL=mempoolentry.js.map

@@ -4,7 +4,7 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var bdb = require('bdb');
+const bdb = require('bdb');
 /*
  * Wallet Database Layout:
  *  V -> db version
@@ -82,3 +82,4 @@ exports.txdb = {
     C: bdb.key('C', ['uint32', 'hash256', 'uint32']),
     b: bdb.key('b', ['uint32'])
 };
+//# sourceMappingURL=layout.js.map

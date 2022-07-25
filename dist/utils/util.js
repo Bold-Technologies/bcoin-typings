@@ -5,11 +5,11 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var assert = require('bsert');
+const assert = require('bsert');
 /**
  * @exports utils/util
  */
-var util = exports;
+const util = exports;
 /**
  * Return hrtime (shim for browser).
  * @param {Array} time
@@ -17,21 +17,21 @@ var util = exports;
  */
 util.bench = function bench(time) {
     if (!process.hrtime) {
-        var now = Date.now();
+        const now = Date.now();
         if (time) {
-            var hi_1 = time[0], lo_1 = time[1];
-            var start = hi_1 * 1000 + lo_1 / 1e6;
+            const [hi, lo] = time;
+            const start = hi * 1000 + lo / 1e6;
             return now - start;
         }
-        var ms = now % 1000;
+        const ms = now % 1000;
         // Seconds
-        var hi = (now - ms) / 1000;
+        const hi = (now - ms) / 1000;
         // Nanoseconds
-        var lo = ms * 1e6;
+        const lo = ms * 1e6;
         return [hi, lo];
     }
     if (time) {
-        var _a = process.hrtime(time), hi = _a[0], lo = _a[1];
+        const [hi, lo] = process.hrtime(time);
         return hi * 1000 + lo / 1e6;
     }
     return process.hrtime();
@@ -84,3 +84,4 @@ util.fromRev = function fromRev(str) {
     assert((str.length & 1) === 0);
     return Buffer.from(str, 'hex').reverse();
 };
+//# sourceMappingURL=util.js.map

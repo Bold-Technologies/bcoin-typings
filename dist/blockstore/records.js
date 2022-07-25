@@ -4,21 +4,20 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var assert = require('bsert');
-var bio = require('bufio');
+const assert = require('bsert');
+const bio = require('bufio');
 /**
  * @module blockstore/records
  */
 /**
  * Block Record
  */
-var BlockRecord = /** @class */ (function () {
+class BlockRecord {
     /**
      * Create a block record.
      * @constructor
      */
-    function BlockRecord(options) {
-        if (options === void 0) { options = {}; }
+    constructor(options = {}) {
         this.file = options.file || 0;
         this.position = options.position || 0;
         this.length = options.length || 0;
@@ -31,45 +30,43 @@ var BlockRecord = /** @class */ (function () {
      * @private
      * @param {Buffer} data
      */
-    BlockRecord.prototype.fromRaw = function (data) {
-        var br = bio.read(data);
+    fromRaw(data) {
+        const br = bio.read(data);
         this.file = br.readU32();
         this.position = br.readU32();
         this.length = br.readU32();
         return this;
-    };
+    }
     /**
      * Instantiate block record from serialized data.
      * @param {Hash} hash
      * @param {Buffer} data
      * @returns {BlockRecord}
      */
-    BlockRecord.fromRaw = function (data) {
+    static fromRaw(data) {
         return new this().fromRaw(data);
-    };
+    }
     /**
      * Serialize the block record.
      * @returns {Buffer}
      */
-    BlockRecord.prototype.toRaw = function () {
-        var bw = bio.write(12);
+    toRaw() {
+        const bw = bio.write(12);
         bw.writeU32(this.file);
         bw.writeU32(this.position);
         bw.writeU32(this.length);
         return bw.render();
-    };
-    return BlockRecord;
-}());
+    }
+}
 /**
  * File Record
  */
-var FileRecord = /** @class */ (function () {
+class FileRecord {
     /**
      * Create a file record.
      * @constructor
      */
-    function FileRecord(options) {
-        if (options === void 0) { options = {}; }
+    constructor(options = {}) {
         this.blocks = options.blocks || 0;
         this.used = options.used || 0;
         this.length = options.length || 0;
@@ -82,38 +79,38 @@ var FileRecord = /** @class */ (function () {
      * @private
      * @param {Buffer} data
      */
-    FileRecord.prototype.fromRaw = function (data) {
-        var br = bio.read(data);
+    fromRaw(data) {
+        const br = bio.read(data);
         this.blocks = br.readU32();
         this.used = br.readU32();
         this.length = br.readU32();
         return this;
-    };
+    }
     /**
      * Instantiate file record from serialized data.
      * @param {Hash} hash
      * @param {Buffer} data
      * @returns {ChainState}
      */
-    FileRecord.fromRaw = function (data) {
+    static fromRaw(data) {
         return new this().fromRaw(data);
-    };
+    }
     /**
      * Serialize the file record.
      * @returns {Buffer}
      */
-    FileRecord.prototype.toRaw = function () {
-        var bw = bio.write(12);
+    toRaw() {
+        const bw = bio.write(12);
         bw.writeU32(this.blocks);
         bw.writeU32(this.used);
         bw.writeU32(this.length);
         return bw.render();
-    };
-    return FileRecord;
-}());
+    }
+}
 /*
  * Expose
  */
 exports.BlockRecord = BlockRecord;
 exports.FileRecord = FileRecord;
 module.exports = exports;
+//# sourceMappingURL=records.js.map

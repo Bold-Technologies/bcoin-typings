@@ -60,3 +60,4 @@ exports.flags = {
 exports.flags.DEFAULT_FLAGS = 0
     | exports.flags.VERIFY_POW
     | exports.flags.VERIFY_BODY;
+//# sourceMappingURL=common.js.map

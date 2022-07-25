@@ -4,26 +4,11 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-var EventEmitter = require('events');
-var path = require('path');
-var cp = require('child_process');
-var children = new Set();
-var exitBound = false;
+const EventEmitter = require('events');
+const path = require('path');
+const cp = require('child_process');
+const children = new Set();
+let exitBound = false;
 /**
  * Child
  * Represents a child process.
@@ -31,78 +16,74 @@ var exitBound = false;
  * @extends EventEmitter
  * @ignore
  */
-var Child = /** @class */ (function (_super) {
-    __extends(Child, _super);
+class Child extends EventEmitter {
     /**
      * Represents a child process.
      * @constructor
      * @param {String} file
      */
-    function Child(file) {
-        var _this = _super.call(this) || this;
+    constructor(file) {
+        super();
         bindExit();
-        children.add(_this);
-        _this.init(file);
-        return _this;
+        children.add(this);
+        this.init(file);
     }
     /**
      * Test whether child process support is available.
      * @returns {Boolean}
      */
-    Child.hasSupport = function () {
+    static hasSupport() {
         return true;
-    };
+    }
     /**
      * Initialize child process (node.js).
      * @private
      * @param {String} file
      */
-    Child.prototype.init = function (file) {
-        var _this = this;
-        var bin = process.argv[0];
-        var filename = path.resolve(__dirname, file);
-        var options = { stdio: 'pipe', env: process.env };
+    init(file) {
+        const bin = process.argv[0];
+        const filename = path.resolve(__dirname, file);
+        const options = { stdio: 'pipe', env: process.env };
         this.child = cp.spawn(bin, [filename], options);
         this.child.unref();
         this.child.stdin.unref();
         this.child.stdout.unref();
         this.child.stderr.unref();
-        this.child.on('error', function (err) {
-            _this.emit('error', err);
+        this.child.on('error', (err) => {
+            this.emit('error', err);
         });
-        this.child.once('exit', function (code, signal) {
-            children["delete"](_this);
-            _this.emit('exit', code == null ? -1 : code, signal);
+        this.child.once('exit', (code, signal) => {
+            children.delete(this);
+            this.emit('exit', code == null ? -1 : code, signal);
         });
-        this.child.stdin.on('error', function (err) {
-            _this.emit('error', err);
+        this.child.stdin.on('error', (err) => {
+            this.emit('error', err);
         });
-        this.child.stdout.on('error', function (err) {
-            _this.emit('error', err);
+        this.child.stdout.on('error', (err) => {
+            this.emit('error', err);
         });
-        this.child.stderr.on('error', function (err) {
-            _this.emit('error', err);
+        this.child.stderr.on('error', (err) => {
+            this.emit('error', err);
         });
-        this.child.stdout.on('data', function (data) {
-            _this.emit('data', data);
+        this.child.stdout.on('data', (data) => {
+            this.emit('data', data);
         });
-    };
+    }
     /**
      * Send data to child process.
      * @param {Buffer} data
      * @returns {Boolean}
      */
-    Child.prototype.write = function (data) {
+    write(data) {
         return this.child.stdin.write(data);
-    };
+    }
     /**
      * Destroy the child process.
      */
-    Child.prototype.destroy = function () {
+    destroy() {
         this.child.kill('SIGTERM');
-    };
-    return Child;
-}(EventEmitter));
+    }
+}
 /**
  * Cleanup all child processes.
  * @private
@@ -111,11 +92,9 @@ function bindExit() {
     if (exitBound)
         return;
     exitBound = true;
-    listenExit(function () {
-        for (var _i = 0, children_1 = children; _i < children_1.length; _i++) {
-            var child = children_1[_i];
+    listenExit(() => {
+        for (const child of children)
             child.destroy();
-        }
     });
 }
 /**
@@ -124,16 +103,16 @@ function bindExit() {
  * @private
  */
 function listenExit(handler) {
-    var onSighup = function () {
+    const onSighup = () => {
         process.exit(1 | 0x80);
     };
-    var onSigint = function () {
+    const onSigint = () => {
         process.exit(2 | 0x80);
     };
-    var onSigterm = function () {
+    const onSigterm = () => {
         process.exit(15 | 0x80);
     };
-    var onError = function (err) {
+    const onError = (err) => {
         if (err && err.stack)
             console.error(String(err.stack));
         else
@@ -149,7 +128,7 @@ function listenExit(handler) {
         process.once('SIGTERM', onSigterm);
     if (process.listenerCount('uncaughtException') === 0)
         process.once('uncaughtException', onError);
-    process.on('newListener', function (name) {
+    process.on('newListener', (name) => {
         switch (name) {
             case 'SIGHUP':
                 process.removeListener(name, onSighup);
@@ -170,3 +149,4 @@ function listenExit(handler) {
  * Expose
  */
 module.exports = Child;
+//# sourceMappingURL=child.js.map

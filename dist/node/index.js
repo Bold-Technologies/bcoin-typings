@@ -12,3 +12,4 @@ exports.HTTP = require('./http');
 exports.Node = require('./node');
 exports.RPC = require('./rpc');
 exports.SPVNode = require('./spvnode');
+//# sourceMappingURL=index.js.map

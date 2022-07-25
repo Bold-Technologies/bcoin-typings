@@ -5,24 +5,24 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var assert = require('bsert');
-var binary = require('../utils/binary');
-var networks = require('./networks');
-var consensus = require('./consensus');
-var TimeData = require('./timedata');
-var inspectSymbol = require('../utils').inspectSymbol;
+const assert = require('bsert');
+const binary = require('../utils/binary');
+const networks = require('./networks');
+const consensus = require('./consensus');
+const TimeData = require('./timedata');
+const { inspectSymbol } = require('../utils');
 /**
  * Network
  * Represents a network.
  * @alias module:protocol.Network
  */
-var Network = /** @class */ (function () {
+class Network {
     /**
      * Create a network.
      * @constructor
      * @param {Object} options
      */
-    function Network(options) {
+    constructor(options) {
         assert(!Network[options.type], 'Cannot create two networks.');
         this.type = options.type;
         this.seeds = options.seeds;
@@ -60,64 +60,61 @@ var Network = /** @class */ (function () {
      * @param {Number} bit
      * @returns {Object}
      */
-    Network.prototype.init = function () {
-        var bits = 0;
-        for (var _i = 0, _a = this.deploys; _i < _a.length; _i++) {
-            var deployment = _a[_i];
+    init() {
+        let bits = 0;
+        for (const deployment of this.deploys)
             bits |= 1 << deployment.bit;
-        }
         bits |= consensus.VERSION_TOP_MASK;
         this.unknownBits = ~bits >>> 0;
-        for (var _b = 0, _c = Object.keys(this.checkpointMap); _b < _c.length; _b++) {
-            var key = _c[_b];
-            var hash = this.checkpointMap[key];
-            var height = Number(key);
-            this.checkpoints.push({ hash: hash, height: height });
+        for (const key of Object.keys(this.checkpointMap)) {
+            const hash = this.checkpointMap[key];
+            const height = Number(key);
+            this.checkpoints.push({ hash, height });
         }
         this.checkpoints.sort(cmpNode);
-    };
+    }
     /**
      * Get a deployment by bit index.
      * @param {Number} bit
      * @returns {Object}
      */
-    Network.prototype.byBit = function (bit) {
-        var index = binary.search(this.deploys, bit, cmpBit);
+    byBit(bit) {
+        const index = binary.search(this.deploys, bit, cmpBit);
         if (index === -1)
             return null;
         return this.deploys[index];
-    };
+    }
     /**
      * Get network adjusted time.
      * @returns {Number}
      */
-    Network.prototype.now = function () {
+    now() {
         return this.time.now();
-    };
+    }
     /**
      * Get network adjusted time in milliseconds.
      * @returns {Number}
      */
-    Network.prototype.ms = function () {
+    ms() {
         return this.time.ms();
-    };
+    }
     /**
      * Create a network. Get existing network if possible.
      * @param {NetworkType|Object} options
      * @returns {Network}
      */
-    Network.create = function (options) {
+    static create(options) {
         if (typeof options === 'string')
             options = networks[options];
         assert(options, 'Unknown network.');
         if (Network[options.type])
             return Network[options.type];
-        var network = new Network(options);
+        const network = new Network(options);
         Network[network.type] = network;
         if (!Network.primary)
             Network.primary = network;
         return network;
-    };
+    }
     /**
      * Set the default network. This network will be used
      * if nothing is passed as the `network` option for
@@ -125,18 +122,18 @@ var Network = /** @class */ (function () {
      * @param {NetworkType} type - Network type.
      * @returns {Network}
      */
-    Network.set = function (type) {
+    static set(type) {
         assert(typeof type === 'string', 'Bad network.');
         Network.primary = Network.get(type);
         Network.type = type;
         return Network.primary;
-    };
+    }
     /**
      * Get a network with a string or a Network object.
      * @param {NetworkType|Network} type - Network type.
      * @returns {Network}
      */
-    Network.get = function (type) {
+    static get(type) {
         if (!type) {
             assert(Network.primary, 'No default network.');
             return Network.primary;
@@ -146,13 +143,13 @@ var Network = /** @class */ (function () {
         if (typeof type === 'string')
             return Network.create(type);
         throw new Error('Unknown network.');
-    };
+    }
     /**
      * Get a network with a string or a Network object.
      * @param {NetworkType|Network} type - Network type.
      * @returns {Network}
      */
-    Network.ensure = function (type) {
+    static ensure(type) {
         if (!type) {
             assert(Network.primary, 'No default network.');
             return Network.primary;
@@ -165,7 +162,7 @@ var Network = /** @class */ (function () {
         }
         assert(Network.primary, 'No default network.');
         return Network.primary;
-    };
+    }
     /**
      * Get a network by an associated comparator.
      * @private
@@ -175,126 +172,124 @@ var Network = /** @class */ (function () {
      * @param {String} name
      * @returns {Network}
      */
-    Network.by = function (value, compare, network, name) {
+    static by(value, compare, network, name) {
         if (network) {
             network = Network.get(network);
             if (compare(network, value))
                 return network;
-            throw new Error("Network mismatch for ".concat(name, "."));
+            throw new Error(`Network mismatch for ${name}.`);
         }
-        for (var _i = 0, _a = networks.types; _i < _a.length; _i++) {
-            var type = _a[_i];
+        for (const type of networks.types) {
             network = networks[type];
             if (compare(network, value))
                 return Network.get(type);
         }
-        throw new Error("Network not found for ".concat(name, "."));
-    };
+        throw new Error(`Network not found for ${name}.`);
+    }
     /**
      * Get a network by its magic number.
      * @param {Number} value
      * @param {Network?} network
      * @returns {Network}
      */
-    Network.fromMagic = function (value, network) {
+    static fromMagic(value, network) {
         return Network.by(value, cmpMagic, network, 'magic number');
-    };
+    }
     /**
      * Get a network by its WIF prefix.
      * @param {Number} value
      * @param {Network?} network
      * @returns {Network}
      */
-    Network.fromWIF = function (prefix, network) {
+    static fromWIF(prefix, network) {
         return Network.by(prefix, cmpWIF, network, 'WIF');
-    };
+    }
     /**
      * Get a network by its xpubkey prefix.
      * @param {Number} value
      * @param {Network?} network
      * @returns {Network}
      */
-    Network.fromPublic = function (prefix, network) {
+    static fromPublic(prefix, network) {
         return Network.by(prefix, cmpPub, network, 'xpubkey');
-    };
+    }
     /**
      * Get a network by its xprivkey prefix.
      * @param {Number} value
      * @param {Network?} network
      * @returns {Network}
      */
-    Network.fromPrivate = function (prefix, network) {
+    static fromPrivate(prefix, network) {
         return Network.by(prefix, cmpPriv, network, 'xprivkey');
-    };
+    }
     /**
      * Get a network by its xpubkey base58 prefix.
      * @param {String} prefix
      * @param {Network?} network
      * @returns {Network}
      */
-    Network.fromPublic58 = function (prefix, network) {
+    static fromPublic58(prefix, network) {
         return Network.by(prefix, cmpPub58, network, 'xpubkey');
-    };
+    }
     /**
      * Get a network by its xprivkey base58 prefix.
      * @param {String} prefix
      * @param {Network?} network
      * @returns {Network}
      */
-    Network.fromPrivate58 = function (prefix, network) {
+    static fromPrivate58(prefix, network) {
         return Network.by(prefix, cmpPriv58, network, 'xprivkey');
-    };
+    }
     /**
      * Get a network by its base58 address prefix.
      * @param {Number} value
      * @param {Network?} network
      * @returns {Network}
      */
-    Network.fromBase58 = function (prefix, network) {
+    static fromBase58(prefix, network) {
         return Network.by(prefix, cmpBase58, network, 'base58 address');
-    };
+    }
     /**
      * Get a network by its bech32 address prefix.
      * @param {String} hrp
      * @param {Network?} network
      * @returns {Network}
      */
-    Network.fromBech32 = function (hrp, network) {
+    static fromBech32(hrp, network) {
         return Network.by(hrp, cmpBech32, network, 'bech32 address');
-    };
+    }
     /**
      * Get a network by its bech32m address prefix.
      * @param {String} hrp
      * @param {Network?} network
      * @returns {Network}
      */
-    Network.fromBech32m = function (hrp, network) {
+    static fromBech32m(hrp, network) {
         return Network.by(hrp, cmpBech32, network, 'bech32m address');
-    };
+    }
     /**
      * Convert the network to a string.
      * @returns {String}
      */
-    Network.prototype.toString = function () {
+    toString() {
         return this.type;
-    };
+    }
     /**
      * Inspect the network.
      * @returns {String}
      */
-    Network.prototype[inspectSymbol] = function () {
-        return "<Network: ".concat(this.type, ">");
-    };
+    [inspectSymbol]() {
+        return `<Network: ${this.type}>`;
+    }
     /**
      * Test an object to see if it is a Network.
      * @param {Object} obj
      * @returns {Boolean}
      */
-    Network.isNetwork = function (obj) {
+    static isNetwork(obj) {
         return obj instanceof Network;
-    };
-    return Network;
-}());
+    }
+}
 /**
  * Default network.
  * @type {Network}
@@ -344,7 +339,7 @@ function cmpPriv58(network, prefix) {
     return network.keyPrefix.xprivkey58 === prefix;
 }
 function cmpBase58(network, prefix) {
-    var prefixes = network.addressPrefix;
+    const prefixes = network.addressPrefix;
     switch (prefix) {
         case prefixes.pubkeyhash:
         case prefixes.scripthash:
@@ -359,3 +354,4 @@ function cmpBech32(network, hrp) {
  * Expose
  */
 module.exports = Network;
+//# sourceMappingURL=network.js.map

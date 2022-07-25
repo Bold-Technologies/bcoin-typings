@@ -4,8 +4,8 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var main = require('./main');
-var testnet = require('./testnet');
+const main = require('./main');
+const testnet = require('./testnet');
 exports.get = function get(type) {
     switch (type) {
         case 'main':
@@ -16,3 +16,4 @@ exports.get = function get(type) {
             return [];
     }
 };
+//# sourceMappingURL=index.js.map

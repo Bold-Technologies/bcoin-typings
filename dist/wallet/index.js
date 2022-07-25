@@ -23,3 +23,4 @@ exports.TXDB = require('./txdb');
 exports.WalletDB = require('./walletdb');
 exports.Wallet = require('./wallet');
 exports.WalletKey = require('./walletkey');
+//# sourceMappingURL=index.js.map

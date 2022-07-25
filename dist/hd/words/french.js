@@ -2049,3 +2049,4 @@ module.exports = [
     'zeste',
     'zoologie'
 ];
+//# sourceMappingURL=french.js.map

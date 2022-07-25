@@ -5,37 +5,37 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var assert = require('bsert');
-var bio = require('bufio');
-var hash256 = require('bcrypto/lib/hash256');
-var merkle = require('bcrypto/lib/merkle');
-var random = require('bcrypto/lib/random');
-var util = require('../utils/util');
-var Address = require('../primitives/address');
-var TX = require('../primitives/tx');
-var Block = require('../primitives/block');
-var Input = require('../primitives/input');
-var Output = require('../primitives/output');
-var consensus = require('../protocol/consensus');
-var policy = require('../protocol/policy');
-var CoinView = require('../coins/coinview');
-var Script = require('../script/script');
-var common = require('./common');
+const assert = require('bsert');
+const bio = require('bufio');
+const hash256 = require('bcrypto/lib/hash256');
+const merkle = require('bcrypto/lib/merkle');
+const random = require('bcrypto/lib/random');
+const util = require('../utils/util');
+const Address = require('../primitives/address');
+const TX = require('../primitives/tx');
+const Block = require('../primitives/block');
+const Input = require('../primitives/input');
+const Output = require('../primitives/output');
+const consensus = require('../protocol/consensus');
+const policy = require('../protocol/policy');
+const CoinView = require('../coins/coinview');
+const Script = require('../script/script');
+const common = require('./common');
 /*
  * Constants
  */
-var DUMMY = Buffer.alloc(0);
+const DUMMY = Buffer.alloc(0);
 /**
  * Block Template
  * @alias module:mining.BlockTemplate
  */
-var BlockTemplate = /** @class */ (function () {
+class BlockTemplate {
     /**
      * Create a block template.
      * @constructor
      * @param {Object} options
      */
-    function BlockTemplate(options) {
+    constructor(options) {
         this.prevBlock = consensus.ZERO_HASH;
         this.version = 1;
         this.height = 0;
@@ -66,7 +66,7 @@ var BlockTemplate = /** @class */ (function () {
      * @param {Object} options
      * @returns {BlockTemplate}
      */
-    BlockTemplate.prototype.fromOptions = function (options) {
+    fromOptions(options) {
         assert(options);
         if (options.prevBlock != null) {
             assert(Buffer.isBuffer(options.prevBlock));
@@ -131,80 +131,78 @@ var BlockTemplate = /** @class */ (function () {
             this.items = options.items;
         }
         return this;
-    };
+    }
     /**
      * Instantiate block template from options.
      * @param {Object} options
      * @returns {BlockTemplate}
      */
-    BlockTemplate.fromOptions = function (options) {
+    static fromOptions(options) {
         return new this().fromOptions(options);
-    };
+    }
     /**
      * Create witness commitment hash.
      * @returns {Buffer}
      */
-    BlockTemplate.prototype.getWitnessHash = function () {
-        var nonce = consensus.ZERO_HASH;
-        var leaves = [];
+    getWitnessHash() {
+        const nonce = consensus.ZERO_HASH;
+        const leaves = [];
         leaves.push(consensus.ZERO_HASH);
-        for (var _i = 0, _a = this.items; _i < _a.length; _i++) {
-            var tx = _a[_i].tx;
+        for (const { tx } of this.items)
             leaves.push(tx.witnessHash());
-        }
-        var _b = merkle.createRoot(hash256, leaves), root = _b[0], malleated = _b[1];
+        const [root, malleated] = merkle.createRoot(hash256, leaves);
         assert(!malleated);
         return hash256.root(root, nonce);
-    };
+    }
     /**
      * Create witness commitment script.
      * @returns {Script}
      */
-    BlockTemplate.prototype.getWitnessScript = function () {
+    getWitnessScript() {
         return Script.fromCommitment(this.commitment);
-    };
+    }
     /**
      * Set the target (bits).
      * @param {Number} bits
      */
-    BlockTemplate.prototype.setBits = function (bits) {
+    setBits(bits) {
         assert(typeof bits === 'number');
         this.bits = bits;
         this.target = common.getTarget(bits);
-    };
+    }
     /**
      * Set the target (uint256le).
      * @param {Buffer} target
      */
-    BlockTemplate.prototype.setTarget = function (target) {
+    setTarget(target) {
         assert(Buffer.isBuffer(target));
         this.bits = common.getBits(target);
         this.target = target;
-    };
+    }
     /**
      * Calculate the block reward.
      * @returns {SatoshiAmount}
      */
-    BlockTemplate.prototype.getReward = function () {
-        var reward = consensus.getReward(this.height, this.interval);
+    getReward() {
+        const reward = consensus.getReward(this.height, this.interval);
         return reward + this.fees;
-    };
+    }
     /**
      * Initialize the default coinbase.
      * @param {Buffer} hash - Witness commitment hash.
      * @returns {TX}
      */
-    BlockTemplate.prototype.createCoinbase = function (hash) {
-        var scale = consensus.WITNESS_SCALE_FACTOR;
-        var cb = new TX();
+    createCoinbase(hash) {
+        const scale = consensus.WITNESS_SCALE_FACTOR;
+        const cb = new TX();
         // Coinbase input.
-        var input = new Input();
+        const input = new Input();
         // Height (required in v2+ blocks)
         input.script.pushInt(this.height);
         // Coinbase flags.
         input.script.pushData(Buffer.alloc(20, 0x00));
         // Smaller nonce for good measure.
-        var nonce = Buffer.allocUnsafe(4);
+        const nonce = Buffer.allocUnsafe(4);
         nonce.writeUInt32LE(random.randomInt(), 0, true);
         input.script.pushData(nonce);
         // Extra nonce: incremented when
@@ -218,7 +216,7 @@ var BlockTemplate = /** @class */ (function () {
         }
         cb.inputs.push(input);
         // Reward output.
-        var output = new Output();
+        const output = new Output();
         output.script.fromPubkeyhash(Buffer.alloc(20, 0x00));
         output.value = this.getReward();
         cb.outputs.push(output);
@@ -226,14 +224,14 @@ var BlockTemplate = /** @class */ (function () {
         // need to set up the commitment.
         if (this.witness) {
             // Commitment output.
-            var commit = new Output();
+            const commit = new Output();
             commit.script.fromCommitment(hash);
             cb.outputs.push(commit);
         }
         // Padding for the CB height (constant size).
-        var op = input.script.get(0);
+        const op = input.script.get(0);
         assert(op);
-        var padding = 5 - op.getSize();
+        const padding = 5 - op.getSize();
         assert(padding >= 0);
         // Reserved size.
         // Without segwit:
@@ -264,59 +262,59 @@ var BlockTemplate = /** @class */ (function () {
         cb.refresh();
         assert(input.script.getSize() <= 100, 'Coinbase input script is too large!');
         return cb;
-    };
+    }
     /**
      * Refresh the coinbase and merkle tree.
      */
-    BlockTemplate.prototype.refresh = function () {
-        var hash = this.getWitnessHash();
-        var cb = this.createCoinbase(hash);
-        var raw = cb.toNormal();
-        var size = 0;
+    refresh() {
+        const hash = this.getWitnessHash();
+        const cb = this.createCoinbase(hash);
+        const raw = cb.toNormal();
+        let size = 0;
         size += 4; // version
         size += 1; // varint inputs length
         size += cb.inputs[0].getSize(); // input size
         size -= 4 + 4 + 4; // -(nonce1 + nonce2 + sequence)
         // Cut off right after the nonce
         // push and before the sequence.
-        var left = raw.slice(0, size);
+        const left = raw.slice(0, size);
         // Include the sequence.
         size += 4 + 4; // nonce1 + nonce2
-        var right = raw.slice(size);
+        const right = raw.slice(size);
         this.commitment = hash;
         this.left = left;
         this.right = right;
         this.tree = MerkleTree.fromItems(this.items);
-    };
+    }
     /**
      * Get raw coinbase with desired nonces.
      * @param {Number} nonce1
      * @param {Number} nonce2
      * @returns {Buffer}
      */
-    BlockTemplate.prototype.getRawCoinbase = function (nonce1, nonce2) {
-        var size = 0;
+    getRawCoinbase(nonce1, nonce2) {
+        let size = 0;
         size += this.left.length;
         size += 4 + 4;
         size += this.right.length;
-        var bw = bio.write(size);
+        const bw = bio.write(size);
         bw.writeBytes(this.left);
         bw.writeU32BE(nonce1);
         bw.writeU32BE(nonce2);
         bw.writeBytes(this.right);
         return bw.render();
-    };
+    }
     /**
      * Calculate the merkle root with given nonces.
      * @param {Number} nonce1
      * @param {Number} nonce2
      * @returns {Buffer}
      */
-    BlockTemplate.prototype.getRoot = function (nonce1, nonce2) {
-        var raw = this.getRawCoinbase(nonce1, nonce2);
-        var hash = hash256.digest(raw);
+    getRoot(nonce1, nonce2) {
+        const raw = this.getRawCoinbase(nonce1, nonce2);
+        const hash = hash256.digest(raw);
         return this.tree.withFirst(hash);
-    };
+    }
     /**
      * Create raw block header with given parameters.
      * @param {Buffer} root
@@ -324,8 +322,8 @@ var BlockTemplate = /** @class */ (function () {
      * @param {Number} nonce
      * @returns {Buffer}
      */
-    BlockTemplate.prototype.getHeader = function (root, time, nonce) {
-        var bw = bio.write(80);
+    getHeader(root, time, nonce) {
+        const bw = bio.write(80);
         bw.writeU32(this.version);
         bw.writeHash(this.prevBlock);
         bw.writeHash(root);
@@ -333,7 +331,7 @@ var BlockTemplate = /** @class */ (function () {
         bw.writeU32(this.bits);
         bw.writeU32(nonce);
         return bw.render();
-    };
+    }
     /**
      * Calculate proof with given parameters.
      * @param {Number} nonce1
@@ -342,98 +340,96 @@ var BlockTemplate = /** @class */ (function () {
      * @param {Number} nonce
      * @returns {BlockProof}
      */
-    BlockTemplate.prototype.getProof = function (nonce1, nonce2, time, nonce) {
-        var root = this.getRoot(nonce1, nonce2);
-        var data = this.getHeader(root, time, nonce);
-        var hash = hash256.digest(data);
+    getProof(nonce1, nonce2, time, nonce) {
+        const root = this.getRoot(nonce1, nonce2);
+        const data = this.getHeader(root, time, nonce);
+        const hash = hash256.digest(data);
         return new BlockProof(hash, root, nonce1, nonce2, time, nonce);
-    };
+    }
     /**
      * Create coinbase from given parameters.
      * @param {Number} nonce1
      * @param {Number} nonce2
      * @returns {TX}
      */
-    BlockTemplate.prototype.getCoinbase = function (nonce1, nonce2) {
-        var raw = this.getRawCoinbase(nonce1, nonce2);
-        var tx = TX.fromRaw(raw);
+    getCoinbase(nonce1, nonce2) {
+        const raw = this.getRawCoinbase(nonce1, nonce2);
+        const tx = TX.fromRaw(raw);
         if (this.witness) {
-            var input = tx.inputs[0];
+            const input = tx.inputs[0];
             input.witness.push(consensus.ZERO_HASH);
             input.witness.compile();
             tx.refresh();
         }
         return tx;
-    };
+    }
     /**
      * Create block from calculated proof.
      * @param {BlockProof} proof
      * @returns {Block}
      */
-    BlockTemplate.prototype.commit = function (proof) {
-        var root = proof.root;
-        var n1 = proof.nonce1;
-        var n2 = proof.nonce2;
-        var time = proof.time;
-        var nonce = proof.nonce;
-        var block = new Block();
+    commit(proof) {
+        const root = proof.root;
+        const n1 = proof.nonce1;
+        const n2 = proof.nonce2;
+        const time = proof.time;
+        const nonce = proof.nonce;
+        const block = new Block();
         block.version = this.version;
         block.prevBlock = this.prevBlock;
         block.merkleRoot = root;
         block.time = time;
         block.bits = this.bits;
         block.nonce = nonce;
-        var tx = this.getCoinbase(n1, n2);
+        const tx = this.getCoinbase(n1, n2);
         block.txs.push(tx);
-        for (var _i = 0, _a = this.items; _i < _a.length; _i++) {
-            var item = _a[_i];
+        for (const item of this.items)
             block.txs.push(item.tx);
-        }
         return block;
-    };
+    }
     /**
      * Quick and dirty way to
      * get a coinbase tx object.
      * @returns {TX}
      */
-    BlockTemplate.prototype.toCoinbase = function () {
+    toCoinbase() {
         return this.getCoinbase(0, 0);
-    };
+    }
     /**
      * Quick and dirty way to get a block
      * object (most likely to be an invalid one).
      * @returns {Block}
      */
-    BlockTemplate.prototype.toBlock = function () {
-        var proof = this.getProof(0, 0, this.time, 0);
+    toBlock() {
+        const proof = this.getProof(0, 0, this.time, 0);
         return this.commit(proof);
-    };
+    }
     /**
      * Calculate the target difficulty.
      * @returns {Number}
      */
-    BlockTemplate.prototype.getDifficulty = function () {
+    getDifficulty() {
         return common.getDifficulty(this.target);
-    };
+    }
     /**
      * Set the reward output
      * address and refresh.
      * @param {Address} address
      */
-    BlockTemplate.prototype.setAddress = function (address) {
+    setAddress(address) {
         this.address = new Address(address);
         this.refresh();
-    };
+    }
     /**
      * Add a transaction to the template.
      * @param {TX} tx
      * @param {CoinView} view
      */
-    BlockTemplate.prototype.addTX = function (tx, view) {
+    addTX(tx, view) {
         assert(!tx.mutable, 'Cannot add mutable TX to block.');
-        var item = BlockEntry.fromTX(tx, view, this);
-        var weight = item.tx.getWeight();
-        var sigops = item.sigops;
+        const item = BlockEntry.fromTX(tx, view, this);
+        const weight = item.tx.getWeight();
+        const sigops = item.sigops;
         if (!tx.isFinal(this.height, this.locktime))
             return false;
         if (this.weight + weight > consensus.MAX_BLOCK_WEIGHT)
@@ -448,29 +444,28 @@ var BlockTemplate = /** @class */ (function () {
         // Add the tx to our block
         this.items.push(item);
         return true;
-    };
+    }
     /**
      * Add a transaction to the template
      * (less verification than addTX).
      * @param {TX} tx
      * @param {CoinView?} view
      */
-    BlockTemplate.prototype.pushTX = function (tx, view) {
+    pushTX(tx, view) {
         assert(!tx.mutable, 'Cannot add mutable TX to block.');
         if (!view)
             view = new CoinView();
-        var item = BlockEntry.fromTX(tx, view, this);
-        var weight = item.tx.getWeight();
-        var sigops = item.sigops;
+        const item = BlockEntry.fromTX(tx, view, this);
+        const weight = item.tx.getWeight();
+        const sigops = item.sigops;
         this.weight += weight;
         this.sigops += sigops;
         this.fees += item.fee;
         // Add the tx to our block
         this.items.push(item);
         return true;
-    };
-    return BlockTemplate;
-}());
+    }
+}
 /**
  * Block Entry
  * @alias module:mining.BlockEntry
@@ -483,13 +478,13 @@ var BlockTemplate = /** @class */ (function () {
  * @property {Sigops} sigops
  * @property {Number} depCount
  */
-var BlockEntry = /** @class */ (function () {
+class BlockEntry {
     /**
      * Create a block entry.
      * @constructor
      * @param {TX} tx
      */
-    function BlockEntry(tx) {
+    constructor(tx) {
         this.tx = tx;
         this.hash = tx.hash();
         this.fee = 0;
@@ -507,8 +502,8 @@ var BlockEntry = /** @class */ (function () {
      * @param {BlockTemplate} attempt
      * @returns {BlockEntry}
      */
-    BlockEntry.fromTX = function (tx, view, attempt) {
-        var item = new this(tx);
+    static fromTX(tx, view, attempt) {
+        const item = new this(tx);
         item.fee = tx.getFee(view);
         item.rate = tx.getRate(view);
         item.priority = tx.getPriority(view, attempt.height);
@@ -516,15 +511,15 @@ var BlockEntry = /** @class */ (function () {
         item.sigops = tx.getSigopsCost(view, attempt.flags);
         item.descRate = item.rate;
         return item;
-    };
+    }
     /**
      * Instantiate block entry from mempool entry.
      * @param {MempoolEntry} entry
      * @param {BlockTemplate} attempt
      * @returns {BlockEntry}
      */
-    BlockEntry.fromEntry = function (entry, attempt) {
-        var item = new this(entry.tx);
+    static fromEntry(entry, attempt) {
+        const item = new this(entry.tx);
         item.fee = entry.getFee();
         item.rate = entry.getDeltaRate();
         item.priority = entry.getPriority(attempt.height);
@@ -532,13 +527,12 @@ var BlockEntry = /** @class */ (function () {
         item.sigops = entry.sigops;
         item.descRate = entry.getDescRate();
         return item;
-    };
-    return BlockEntry;
-}());
+    }
+}
 /**
  * Block Proof
  */
-var BlockProof = /** @class */ (function () {
+class BlockProof {
     /**
      * Create a block proof.
      * @constructor
@@ -549,7 +543,7 @@ var BlockProof = /** @class */ (function () {
      * @param {Number} time
      * @param {Number} nonce
      */
-    function BlockProof(hash, root, nonce1, nonce2, time, nonce) {
+    constructor(hash, root, nonce1, nonce2, time, nonce) {
         this.hash = hash;
         this.root = root;
         this.nonce1 = nonce1;
@@ -557,89 +551,81 @@ var BlockProof = /** @class */ (function () {
         this.time = time;
         this.nonce = nonce;
     }
-    BlockProof.prototype.rhash = function () {
+    rhash() {
         return util.revHex(this.hash);
-    };
-    BlockProof.prototype.verify = function (target) {
+    }
+    verify(target) {
         return common.rcmp(this.hash, target) <= 0;
-    };
-    BlockProof.prototype.getDifficulty = function () {
+    }
+    getDifficulty() {
         return common.getDifficulty(this.hash);
-    };
-    return BlockProof;
-}());
+    }
+}
 /**
  * Merkle Tree
  * @property {Hash[]} steps
  */
-var MerkleTree = /** @class */ (function () {
+class MerkleTree {
     /**
      * Create a merkle tree.
      * @constructor
      */
-    function MerkleTree() {
+    constructor() {
         this.steps = [];
     }
-    MerkleTree.prototype.withFirst = function (hash) {
-        for (var _i = 0, _a = this.steps; _i < _a.length; _i++) {
-            var step = _a[_i];
+    withFirst(hash) {
+        for (const step of this.steps)
             hash = hash256.root(hash, step);
-        }
         return hash;
-    };
-    MerkleTree.prototype.toJSON = function () {
-        var steps = [];
-        for (var _i = 0, _a = this.steps; _i < _a.length; _i++) {
-            var step = _a[_i];
+    }
+    toJSON() {
+        const steps = [];
+        for (const step of this.steps)
             steps.push(step.toString('hex'));
-        }
         return steps;
-    };
-    MerkleTree.prototype.fromItems = function (items) {
-        var leaves = [];
+    }
+    fromItems(items) {
+        const leaves = [];
         leaves.push(consensus.ZERO_HASH);
-        for (var _i = 0, items_1 = items; _i < items_1.length; _i++) {
-            var item = items_1[_i];
+        for (const item of items)
             leaves.push(item.tx.hash());
-        }
         return this.fromLeaves(leaves);
-    };
-    MerkleTree.fromItems = function (items) {
+    }
+    static fromItems(items) {
         return new this().fromItems(items);
-    };
-    MerkleTree.prototype.fromBlock = function (txs) {
-        var leaves = [];
+    }
+    fromBlock(txs) {
+        const leaves = [];
         leaves.push(consensus.ZERO_HASH);
-        for (var i = 1; i < txs.length; i++) {
-            var tx = txs[i];
+        for (let i = 1; i < txs.length; i++) {
+            const tx = txs[i];
             leaves.push(tx.hash());
         }
         return this.fromLeaves(leaves);
-    };
-    MerkleTree.fromBlock = function (txs) {
+    }
+    static fromBlock(txs) {
         return new this().fromBlock(txs);
-    };
-    MerkleTree.prototype.fromLeaves = function (leaves) {
-        var len = leaves.length;
+    }
+    fromLeaves(leaves) {
+        let len = leaves.length;
         while (len > 1) {
-            var hashes = [consensus.ZERO_HASH];
+            const hashes = [consensus.ZERO_HASH];
             this.steps.push(leaves[1]);
             if (len % 2)
                 leaves.push(leaves[len - 1]);
-            for (var i = 2; i < len; i += 2) {
-                var hash = hash256.root(leaves[i], leaves[i + 1]);
+            for (let i = 2; i < len; i += 2) {
+                const hash = hash256.root(leaves[i], leaves[i + 1]);
                 hashes.push(hash);
             }
             leaves = hashes;
             len = leaves.length;
         }
         return this;
-    };
-    MerkleTree.fromLeaves = function (leaves) {
+    }
+    static fromLeaves(leaves) {
         return new this().fromLeaves(leaves);
-    };
-    return MerkleTree;
-}());
+    }
+}
 /*
  * Expose
  */
@@ -647,3 +633,4 @@ exports = BlockTemplate;
 exports.BlockTemplate = BlockTemplate;
 exports.BlockEntry = BlockEntry;
 module.exports = exports;
+//# sourceMappingURL=template.js.map

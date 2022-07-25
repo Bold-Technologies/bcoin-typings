@@ -12,3 +12,4 @@ exports.jobs = require('./jobs');
 exports.packets = require('./packets');
 exports.Parser = require('./parser');
 exports.WorkerPool = require('./workerpool');
+//# sourceMappingURL=index.js.map

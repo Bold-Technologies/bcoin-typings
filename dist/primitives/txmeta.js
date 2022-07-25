@@ -4,23 +4,23 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var assert = require('bsert');
-var bio = require('bufio');
-var util = require('../utils/util');
-var TX = require('./tx');
-var inspectSymbol = require('../utils').inspectSymbol;
+const assert = require('bsert');
+const bio = require('bufio');
+const util = require('../utils/util');
+const TX = require('./tx');
+const { inspectSymbol } = require('../utils');
 /**
  * TXMeta
  * An extended transaction object.
  * @alias module:primitives.TXMeta
  */
-var TXMeta = /** @class */ (function () {
+class TXMeta {
     /**
      * Create an extended transaction.
      * @constructor
      * @param {Object?} options
      */
-    function TXMeta(options) {
+    constructor(options) {
         this.tx = new TX();
         this.mtime = util.now();
         this.height = -1;
@@ -35,7 +35,7 @@ var TXMeta = /** @class */ (function () {
      * @private
      * @param {Object} options
      */
-    TXMeta.prototype.fromOptions = function (options) {
+    fromOptions(options) {
         if (options.tx) {
             assert(options.tx instanceof TX);
             this.tx = options.tx;
@@ -61,21 +61,21 @@ var TXMeta = /** @class */ (function () {
             this.index = options.index;
         }
         return this;
-    };
+    }
     /**
      * Instantiate TXMeta from options.
      * @param {Object} options
      * @returns {TXMeta}
      */
-    TXMeta.fromOptions = function (options) {
+    static fromOptions(options) {
         return new this().fromOptions(options);
-    };
+    }
     /**
      * Inject properties from options object.
      * @private
      * @param {Object} options
      */
-    TXMeta.prototype.fromTX = function (tx, entry, index) {
+    fromTX(tx, entry, index) {
         this.tx = tx;
         if (entry) {
             this.height = entry.height;
@@ -84,41 +84,41 @@ var TXMeta = /** @class */ (function () {
             this.index = index;
         }
         return this;
-    };
+    }
     /**
      * Instantiate TXMeta from options.
      * @param {Object} options
      * @returns {TXMeta}
      */
-    TXMeta.fromTX = function (tx, entry, index) {
+    static fromTX(tx, entry, index) {
         return new this().fromTX(tx, entry, index);
-    };
+    }
     /**
      * Inspect the transaction.
      * @returns {Object}
      */
-    TXMeta.prototype[inspectSymbol] = function () {
+    [inspectSymbol]() {
         return this.format();
-    };
+    }
     /**
      * Inspect the transaction.
      * @returns {Object}
      */
-    TXMeta.prototype.format = function (view) {
-        var data = this.tx.format(view, null, this.index);
+    format(view) {
+        const data = this.tx.format(view, null, this.index);
         data.mtime = this.mtime;
         data.height = this.height;
         data.block = this.block ? util.revHex(this.block) : null;
         data.time = this.time;
         return data;
-    };
+    }
     /**
      * Convert transaction to JSON.
      * @returns {Object}
      */
-    TXMeta.prototype.toJSON = function () {
+    toJSON() {
         return this.getJSON();
-    };
+    }
     /**
      * Convert the transaction to an object suitable
      * for JSON serialization.
@@ -126,8 +126,8 @@ var TXMeta = /** @class */ (function () {
      * @param {CoinView} view
      * @returns {Object}
      */
-    TXMeta.prototype.getJSON = function (network, view, chainHeight) {
-        var json = this.tx.getJSON(network, view, null, this.index);
+    getJSON(network, view, chainHeight) {
+        const json = this.tx.getJSON(network, view, null, this.index);
         json.mtime = this.mtime;
         json.height = this.height;
         json.block = this.block ? util.revHex(this.block) : null;
@@ -136,13 +136,13 @@ var TXMeta = /** @class */ (function () {
         if (chainHeight != null && this.height !== -1)
             json.confirmations = chainHeight - this.height + 1;
         return json;
-    };
+    }
     /**
      * Inject properties from a json object.
      * @private
      * @param {Object} json
      */
-    TXMeta.prototype.fromJSON = function (json) {
+    fromJSON(json) {
         this.tx.fromJSON(json);
         assert((json.mtime >>> 0) === json.mtime);
         assert(Number.isSafeInteger(json.height));
@@ -154,22 +154,22 @@ var TXMeta = /** @class */ (function () {
         this.block = util.fromRev(json.block);
         this.index = json.index;
         return this;
-    };
+    }
     /**
      * Instantiate a transaction from a
      * jsonified transaction object.
      * @param {Object} json - The jsonified transaction object.
      * @returns {TX}
      */
-    TXMeta.fromJSON = function (json) {
+    static fromJSON(json) {
         return new this().fromJSON(json);
-    };
+    }
     /**
      * Calculate serialization size.
      * @returns {Number}
      */
-    TXMeta.prototype.getSize = function () {
-        var size = 0;
+    getSize() {
+        let size = 0;
         size += this.tx.getSize();
         size += 4;
         if (this.block) {
@@ -181,7 +181,7 @@ var TXMeta = /** @class */ (function () {
             size += 1;
         }
         return size;
-    };
+    }
     /**
      * Serialize a transaction to "extended format".
      * This is the serialization format bcoin uses internally
@@ -190,9 +190,9 @@ var TXMeta = /** @class */ (function () {
      * timestamp, and pending-since time.
      * @returns {Buffer}
      */
-    TXMeta.prototype.toRaw = function () {
-        var size = this.getSize();
-        var bw = bio.write(size);
+    toRaw() {
+        const size = this.getSize();
+        const bw = bio.write(size);
         this.tx.toWriter(bw);
         bw.writeU32(this.mtime);
         if (this.block) {
@@ -206,14 +206,14 @@ var TXMeta = /** @class */ (function () {
             bw.writeU8(0);
         }
         return bw.render();
-    };
+    }
     /**
      * Inject properties from "extended" serialization format.
      * @private
      * @param {Buffer} data
      */
-    TXMeta.prototype.fromRaw = function (data) {
-        var br = bio.read(data);
+    fromRaw(data) {
+        const br = bio.read(data);
         this.tx.fromReader(br);
         this.mtime = br.readU32();
         if (br.readU8() === 1) {
@@ -225,7 +225,7 @@ var TXMeta = /** @class */ (function () {
                 this.index = -1;
         }
         return this;
-    };
+    }
     /**
      * Instantiate a transaction from a Buffer
      * in "extended" serialization format.
@@ -233,22 +233,22 @@ var TXMeta = /** @class */ (function () {
      * @param {String?} enc - One of `"hex"` or `null`.
      * @returns {TX}
      */
-    TXMeta.fromRaw = function (data, enc) {
+    static fromRaw(data, enc) {
         if (typeof data === 'string')
             data = Buffer.from(data, enc);
         return new this().fromRaw(data);
-    };
+    }
     /**
      * Test whether an object is an TXMeta.
      * @param {Object} obj
      * @returns {Boolean}
      */
-    TXMeta.isTXMeta = function (obj) {
+    static isTXMeta(obj) {
         return obj instanceof TXMeta;
-    };
-    return TXMeta;
-}());
+    }
+}
 /*
  * Expose
  */
 module.exports = TXMeta;
+//# sourceMappingURL=txmeta.js.map

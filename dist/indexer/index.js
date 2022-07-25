@@ -10,3 +10,4 @@
 exports.Indexer = require('./indexer');
 exports.TXIndexer = require('./txindexer');
 exports.AddrIndexer = require('./addrindexer');
+//# sourceMappingURL=index.js.map

@@ -8,8 +8,8 @@
 /**
  * @module protocol/networks
  */
-var BN = require('bcrypto/lib/bn.js');
-var network = exports;
+const BN = require('bcrypto/lib/bn.js');
+const network = exports;
 /*
  * Helpers
  */
@@ -29,7 +29,7 @@ network.types = ['main', 'testnet', 'regtest', 'simnet'];
  * @lends module:protocol/networks
  * @type {Object}
  */
-var main = {};
+const main = {};
 /**
  * Symbolic network type.
  * @const {String}
@@ -395,7 +395,7 @@ main.requestMempool = false;
  * Testnet (v3)
  * https://en.bitcoin.it/wiki/Testnet
  */
-var testnet = {};
+const testnet = {};
 testnet.type = 'testnet';
 testnet.seeds = [
     'testnet-seed.bitcoin.jonasschnelli.ch',
@@ -560,7 +560,7 @@ testnet.requestMempool = false;
 /*
  * Regtest
  */
-var regtest = {};
+const regtest = {};
 regtest.type = 'regtest';
 regtest.seeds = [];
 regtest.magic = 0xdab5bffa;
@@ -685,7 +685,7 @@ regtest.requestMempool = true;
 /*
  * Simnet (btcd)
  */
-var simnet = {};
+const simnet = {};
 simnet.type = 'simnet';
 simnet.seeds = [
     '127.0.0.1'
@@ -818,3 +818,4 @@ network.main = main;
 network.testnet = testnet;
 network.regtest = regtest;
 network.simnet = simnet;
+//# sourceMappingURL=networks.js.map

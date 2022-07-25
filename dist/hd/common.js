@@ -4,9 +4,9 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var assert = require('bsert');
-var LRU = require('blru');
-var common = exports;
+const assert = require('bsert');
+const LRU = require('blru');
+const common = exports;
 /**
  * Index at which hardening begins.
  * @const {Number}
@@ -42,25 +42,25 @@ common.parsePath = function parsePath(path, hard) {
     assert(typeof hard === 'boolean');
     assert(path.length >= 1);
     assert(path.length <= 3062);
-    var parts = path.split('/');
-    var root = parts[0];
+    const parts = path.split('/');
+    const root = parts[0];
     if (root !== 'm'
         && root !== 'M'
         && root !== 'm\''
         && root !== 'M\'') {
         throw new Error('Invalid path root.');
     }
-    var result = [];
-    for (var i = 1; i < parts.length; i++) {
-        var part = parts[i];
-        var hardened = part[part.length - 1] === '\'';
+    const result = [];
+    for (let i = 1; i < parts.length; i++) {
+        let part = parts[i];
+        const hardened = part[part.length - 1] === '\'';
         if (hardened)
             part = part.slice(0, -1);
         if (part.length > 10)
             throw new Error('Path index too large.');
         if (!/^\d+$/.test(part))
             throw new Error('Path index is non-numeric.');
-        var index = parseInt(part, 10);
+        let index = parseInt(part, 10);
         if ((index >>> 0) !== index)
             throw new Error('Path index out of range.');
         if (hardened) {
@@ -91,7 +91,7 @@ common.isMaster = function isMaster(key) {
  */
 common.isAccount = function isAccount(key, account) {
     if (account != null) {
-        var index = (common.HARDENED | account) >>> 0;
+        const index = (common.HARDENED | account) >>> 0;
         if (key.childIndex !== index)
             return false;
     }
@@ -103,3 +103,4 @@ common.isAccount = function isAccount(key, account) {
  * @default
  */
 common.ZERO_KEY = Buffer.alloc(33, 0x00);
+//# sourceMappingURL=common.js.map

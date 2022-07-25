@@ -413,7 +413,7 @@ declare class RPC {
     getMemoryInfo(args: any, help: any): Promise<any>;
     setLogLevel(args: any, help: any): Promise<any>;
     handleLongpoll(lpid: any): Promise<void>;
-    longpoll(): any;
+    longpoll(): Promise<any>;
     refreshBlock(): void;
     bindChain(): void;
     getTemplate(): Promise<any>;

@@ -24,7 +24,7 @@ declare class WorkerPool {
     size: number;
     timeout: number;
     file: any;
-    children: any;
+    children: Map<any, any>;
     uid: number;
     /**
      * Set worker pool options.
@@ -165,7 +165,7 @@ declare class Worker {
     id: number;
     framer: Framer;
     parser: Parser;
-    pending: any;
+    pending: Map<any, any>;
     child: Child;
     /**
      * Initialize worker. Bind to events.

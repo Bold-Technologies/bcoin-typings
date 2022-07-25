@@ -186,9 +186,9 @@ export class TXRecord {
 export class MapRecord {
     static fromReader(br: any): MapRecord;
     static fromRaw(data: any): MapRecord;
-    wids: any;
+    wids: Set<any>;
     add(wid: any): boolean;
-    remove(wid: any): any;
+    remove(wid: any): boolean;
     toWriter(bw: any): any;
     getSize(): number;
     toRaw(): any;

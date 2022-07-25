@@ -4,11 +4,11 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var BufferMap = require('buffer-map').BufferMap;
+const { BufferMap } = require('buffer-map');
 /**
  * @exports wallet/common
  */
-var common = exports;
+const common = exports;
 /**
  * Test whether a string is eligible
  * to be used as a name or ID.
@@ -44,7 +44,7 @@ common.isName = function isName(key) {
  * @returns {TX[]}
  */
 common.sortTX = function sortTX(txs) {
-    return txs.sort(function (a, b) {
+    return txs.sort((a, b) => {
         return a.mtime - b.mtime;
     });
 };
@@ -54,7 +54,7 @@ common.sortTX = function sortTX(txs) {
  * @returns {Coin[]}
  */
 common.sortCoins = function sortCoins(coins) {
-    return coins.sort(function (a, b) {
+    return coins.sort((a, b) => {
         a = a.height === -1 ? 0x7fffffff : a.height;
         b = b.height === -1 ? 0x7fffffff : b.height;
         return a - b;
@@ -66,25 +66,22 @@ common.sortCoins = function sortCoins(coins) {
  * @returns {TX[]}
  */
 common.sortDeps = function sortDeps(txs) {
-    var map = new BufferMap();
-    for (var _i = 0, txs_1 = txs; _i < txs_1.length; _i++) {
-        var tx = txs_1[_i];
-        var hash = tx.hash();
+    const map = new BufferMap();
+    for (const tx of txs) {
+        const hash = tx.hash();
         map.set(hash, tx);
     }
-    var depMap = new BufferMap();
-    var depCount = new BufferMap();
-    var top = [];
-    for (var _a = 0, map_1 = map; _a < map_1.length; _a++) {
-        var _b = map_1[_a], hash = _b[0], tx = _b[1];
+    const depMap = new BufferMap();
+    const depCount = new BufferMap();
+    const top = [];
+    for (const [hash, tx] of map) {
         depCount.set(hash, 0);
-        var hasDeps = false;
-        for (var _c = 0, _d = tx.inputs; _c < _d.length; _c++) {
-            var input = _d[_c];
-            var prev = input.prevout.hash;
+        let hasDeps = false;
+        for (const input of tx.inputs) {
+            const prev = input.prevout.hash;
             if (!map.has(prev))
                 continue;
-            var count = depCount.get(hash);
+            const count = depCount.get(hash);
             depCount.set(hash, count + 1);
             hasDeps = true;
             if (!depMap.has(prev))
@@ -95,20 +92,19 @@ common.sortDeps = function sortDeps(txs) {
             continue;
         top.push(tx);
     }
-    var result = [];
-    for (var _e = 0, top_1 = top; _e < top_1.length; _e++) {
-        var tx = top_1[_e];
-        var deps = depMap.get(tx.hash());
+    const result = [];
+    for (const tx of top) {
+        const deps = depMap.get(tx.hash());
         result.push(tx);
         if (!deps)
             continue;
-        for (var _f = 0, deps_1 = deps; _f < deps_1.length; _f++) {
-            var tx_1 = deps_1[_f];
-            var count = depCount.get(tx_1.hash());
+        for (const tx of deps) {
+            let count = depCount.get(tx.hash());
             if (--count === 0)
-                top.push(tx_1);
-            depCount.set(tx_1.hash(), count);
+                top.push(tx);
+            depCount.set(tx.hash(), count);
         }
     }
     return result;
 };
+//# sourceMappingURL=common.js.map

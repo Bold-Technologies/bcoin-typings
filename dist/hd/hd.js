@@ -4,16 +4,16 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var assert = require('bsert');
-var common = require('./common');
-var Mnemonic = require('./mnemonic');
-var HDPrivateKey = require('./private');
-var HDPublicKey = require('./public');
-var wordlist = require('./wordlist');
+const assert = require('bsert');
+const common = require('./common');
+const Mnemonic = require('./mnemonic');
+const HDPrivateKey = require('./private');
+const HDPublicKey = require('./public');
+const wordlist = require('./wordlist');
 /**
  * @exports hd
  */
-var HD = exports;
+const HD = exports;
 /**
  * Instantiate an HD key (public or private) from an base58 string.
  * @param {Base58String} xkey
@@ -149,3 +149,4 @@ HD.PublicKey = HDPublicKey;
 HD.HDPrivateKey = HDPrivateKey;
 HD.HDPublicKey = HDPublicKey;
 HD.wordlist = wordlist;
+//# sourceMappingURL=hd.js.map

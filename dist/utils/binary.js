@@ -14,11 +14,11 @@
  * @returns {Number} Index.
  */
 exports.search = function search(items, key, compare, insert) {
-    var start = 0;
-    var end = items.length - 1;
+    let start = 0;
+    let end = items.length - 1;
     while (start <= end) {
-        var pos = (start + end) >>> 1;
-        var cmp = compare(items[pos], key);
+        const pos = (start + end) >>> 1;
+        const cmp = compare(items[pos], key);
         if (cmp === 0)
             return pos;
         if (cmp < 0)
@@ -38,7 +38,7 @@ exports.search = function search(items, key, compare, insert) {
  * @returns {Number} index
  */
 exports.insert = function insert(items, item, compare, uniq) {
-    var i = exports.search(items, item, compare, true);
+    const i = exports.search(items, item, compare, true);
     if (uniq && i < items.length) {
         if (compare(items[i], item) === 0)
             return -1;
@@ -59,7 +59,7 @@ exports.insert = function insert(items, item, compare, uniq) {
  * @returns {Boolean}
  */
 exports.remove = function remove(items, item, compare) {
-    var i = exports.search(items, item, compare, false);
+    const i = exports.search(items, item, compare, false);
     if (i === -1)
         return false;
     splice(items, i);
@@ -73,8 +73,9 @@ function splice(list, i) {
         list.shift();
         return;
     }
-    var k = i + 1;
+    let k = i + 1;
     while (k < list.length)
         list[i++] = list[k++];
     list.pop();
 }
+//# sourceMappingURL=binary.js.map

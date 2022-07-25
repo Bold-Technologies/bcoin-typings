@@ -5,25 +5,10 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
  * @module protocol/errors
  */
-var assert = require('bsert');
+const assert = require('bsert');
 /**
  * Verify Error
  * An error thrown during verification. Can be either
@@ -38,8 +23,7 @@ var assert = require('bsert');
  * (can be -1 for no reject packet).
  * @param {Boolean} malleated
  */
-var VerifyError = /** @class */ (function (_super) {
-    __extends(VerifyError, _super);
+class VerifyError extends Error {
     /**
      * Create a verify error.
      * @constructor
@@ -50,27 +34,26 @@ var VerifyError = /** @class */ (function (_super) {
      * (can be -1 for no reject packet).
      * @param {Boolean} malleated
      */
-    function VerifyError(msg, code, reason, score, malleated) {
-        var _this = _super.call(this) || this;
+    constructor(msg, code, reason, score, malleated) {
+        super();
         assert(typeof code === 'string');
         assert(typeof reason === 'string');
         assert(score >= 0);
-        _this.type = 'VerifyError';
-        _this.message = '';
-        _this.code = code;
-        _this.reason = reason;
-        _this.score = score;
-        _this.hash = msg.hash();
-        _this.malleated = malleated || false;
-        _this.message = "Verification failure: ".concat(reason)
-            + " (code=".concat(code, " score=").concat(score, " hash=").concat(msg.rhash(), ")");
+        this.type = 'VerifyError';
+        this.message = '';
+        this.code = code;
+        this.reason = reason;
+        this.score = score;
+        this.hash = msg.hash();
+        this.malleated = malleated || false;
+        this.message = `Verification failure: ${reason}`
+            + ` (code=${code} score=${score} hash=${msg.rhash()})`;
         if (Error.captureStackTrace)
-            Error.captureStackTrace(_this, VerifyError);
-        return _this;
+            Error.captureStackTrace(this, VerifyError);
     }
-    return VerifyError;
-}(Error));
+}
 /*
  * Expose
  */
 exports.VerifyError = VerifyError;
+//# sourceMappingURL=errors.js.map

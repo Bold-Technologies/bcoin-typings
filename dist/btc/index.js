@@ -9,3 +9,4 @@
  */
 exports.Amount = require('./amount');
 exports.URI = require('./uri');
+//# sourceMappingURL=index.js.map

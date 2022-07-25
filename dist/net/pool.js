@@ -5,180 +5,126 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-var assert = require('bsert');
-var EventEmitter = require('events');
-var Lock = require('bmutex').Lock;
-var IP = require('binet');
-var dns = require('bdns');
-var tcp = require('btcp');
-var UPNP = require('bupnp');
-var socks = require('bsocks');
-var List = require('blst');
-var _a = require('bfilter'), BloomFilter = _a.BloomFilter, RollingFilter = _a.RollingFilter;
-var _b = require('buffer-map'), BufferMap = _b.BufferMap, BufferSet = _b.BufferSet;
-var util = require('../utils/util');
-var common = require('./common');
-var chainCommon = require('../blockchain/common');
-var Address = require('../primitives/address');
-var BIP152 = require('./bip152');
-var Network = require('../protocol/network');
-var Peer = require('./peer');
-var HostList = require('./hostlist');
-var InvItem = require('../primitives/invitem');
-var packets = require('./packets');
-var services = common.services;
-var invTypes = InvItem.types;
-var packetTypes = packets.types;
-var scores = HostList.scores;
-var inspectSymbol = require('../utils').inspectSymbol;
+const assert = require('bsert');
+const EventEmitter = require('events');
+const { Lock } = require('bmutex');
+const IP = require('binet');
+const dns = require('bdns');
+const tcp = require('btcp');
+const UPNP = require('bupnp');
+const socks = require('bsocks');
+const List = require('blst');
+const { BloomFilter, RollingFilter } = require('bfilter');
+const { BufferMap, BufferSet } = require('buffer-map');
+const util = require('../utils/util');
+const common = require('./common');
+const chainCommon = require('../blockchain/common');
+const Address = require('../primitives/address');
+const BIP152 = require('./bip152');
+const Network = require('../protocol/network');
+const Peer = require('./peer');
+const HostList = require('./hostlist');
+const InvItem = require('../primitives/invitem');
+const packets = require('./packets');
+const services = common.services;
+const invTypes = InvItem.types;
+const packetTypes = packets.types;
+const scores = HostList.scores;
+const { inspectSymbol } = require('../utils');
 /**
  * Pool
  * A pool of peers for handling all network activity.
  * @alias module:net.Pool
  * @extends EventEmitter
  */
-var Pool = /** @class */ (function (_super) {
-    __extends(Pool, _super);
+class Pool extends EventEmitter {
     /**
      * Create a pool.
      * @constructor
      * @param {Object} options
      */
-    function Pool(options) {
-        var _this = _super.call(this) || this;
-        _this.opened = false;
-        _this.options = new PoolOptions(options);
-        _this.network = _this.options.network;
-        _this.logger = _this.options.logger.context('net');
-        _this.chain = _this.options.chain;
-        _this.mempool = _this.options.mempool;
-        _this.server = _this.options.createServer();
-        _this.nonces = _this.options.nonces;
-        _this.locker = new Lock(true, BufferMap);
-        _this.connected = false;
-        _this.disconnecting = false;
-        _this.syncing = false;
-        _this.discovering = false;
-        _this.spvFilter = null;
-        _this.txFilter = null;
-        _this.blockMap = new BufferSet();
-        _this.txMap = new BufferSet();
-        _this.compactBlocks = new BufferSet();
-        _this.invMap = new BufferMap();
-        _this.pendingFilter = null;
-        _this.pendingRefill = null;
-        _this.checkpoints = false;
-        _this.headerChain = new List();
-        _this.headerNext = null;
-        _this.headerTip = null;
-        _this.peers = new PeerList();
-        _this.hosts = new HostList(_this.options);
-        _this.id = 0;
-        if (_this.options.spv) {
-            _this.spvFilter = BloomFilter.fromRate(20000, 0.001, BloomFilter.flags.ALL);
+    constructor(options) {
+        super();
+        this.opened = false;
+        this.options = new PoolOptions(options);
+        this.network = this.options.network;
+        this.logger = this.options.logger.context('net');
+        this.chain = this.options.chain;
+        this.mempool = this.options.mempool;
+        this.server = this.options.createServer();
+        this.nonces = this.options.nonces;
+        this.locker = new Lock(true, BufferMap);
+        this.connected = false;
+        this.disconnecting = false;
+        this.syncing = false;
+        this.discovering = false;
+        this.spvFilter = null;
+        this.txFilter = null;
+        this.blockMap = new BufferSet();
+        this.txMap = new BufferSet();
+        this.compactBlocks = new BufferSet();
+        this.invMap = new BufferMap();
+        this.pendingFilter = null;
+        this.pendingRefill = null;
+        this.checkpoints = false;
+        this.headerChain = new List();
+        this.headerNext = null;
+        this.headerTip = null;
+        this.peers = new PeerList();
+        this.hosts = new HostList(this.options);
+        this.id = 0;
+        if (this.options.spv) {
+            this.spvFilter = BloomFilter.fromRate(20000, 0.001, BloomFilter.flags.ALL);
         }
-        if (!_this.options.mempool)
-            _this.txFilter = new RollingFilter(50000, 0.000001);
-        _this.init();
-        return _this;
+        if (!this.options.mempool)
+            this.txFilter = new RollingFilter(50000, 0.000001);
+        this.init();
     }
     /**
      * Initialize the pool.
      * @private
      */
-    Pool.prototype.init = function () {
-        var _this = this;
-        this.server.on('error', function (err) {
-            _this.emit('error', err);
+    init() {
+        this.server.on('error', (err) => {
+            this.emit('error', err);
         });
-        this.server.on('connection', function (socket) {
-            _this.handleSocket(socket);
-            _this.emit('connection', socket);
+        this.server.on('connection', (socket) => {
+            this.handleSocket(socket);
+            this.emit('connection', socket);
         });
-        this.server.on('listening', function () {
-            var data = _this.server.address();
-            _this.logger.info('Pool server listening on %s (port=%d).', data.address, data.port);
-            _this.emit('listening', data);
+        this.server.on('listening', () => {
+            const data = this.server.address();
+            this.logger.info('Pool server listening on %s (port=%d).', data.address, data.port);
+            this.emit('listening', data);
         });
-        this.chain.on('block', function (block, entry) {
-            _this.emit('block', block, entry);
+        this.chain.on('block', (block, entry) => {
+            this.emit('block', block, entry);
         });
-        this.chain.on('reset', function () {
-            if (_this.checkpoints)
-                _this.resetChain();
-            _this.forceSync();
+        this.chain.on('reset', () => {
+            if (this.checkpoints)
+                this.resetChain();
+            this.forceSync();
         });
-        this.chain.on('full', function () {
-            _this.sync();
-            _this.emit('full');
-            _this.logger.info('Chain is fully synced (height=%d).', _this.chain.height);
+        this.chain.on('full', () => {
+            this.sync();
+            this.emit('full');
+            this.logger.info('Chain is fully synced (height=%d).', this.chain.height);
         });
-        this.chain.on('bad orphan', function (err, id) {
-            _this.handleBadOrphan('block', err, id);
+        this.chain.on('bad orphan', (err, id) => {
+            this.handleBadOrphan('block', err, id);
         });
         if (this.mempool) {
-            this.mempool.on('tx', function (tx) {
-                _this.emit('tx', tx);
+            this.mempool.on('tx', (tx) => {
+                this.emit('tx', tx);
             });
-            this.mempool.on('bad orphan', function (err, id) {
-                _this.handleBadOrphan('tx', err, id);
+            this.mempool.on('bad orphan', (err, id) => {
+                this.handleBadOrphan('tx', err, id);
             });
         }
         if (!this.options.selfish && !this.options.spv) {
             if (this.mempool) {
-                this.mempool.on('tx', function (tx) {
-                    _this.announceTX(tx);
+                this.mempool.on('tx', (tx) => {
+                    this.announceTX(tx);
                 });
             }
             // Normally we would also broadcast
@@ -187,468 +133,317 @@ var Pool = /** @class */ (function (_super) {
             // miner sends us an invalid competing
             // chain that we can't connect and
             // verify yet.
-            this.chain.on('block', function (block) {
-                if (!_this.chain.synced)
+            this.chain.on('block', (block) => {
+                if (!this.chain.synced)
                     return;
-                _this.announceBlock(block);
+                this.announceBlock(block);
             });
         }
-    };
+    }
     /**
      * Open the pool, wait for the chain to load.
      * @returns {Promise}
      */
-    Pool.prototype.open = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                assert(!this.opened, 'Pool is already open.');
-                this.opened = true;
-                this.logger.info('Pool loaded (maxpeers=%d).', this.options.maxOutbound);
-                this.resetChain();
-                return [2 /*return*/];
-            });
-        });
-    };
+    async open() {
+        assert(!this.opened, 'Pool is already open.');
+        this.opened = true;
+        this.logger.info('Pool loaded (maxpeers=%d).', this.options.maxOutbound);
+        this.resetChain();
+    }
     /**
      * Close and destroy the pool.
      * @method
      * @alias Pool#close
      * @returns {Promise}
      */
-    Pool.prototype.close = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                assert(this.opened, 'Pool is not open.');
-                this.opened = false;
-                return [2 /*return*/, this.disconnect()];
-            });
-        });
-    };
+    async close() {
+        assert(this.opened, 'Pool is not open.');
+        this.opened = false;
+        return this.disconnect();
+    }
     /**
      * Reset header chain.
      */
-    Pool.prototype.resetChain = function () {
+    resetChain() {
         if (!this.options.checkpoints)
             return;
         this.checkpoints = false;
         this.headerTip = null;
         this.headerChain.reset();
         this.headerNext = null;
-        var tip = this.chain.tip;
+        const tip = this.chain.tip;
         if (tip.height < this.network.lastCheckpoint) {
             this.checkpoints = true;
             this.headerTip = this.getNextTip(tip.height);
             this.headerChain.push(new HeaderEntry(tip.hash, tip.height));
             this.logger.info('Initialized header chain to height %d (checkpoint=%h).', tip.height, this.headerTip.hash);
         }
-    };
+    }
     /**
      * Connect to the network.
      * @method
      * @returns {Promise}
      */
-    Pool.prototype.connect = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var unlock;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.locker.lock()];
-                    case 1:
-                        unlock = _a.sent();
-                        _a.label = 2;
-                    case 2:
-                        _a.trys.push([2, , 4, 5]);
-                        return [4 /*yield*/, this._connect()];
-                    case 3: return [2 /*return*/, _a.sent()];
-                    case 4:
-                        unlock();
-                        return [7 /*endfinally*/];
-                    case 5: return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async connect() {
+        const unlock = await this.locker.lock();
+        try {
+            return await this._connect();
+        }
+        finally {
+            unlock();
+        }
+    }
     /**
      * Connect to the network (no lock).
      * @method
      * @returns {Promise}
      */
-    Pool.prototype._connect = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        assert(this.opened, 'Pool is not opened.');
-                        if (this.connected)
-                            return [2 /*return*/];
-                        return [4 /*yield*/, this.hosts.open()];
-                    case 1:
-                        _a.sent();
-                        return [4 /*yield*/, this.discoverGateway()];
-                    case 2:
-                        _a.sent();
-                        return [4 /*yield*/, this.discoverExternal()];
-                    case 3:
-                        _a.sent();
-                        return [4 /*yield*/, this.discoverSeeds()];
-                    case 4:
-                        _a.sent();
-                        this.fillOutbound();
-                        return [4 /*yield*/, this.listen()];
-                    case 5:
-                        _a.sent();
-                        this.startTimer();
-                        this.connected = true;
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async _connect() {
+        assert(this.opened, 'Pool is not opened.');
+        if (this.connected)
+            return;
+        await this.hosts.open();
+        await this.discoverGateway();
+        await this.discoverExternal();
+        await this.discoverSeeds();
+        this.fillOutbound();
+        await this.listen();
+        this.startTimer();
+        this.connected = true;
+    }
     /**
      * Disconnect from the network.
      * @method
      * @returns {Promise}
      */
-    Pool.prototype.disconnect = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var unlock;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.locker.lock()];
-                    case 1:
-                        unlock = _a.sent();
-                        _a.label = 2;
-                    case 2:
-                        _a.trys.push([2, , 4, 5]);
-                        return [4 /*yield*/, this._disconnect()];
-                    case 3: return [2 /*return*/, _a.sent()];
-                    case 4:
-                        unlock();
-                        return [7 /*endfinally*/];
-                    case 5: return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async disconnect() {
+        const unlock = await this.locker.lock();
+        try {
+            return await this._disconnect();
+        }
+        finally {
+            unlock();
+        }
+    }
     /**
      * Disconnect from the network.
      * @method
      * @returns {Promise}
      */
-    Pool.prototype._disconnect = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var _i, _a, item;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        for (_i = 0, _a = this.invMap.values(); _i < _a.length; _i++) {
-                            item = _a[_i];
-                            item.resolve();
-                        }
-                        if (!this.connected)
-                            return [2 /*return*/];
-                        this.disconnecting = true;
-                        this.peers.destroy();
-                        this.blockMap.clear();
-                        this.txMap.clear();
-                        if (this.pendingFilter != null) {
-                            clearTimeout(this.pendingFilter);
-                            this.pendingFilter = null;
-                        }
-                        if (this.pendingRefill != null) {
-                            clearTimeout(this.pendingRefill);
-                            this.pendingRefill = null;
-                        }
-                        this.checkpoints = false;
-                        this.headerTip = null;
-                        this.headerChain.reset();
-                        this.headerNext = null;
-                        this.stopTimer();
-                        return [4 /*yield*/, this.hosts.close()];
-                    case 1:
-                        _b.sent();
-                        return [4 /*yield*/, this.unlisten()];
-                    case 2:
-                        _b.sent();
-                        this.disconnecting = false;
-                        this.syncing = false;
-                        this.connected = false;
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async _disconnect() {
+        for (const item of this.invMap.values())
+            item.resolve();
+        if (!this.connected)
+            return;
+        this.disconnecting = true;
+        this.peers.destroy();
+        this.blockMap.clear();
+        this.txMap.clear();
+        if (this.pendingFilter != null) {
+            clearTimeout(this.pendingFilter);
+            this.pendingFilter = null;
+        }
+        if (this.pendingRefill != null) {
+            clearTimeout(this.pendingRefill);
+            this.pendingRefill = null;
+        }
+        this.checkpoints = false;
+        this.headerTip = null;
+        this.headerChain.reset();
+        this.headerNext = null;
+        this.stopTimer();
+        await this.hosts.close();
+        await this.unlisten();
+        this.disconnecting = false;
+        this.syncing = false;
+        this.connected = false;
+    }
     /**
      * Start listening on a server socket.
      * @method
      * @private
      * @returns {Promise}
      */
-    Pool.prototype.listen = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        assert(this.server);
-                        assert(!this.connected, 'Already listening.');
-                        if (!this.options.listen)
-                            return [2 /*return*/];
-                        this.server.maxConnections = this.options.maxInbound;
-                        return [4 /*yield*/, this.server.listen(this.options.port, this.options.host)];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async listen() {
+        assert(this.server);
+        assert(!this.connected, 'Already listening.');
+        if (!this.options.listen)
+            return;
+        this.server.maxConnections = this.options.maxInbound;
+        await this.server.listen(this.options.port, this.options.host);
+    }
     /**
      * Stop listening on server socket.
      * @method
      * @private
      * @returns {Promise}
      */
-    Pool.prototype.unlisten = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        assert(this.server);
-                        assert(this.connected, 'Not listening.');
-                        if (!this.options.listen)
-                            return [2 /*return*/];
-                        return [4 /*yield*/, this.server.close()];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async unlisten() {
+        assert(this.server);
+        assert(this.connected, 'Not listening.');
+        if (!this.options.listen)
+            return;
+        await this.server.close();
+    }
     /**
      * Start discovery timer.
      * @private
      */
-    Pool.prototype.startTimer = function () {
-        var _this = this;
+    startTimer() {
         assert(this.timer == null, 'Timer already started.');
-        this.timer = setInterval(function () { return _this.discover(); }, Pool.DISCOVERY_INTERVAL);
-    };
+        this.timer = setInterval(() => this.discover(), Pool.DISCOVERY_INTERVAL);
+    }
     /**
      * Stop discovery timer.
      * @private
      */
-    Pool.prototype.stopTimer = function () {
+    stopTimer() {
         assert(this.timer != null, 'Timer already stopped.');
         clearInterval(this.timer);
         this.timer = null;
-    };
+    }
     /**
      * Rediscover seeds and internet gateway.
      * Attempt to add port mapping once again.
      * @returns {Promise}
      */
-    Pool.prototype.discover = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (this.discovering)
-                            return [2 /*return*/];
-                        _a.label = 1;
-                    case 1:
-                        _a.trys.push([1, , 4, 5]);
-                        this.discovering = true;
-                        return [4 /*yield*/, this.discoverGateway()];
-                    case 2:
-                        _a.sent();
-                        return [4 /*yield*/, this.discoverSeeds(true)];
-                    case 3:
-                        _a.sent();
-                        return [3 /*break*/, 5];
-                    case 4:
-                        this.discovering = false;
-                        return [7 /*endfinally*/];
-                    case 5: return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async discover() {
+        if (this.discovering)
+            return;
+        try {
+            this.discovering = true;
+            await this.discoverGateway();
+            await this.discoverSeeds(true);
+        }
+        finally {
+            this.discovering = false;
+        }
+    }
     /**
      * Attempt to add port mapping (i.e.
      * remote:8333->local:8333) via UPNP.
      * @returns {Promise}
      */
-    Pool.prototype.discoverGateway = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var src, dest, wan, e_1, host, e_2, e_3;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        src = this.options.publicPort;
-                        dest = this.options.port;
-                        // Pointless if we're not listening.
-                        if (!this.options.listen)
-                            return [2 /*return*/, false];
-                        // UPNP is always optional, since
-                        // it's likely to not work anyway.
-                        if (!this.options.upnp)
-                            return [2 /*return*/, false];
-                        _a.label = 1;
-                    case 1:
-                        _a.trys.push([1, 3, , 4]);
-                        this.logger.debug('Discovering internet gateway (upnp).');
-                        return [4 /*yield*/, UPNP.discover()];
-                    case 2:
-                        wan = _a.sent();
-                        return [3 /*break*/, 4];
-                    case 3:
-                        e_1 = _a.sent();
-                        this.logger.debug('Could not discover internet gateway (upnp).');
-                        this.logger.debug(e_1);
-                        return [2 /*return*/, false];
-                    case 4:
-                        _a.trys.push([4, 6, , 7]);
-                        return [4 /*yield*/, wan.getExternalIP()];
-                    case 5:
-                        host = _a.sent();
-                        return [3 /*break*/, 7];
-                    case 6:
-                        e_2 = _a.sent();
-                        this.logger.debug('Could not find external IP (upnp).');
-                        this.logger.debug(e_2);
-                        return [2 /*return*/, false];
-                    case 7:
-                        if (this.hosts.addLocal(host, src, scores.UPNP))
-                            this.logger.info('External IP found (upnp): %s.', host);
-                        this.logger.debug('Adding port mapping %d->%d.', src, dest);
-                        _a.label = 8;
-                    case 8:
-                        _a.trys.push([8, 10, , 11]);
-                        return [4 /*yield*/, wan.addPortMapping(host, src, dest)];
-                    case 9:
-                        _a.sent();
-                        return [3 /*break*/, 11];
-                    case 10:
-                        e_3 = _a.sent();
-                        this.logger.debug('Could not add port mapping (upnp).');
-                        this.logger.debug(e_3);
-                        return [2 /*return*/, false];
-                    case 11: return [2 /*return*/, true];
-                }
-            });
-        });
-    };
+    async discoverGateway() {
+        const src = this.options.publicPort;
+        const dest = this.options.port;
+        // Pointless if we're not listening.
+        if (!this.options.listen)
+            return false;
+        // UPNP is always optional, since
+        // it's likely to not work anyway.
+        if (!this.options.upnp)
+            return false;
+        let wan;
+        try {
+            this.logger.debug('Discovering internet gateway (upnp).');
+            wan = await UPNP.discover();
+        }
+        catch (e) {
+            this.logger.debug('Could not discover internet gateway (upnp).');
+            this.logger.debug(e);
+            return false;
+        }
+        let host;
+        try {
+            host = await wan.getExternalIP();
+        }
+        catch (e) {
+            this.logger.debug('Could not find external IP (upnp).');
+            this.logger.debug(e);
+            return false;
+        }
+        if (this.hosts.addLocal(host, src, scores.UPNP))
+            this.logger.info('External IP found (upnp): %s.', host);
+        this.logger.debug('Adding port mapping %d->%d.', src, dest);
+        try {
+            await wan.addPortMapping(host, src, dest);
+        }
+        catch (e) {
+            this.logger.debug('Could not add port mapping (upnp).');
+            this.logger.debug(e);
+            return false;
+        }
+        return true;
+    }
     /**
      * Attempt to resolve DNS seeds if necessary.
      * @param {Boolean} checkPeers
      * @returns {Promise}
      */
-    Pool.prototype.discoverSeeds = function (checkPeers) {
-        return __awaiter(this, void 0, void 0, function () {
-            var max, size, total, peer;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (!this.options.discover)
-                            return [2 /*return*/];
-                        if (this.hosts.dnsSeeds.length === 0)
-                            return [2 /*return*/];
-                        max = Math.min(2, this.options.maxOutbound);
-                        size = this.hosts.size();
-                        total = 0;
-                        for (peer = this.peers.head(); peer; peer = peer.next) {
-                            if (!peer.outbound)
-                                continue;
-                            if (peer.connected) {
-                                if (++total > max)
-                                    break;
-                            }
-                        }
-                        if (!(size === 0 || (checkPeers && total < max))) return [3 /*break*/, 2];
-                        this.logger.warning('Could not find enough peers.');
-                        this.logger.warning('Hitting DNS seeds...');
-                        return [4 /*yield*/, this.hosts.discoverSeeds()];
-                    case 1:
-                        _a.sent();
-                        this.logger.info('Resolved %d hosts from DNS seeds.', this.hosts.size() - size);
-                        this.refill();
-                        _a.label = 2;
-                    case 2: return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async discoverSeeds(checkPeers) {
+        if (!this.options.discover)
+            return;
+        if (this.hosts.dnsSeeds.length === 0)
+            return;
+        const max = Math.min(2, this.options.maxOutbound);
+        const size = this.hosts.size();
+        let total = 0;
+        for (let peer = this.peers.head(); peer; peer = peer.next) {
+            if (!peer.outbound)
+                continue;
+            if (peer.connected) {
+                if (++total > max)
+                    break;
+            }
+        }
+        if (size === 0 || (checkPeers && total < max)) {
+            this.logger.warning('Could not find enough peers.');
+            this.logger.warning('Hitting DNS seeds...');
+            await this.hosts.discoverSeeds();
+            this.logger.info('Resolved %d hosts from DNS seeds.', this.hosts.size() - size);
+            this.refill();
+        }
+    }
     /**
      * Attempt to discover external IP via DNS.
      * @returns {Promise}
      */
-    Pool.prototype.discoverExternal = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var port, host4, e_4, host6, e_5;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        port = this.options.publicPort;
-                        // Pointless if we're not listening.
-                        if (!this.options.listen)
-                            return [2 /*return*/];
-                        // Never hit a DNS server if
-                        // we're using an outbound proxy.
-                        if (this.options.proxy)
-                            return [2 /*return*/];
-                        // Try not to hit this if we can avoid it.
-                        if (this.hosts.local.size > 0)
-                            return [2 /*return*/];
-                        host4 = null;
-                        _a.label = 1;
-                    case 1:
-                        _a.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, dns.getIPv4(2000)];
-                    case 2:
-                        host4 = _a.sent();
-                        return [3 /*break*/, 4];
-                    case 3:
-                        e_4 = _a.sent();
-                        this.logger.debug('Could not find external IPv4 (dns).');
-                        this.logger.debug(e_4);
-                        return [3 /*break*/, 4];
-                    case 4:
-                        if (host4 && this.hosts.addLocal(host4, port, scores.DNS))
-                            this.logger.info('External IPv4 found (dns): %s.', host4);
-                        host6 = null;
-                        _a.label = 5;
-                    case 5:
-                        _a.trys.push([5, 7, , 8]);
-                        return [4 /*yield*/, dns.getIPv6(2000)];
-                    case 6:
-                        host6 = _a.sent();
-                        return [3 /*break*/, 8];
-                    case 7:
-                        e_5 = _a.sent();
-                        this.logger.debug('Could not find external IPv6 (dns).');
-                        this.logger.debug(e_5);
-                        return [3 /*break*/, 8];
-                    case 8:
-                        if (host6 && this.hosts.addLocal(host6, port, scores.DNS))
-                            this.logger.info('External IPv6 found (dns): %s.', host6);
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async discoverExternal() {
+        const port = this.options.publicPort;
+        // Pointless if we're not listening.
+        if (!this.options.listen)
+            return;
+        // Never hit a DNS server if
+        // we're using an outbound proxy.
+        if (this.options.proxy)
+            return;
+        // Try not to hit this if we can avoid it.
+        if (this.hosts.local.size > 0)
+            return;
+        let host4 = null;
+        try {
+            host4 = await dns.getIPv4(2000);
+        }
+        catch (e) {
+            this.logger.debug('Could not find external IPv4 (dns).');
+            this.logger.debug(e);
+        }
+        if (host4 && this.hosts.addLocal(host4, port, scores.DNS))
+            this.logger.info('External IPv4 found (dns): %s.', host4);
+        let host6 = null;
+        try {
+            host6 = await dns.getIPv6(2000);
+        }
+        catch (e) {
+            this.logger.debug('Could not find external IPv6 (dns).');
+            this.logger.debug(e);
+        }
+        if (host6 && this.hosts.addLocal(host6, port, scores.DNS))
+            this.logger.info('External IPv6 found (dns): %s.', host6);
+    }
     /**
      * Handle incoming connection.
      * @private
      * @param {net.Socket} socket
      */
-    Pool.prototype.handleSocket = function (socket) {
+    handleSocket(socket) {
         if (!socket.remoteAddress) {
             this.logger.debug('Ignoring disconnected peer.');
             socket.destroy();
             return;
         }
-        var ip = IP.normalize(socket.remoteAddress);
+        const ip = IP.normalize(socket.remoteAddress);
         if (this.peers.inbound >= this.options.maxInbound) {
             this.logger.debug('Ignoring peer: too many inbound (%s).', ip);
             socket.destroy();
@@ -659,40 +454,40 @@ var Pool = /** @class */ (function (_super) {
             socket.destroy();
             return;
         }
-        var host = IP.toHostname(ip, socket.remotePort);
+        const host = IP.toHostname(ip, socket.remotePort);
         assert(!this.peers.map.has(host), 'Port collision.');
         this.addInbound(socket);
-    };
+    }
     /**
      * Add a loader peer. Necessary for
      * a sync to even begin.
      * @private
      */
-    Pool.prototype.addLoader = function () {
+    addLoader() {
         if (!this.opened)
             return;
         assert(!this.peers.load);
-        for (var peer_1 = this.peers.head(); peer_1; peer_1 = peer_1.next) {
-            if (!peer_1.outbound)
+        for (let peer = this.peers.head(); peer; peer = peer.next) {
+            if (!peer.outbound)
                 continue;
-            this.logger.info('Repurposing peer for loader (%s).', peer_1.hostname());
-            this.setLoader(peer_1);
+            this.logger.info('Repurposing peer for loader (%s).', peer.hostname());
+            this.setLoader(peer);
             return;
         }
-        var addr = this.getHost();
+        const addr = this.getHost();
         if (!addr)
             return;
-        var peer = this.createOutbound(addr);
+        const peer = this.createOutbound(addr);
         this.logger.info('Adding loader peer (%s).', peer.hostname());
         this.peers.add(peer);
         this.setLoader(peer);
-    };
+    }
     /**
      * Add a loader peer. Necessary for
      * a sync to even begin.
      * @private
      */
-    Pool.prototype.setLoader = function (peer) {
+    setLoader(peer) {
         if (!this.opened)
             return;
         assert(peer.outbound);
@@ -702,39 +497,39 @@ var Pool = /** @class */ (function (_super) {
         this.peers.load = peer;
         this.sendSync(peer);
         this.emit('loader', peer);
-    };
+    }
     /**
      * Start the blockchain sync.
      */
-    Pool.prototype.startSync = function () {
+    startSync() {
         if (!this.opened || !this.connected)
             return;
         this.syncing = true;
         this.resync(false);
-    };
+    }
     /**
      * Force sending of a sync to each peer.
      */
-    Pool.prototype.forceSync = function () {
+    forceSync() {
         if (!this.opened || !this.connected)
             return;
         this.resync(true);
-    };
+    }
     /**
      * Send a sync to each peer.
      */
-    Pool.prototype.sync = function (force) {
+    sync(force) {
         this.resync(false);
-    };
+    }
     /**
      * Stop the sync.
      * @private
      */
-    Pool.prototype.stopSync = function () {
+    stopSync() {
         if (!this.syncing)
             return;
         this.syncing = false;
-        for (var peer = this.peers.head(); peer; peer = peer.next) {
+        for (let peer = this.peers.head(); peer; peer = peer.next) {
             if (!peer.outbound)
                 continue;
             if (!peer.syncing)
@@ -750,51 +545,38 @@ var Pool = /** @class */ (function (_super) {
         }
         this.blockMap.clear();
         this.compactBlocks.clear();
-    };
+    }
     /**
      * Send a sync to each peer.
      * @private
      * @param {Boolean?} force
      * @returns {Promise}
      */
-    Pool.prototype.resync = function (force) {
-        return __awaiter(this, void 0, void 0, function () {
-            var locator, e_6, peer;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (!this.syncing)
-                            return [2 /*return*/];
-                        _a.label = 1;
-                    case 1:
-                        _a.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, this.chain.getLocator()];
-                    case 2:
-                        locator = _a.sent();
-                        return [3 /*break*/, 4];
-                    case 3:
-                        e_6 = _a.sent();
-                        this.emit('error', e_6);
-                        return [2 /*return*/];
-                    case 4:
-                        for (peer = this.peers.head(); peer; peer = peer.next) {
-                            if (!peer.outbound)
-                                continue;
-                            if (!force && peer.syncing)
-                                continue;
-                            this.sendLocator(locator, peer);
-                        }
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async resync(force) {
+        if (!this.syncing)
+            return;
+        let locator;
+        try {
+            locator = await this.chain.getLocator();
+        }
+        catch (e) {
+            this.emit('error', e);
+            return;
+        }
+        for (let peer = this.peers.head(); peer; peer = peer.next) {
+            if (!peer.outbound)
+                continue;
+            if (!force && peer.syncing)
+                continue;
+            this.sendLocator(locator, peer);
+        }
+    }
     /**
      * Test whether a peer is sync-worthy.
      * @param {Peer} peer
      * @returns {Boolean}
      */
-    Pool.prototype.isSyncable = function (peer) {
+    isSyncable(peer) {
         if (!this.syncing)
             return false;
         if (peer.destroyed)
@@ -810,43 +592,32 @@ var Pool = /** @class */ (function (_super) {
                 return false;
         }
         return true;
-    };
+    }
     /**
      * Start syncing from peer.
      * @method
      * @param {Peer} peer
      * @returns {Promise}
      */
-    Pool.prototype.sendSync = function (peer) {
-        return __awaiter(this, void 0, void 0, function () {
-            var locator, e_7;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (peer.syncing)
-                            return [2 /*return*/, false];
-                        if (!this.isSyncable(peer))
-                            return [2 /*return*/, false];
-                        peer.syncing = true;
-                        peer.blockTime = Date.now();
-                        _a.label = 1;
-                    case 1:
-                        _a.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, this.chain.getLocator()];
-                    case 2:
-                        locator = _a.sent();
-                        return [3 /*break*/, 4];
-                    case 3:
-                        e_7 = _a.sent();
-                        peer.syncing = false;
-                        peer.blockTime = -1;
-                        this.emit('error', e_7);
-                        return [2 /*return*/, false];
-                    case 4: return [2 /*return*/, this.sendLocator(locator, peer)];
-                }
-            });
-        });
-    };
+    async sendSync(peer) {
+        if (peer.syncing)
+            return false;
+        if (!this.isSyncable(peer))
+            return false;
+        peer.syncing = true;
+        peer.blockTime = Date.now();
+        let locator;
+        try {
+            locator = await this.chain.getLocator();
+        }
+        catch (e) {
+            peer.syncing = false;
+            peer.blockTime = -1;
+            this.emit('error', e);
+            return false;
+        }
+        return this.sendLocator(locator, peer);
+    }
     /**
      * Send a chain locator and start syncing from peer.
      * @method
@@ -854,7 +625,7 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @returns {Boolean}
      */
-    Pool.prototype.sendLocator = function (locator, peer) {
+    sendLocator(locator, peer) {
         if (!this.isSyncable(peer))
             return false;
         // Ask for the mempool if we're synced.
@@ -870,44 +641,44 @@ var Pool = /** @class */ (function (_super) {
         }
         peer.sendGetBlocks(locator);
         return true;
-    };
+    }
     /**
      * Send `mempool` to all peers.
      */
-    Pool.prototype.sendMempool = function () {
-        for (var peer = this.peers.head(); peer; peer = peer.next)
+    sendMempool() {
+        for (let peer = this.peers.head(); peer; peer = peer.next)
             peer.sendMempool();
-    };
+    }
     /**
      * Send `getaddr` to all peers.
      */
-    Pool.prototype.sendGetAddr = function () {
-        for (var peer = this.peers.head(); peer; peer = peer.next)
+    sendGetAddr() {
+        for (let peer = this.peers.head(); peer; peer = peer.next)
             peer.sendGetAddr();
-    };
+    }
     /**
      * Request current header chain blocks.
      * @private
      * @param {Peer} peer
      */
-    Pool.prototype.resolveHeaders = function (peer) {
-        var items = [];
-        for (var node = this.headerNext; node; node = node.next) {
+    resolveHeaders(peer) {
+        const items = [];
+        for (let node = this.headerNext; node; node = node.next) {
             this.headerNext = node.next;
             items.push(node.hash);
             if (items.length === common.MAX_INV)
                 break;
         }
         this.getBlock(peer, items);
-    };
+    }
     /**
      * Update all peer heights by their best hash.
      * @param {Hash} hash
      * @param {Number} height
      */
-    Pool.prototype.resolveHeight = function (hash, height) {
-        var total = 0;
-        for (var peer = this.peers.head(); peer; peer = peer.next) {
+    resolveHeight(hash, height) {
+        let total = 0;
+        for (let peer = this.peers.head(); peer; peer = peer.next) {
             if (!peer.bestHash || !peer.bestHash.equals(hash))
                 continue;
             if (peer.bestHeight !== height) {
@@ -917,30 +688,28 @@ var Pool = /** @class */ (function (_super) {
         }
         if (total > 0)
             this.logger.debug('Resolved height for %d peers.', total);
-    };
+    }
     /**
      * Find the next checkpoint.
      * @private
      * @param {Number} height
      * @returns {Object}
      */
-    Pool.prototype.getNextTip = function (height) {
-        for (var _i = 0, _a = this.network.checkpoints; _i < _a.length; _i++) {
-            var next = _a[_i];
+    getNextTip(height) {
+        for (const next of this.network.checkpoints) {
             if (next.height > height)
                 return new HeaderEntry(next.hash, next.height);
         }
         throw new Error('Next checkpoint not found.');
-    };
+    }
     /**
      * Announce broadcast list to peer.
      * @param {Peer} peer
      */
-    Pool.prototype.announceList = function (peer) {
-        var blocks = [];
-        var txs = [];
-        for (var _i = 0, _a = this.invMap.values(); _i < _a.length; _i++) {
-            var item = _a[_i];
+    announceList(peer) {
+        const blocks = [];
+        const txs = [];
+        for (const item of this.invMap.values()) {
             switch (item.type) {
                 case invTypes.BLOCK:
                     blocks.push(item.msg);
@@ -957,7 +726,7 @@ var Pool = /** @class */ (function (_super) {
             peer.announceBlock(blocks);
         if (txs.length > 0)
             peer.announceTX(txs);
-    };
+    }
     /**
      * Get a block/tx from the broadcast map.
      * @private
@@ -965,9 +734,9 @@ var Pool = /** @class */ (function (_super) {
      * @param {InvItem} item
      * @returns {Promise}
      */
-    Pool.prototype.getBroadcasted = function (peer, item) {
-        var type = item.isTX() ? invTypes.TX : invTypes.BLOCK;
-        var entry = this.invMap.get(item.hash);
+    getBroadcasted(peer, item) {
+        const type = item.isTX() ? invTypes.TX : invTypes.BLOCK;
+        const entry = this.invMap.get(item.hash);
         if (!entry)
             return null;
         if (type !== entry.type) {
@@ -977,7 +746,7 @@ var Pool = /** @class */ (function (_super) {
         this.logger.debug('Peer requested %s %h as a %s packet (%s).', item.isTX() ? 'tx' : 'block', item.hash, item.hasWitness() ? 'witness' : 'normal', peer.hostname());
         entry.handleAck(peer);
         return entry.msg;
-    };
+    }
     /**
      * Get a block/tx either from the broadcast map, mempool, or blockchain.
      * @method
@@ -986,28 +755,23 @@ var Pool = /** @class */ (function (_super) {
      * @param {InvItem} item
      * @returns {Promise}
      */
-    Pool.prototype.getItem = function (peer, item) {
-        return __awaiter(this, void 0, void 0, function () {
-            var entry;
-            return __generator(this, function (_a) {
-                entry = this.getBroadcasted(peer, item);
-                if (entry)
-                    return [2 /*return*/, entry];
-                if (this.options.selfish)
-                    return [2 /*return*/, null];
-                if (item.isTX()) {
-                    if (!this.mempool)
-                        return [2 /*return*/, null];
-                    return [2 /*return*/, this.mempool.getTX(item.hash)];
-                }
-                if (this.chain.options.spv)
-                    return [2 /*return*/, null];
-                if (this.chain.options.prune)
-                    return [2 /*return*/, null];
-                return [2 /*return*/, this.chain.getBlock(item.hash)];
-            });
-        });
-    };
+    async getItem(peer, item) {
+        const entry = this.getBroadcasted(peer, item);
+        if (entry)
+            return entry;
+        if (this.options.selfish)
+            return null;
+        if (item.isTX()) {
+            if (!this.mempool)
+                return null;
+            return this.mempool.getTX(item.hash);
+        }
+        if (this.chain.options.spv)
+            return null;
+        if (this.chain.options.prune)
+            return null;
+        return this.chain.getBlock(item.hash);
+    }
     /**
      * Send a block from the broadcast list or chain.
      * @method
@@ -1016,76 +780,67 @@ var Pool = /** @class */ (function (_super) {
      * @param {InvItem} item
      * @returns {Boolean}
      */
-    Pool.prototype.sendBlock = function (peer, item, witness) {
-        return __awaiter(this, void 0, void 0, function () {
-            var broadcasted, block_1, block;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        broadcasted = this.getBroadcasted(peer, item);
-                        // Check for a broadcasted item first.
-                        if (broadcasted) {
-                            peer.send(new packets.BlockPacket(broadcasted, witness));
-                            return [2 /*return*/, true];
-                        }
-                        if (this.options.selfish
-                            || this.chain.options.spv
-                            || this.chain.options.prune) {
-                            return [2 /*return*/, false];
-                        }
-                        if (!(witness || !this.options.hasWitness())) return [3 /*break*/, 2];
-                        return [4 /*yield*/, this.chain.getRawBlock(item.hash)];
-                    case 1:
-                        block_1 = _a.sent();
-                        if (block_1) {
-                            peer.sendRaw('block', block_1);
-                            return [2 /*return*/, true];
-                        }
-                        return [2 /*return*/, false];
-                    case 2: return [4 /*yield*/, this.chain.getBlock(item.hash)];
-                    case 3:
-                        block = _a.sent();
-                        if (block) {
-                            peer.send(new packets.BlockPacket(block, witness));
-                            return [2 /*return*/, true];
-                        }
-                        return [2 /*return*/, false];
-                }
-            });
-        });
-    };
+    async sendBlock(peer, item, witness) {
+        const broadcasted = this.getBroadcasted(peer, item);
+        // Check for a broadcasted item first.
+        if (broadcasted) {
+            peer.send(new packets.BlockPacket(broadcasted, witness));
+            return true;
+        }
+        if (this.options.selfish
+            || this.chain.options.spv
+            || this.chain.options.prune) {
+            return false;
+        }
+        // If we have the same serialization, we
+        // can write the raw binary to the socket.
+        if (witness || !this.options.hasWitness()) {
+            const block = await this.chain.getRawBlock(item.hash);
+            if (block) {
+                peer.sendRaw('block', block);
+                return true;
+            }
+            return false;
+        }
+        const block = await this.chain.getBlock(item.hash);
+        if (block) {
+            peer.send(new packets.BlockPacket(block, witness));
+            return true;
+        }
+        return false;
+    }
     /**
      * Create an outbound peer with no special purpose.
      * @private
      * @param {NetAddress} addr
      * @returns {Peer}
      */
-    Pool.prototype.createOutbound = function (addr) {
-        var peer = Peer.fromOutbound(this.options, addr);
+    createOutbound(addr) {
+        const peer = Peer.fromOutbound(this.options, addr);
         this.hosts.markAttempt(addr.hostname);
         this.bindPeer(peer);
         this.logger.debug('Connecting to %s.', peer.hostname());
         peer.tryOpen();
         return peer;
-    };
+    }
     /**
      * Accept an inbound socket.
      * @private
      * @param {net.Socket} socket
      * @returns {Peer}
      */
-    Pool.prototype.createInbound = function (socket) {
-        var peer = Peer.fromInbound(this.options, socket);
+    createInbound(socket) {
+        const peer = Peer.fromInbound(this.options, socket);
         this.bindPeer(peer);
         peer.tryOpen();
         return peer;
-    };
+    }
     /**
      * Allocate new peer id.
      * @returns {Number}
      */
-    Pool.prototype.uid = function () {
-        var MAX = Number.MAX_SAFE_INTEGER;
+    uid() {
+        const MAX = Number.MAX_SAFE_INTEGER;
         if (this.id >= MAX - this.peers.size() - 1)
             this.id = 0;
         // Once we overflow, there's a chance
@@ -1097,49 +852,38 @@ var Pool = /** @class */ (function (_super) {
             this.id += 1;
         } while (this.peers.find(this.id));
         return this.id;
-    };
+    }
     /**
      * Bind to peer events.
      * @private
      * @param {Peer} peer
      */
-    Pool.prototype.bindPeer = function (peer) {
-        var _this = this;
+    bindPeer(peer) {
         peer.id = this.uid();
-        peer.onPacket = function (packet) {
-            return _this.handlePacket(peer, packet);
+        peer.onPacket = (packet) => {
+            return this.handlePacket(peer, packet);
         };
-        peer.on('error', function (err) {
-            _this.logger.debug(err);
+        peer.on('error', (err) => {
+            this.logger.debug(err);
         });
-        peer.once('connect', function () {
-            _this.handleConnect(peer);
+        peer.once('connect', () => {
+            this.handleConnect(peer);
         });
-        peer.once('open', function () { return __awaiter(_this, void 0, void 0, function () {
-            var e_8;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        _a.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, this.handleOpen(peer)];
-                    case 1:
-                        _a.sent();
-                        return [3 /*break*/, 3];
-                    case 2:
-                        e_8 = _a.sent();
-                        this.emit('error', e_8);
-                        return [3 /*break*/, 3];
-                    case 3: return [2 /*return*/];
-                }
-            });
-        }); });
-        peer.once('close', function (connected) {
-            _this.handleClose(peer, connected);
+        peer.once('open', async () => {
+            try {
+                await this.handleOpen(peer);
+            }
+            catch (e) {
+                this.emit('error', e);
+            }
         });
-        peer.once('ban', function () {
-            _this.handleBan(peer);
+        peer.once('close', (connected) => {
+            this.handleClose(peer, connected);
         });
-    };
+        peer.once('ban', () => {
+            this.handleBan(peer);
+        });
+    }
     /**
      * Handle peer packet event.
      * @method
@@ -1148,232 +892,155 @@ var Pool = /** @class */ (function (_super) {
      * @param {Packet} packet
      * @returns {Promise}
      */
-    Pool.prototype.handlePacket = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            var _a;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _a = packet.type;
-                        switch (_a) {
-                            case packetTypes.VERSION: return [3 /*break*/, 1];
-                            case packetTypes.VERACK: return [3 /*break*/, 3];
-                            case packetTypes.PING: return [3 /*break*/, 5];
-                            case packetTypes.PONG: return [3 /*break*/, 7];
-                            case packetTypes.GETADDR: return [3 /*break*/, 9];
-                            case packetTypes.ADDR: return [3 /*break*/, 11];
-                            case packetTypes.INV: return [3 /*break*/, 13];
-                            case packetTypes.GETDATA: return [3 /*break*/, 15];
-                            case packetTypes.NOTFOUND: return [3 /*break*/, 17];
-                            case packetTypes.GETBLOCKS: return [3 /*break*/, 19];
-                            case packetTypes.GETHEADERS: return [3 /*break*/, 21];
-                            case packetTypes.HEADERS: return [3 /*break*/, 23];
-                            case packetTypes.SENDHEADERS: return [3 /*break*/, 25];
-                            case packetTypes.BLOCK: return [3 /*break*/, 27];
-                            case packetTypes.TX: return [3 /*break*/, 29];
-                            case packetTypes.REJECT: return [3 /*break*/, 31];
-                            case packetTypes.MEMPOOL: return [3 /*break*/, 33];
-                            case packetTypes.FILTERLOAD: return [3 /*break*/, 35];
-                            case packetTypes.FILTERADD: return [3 /*break*/, 37];
-                            case packetTypes.FILTERCLEAR: return [3 /*break*/, 39];
-                            case packetTypes.MERKLEBLOCK: return [3 /*break*/, 41];
-                            case packetTypes.FEEFILTER: return [3 /*break*/, 43];
-                            case packetTypes.SENDCMPCT: return [3 /*break*/, 45];
-                            case packetTypes.CMPCTBLOCK: return [3 /*break*/, 47];
-                            case packetTypes.GETBLOCKTXN: return [3 /*break*/, 49];
-                            case packetTypes.BLOCKTXN: return [3 /*break*/, 51];
-                            case packetTypes.UNKNOWN: return [3 /*break*/, 53];
-                        }
-                        return [3 /*break*/, 55];
-                    case 1: return [4 /*yield*/, this.handleVersion(peer, packet)];
-                    case 2:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 3: return [4 /*yield*/, this.handleVerack(peer, packet)];
-                    case 4:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 5: return [4 /*yield*/, this.handlePing(peer, packet)];
-                    case 6:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 7: return [4 /*yield*/, this.handlePong(peer, packet)];
-                    case 8:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 9: return [4 /*yield*/, this.handleGetAddr(peer, packet)];
-                    case 10:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 11: return [4 /*yield*/, this.handleAddr(peer, packet)];
-                    case 12:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 13: return [4 /*yield*/, this.handleInv(peer, packet)];
-                    case 14:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 15: return [4 /*yield*/, this.handleGetData(peer, packet)];
-                    case 16:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 17: return [4 /*yield*/, this.handleNotFound(peer, packet)];
-                    case 18:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 19: return [4 /*yield*/, this.handleGetBlocks(peer, packet)];
-                    case 20:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 21: return [4 /*yield*/, this.handleGetHeaders(peer, packet)];
-                    case 22:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 23: return [4 /*yield*/, this.handleHeaders(peer, packet)];
-                    case 24:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 25: return [4 /*yield*/, this.handleSendHeaders(peer, packet)];
-                    case 26:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 27: return [4 /*yield*/, this.handleBlock(peer, packet)];
-                    case 28:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 29: return [4 /*yield*/, this.handleTX(peer, packet)];
-                    case 30:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 31: return [4 /*yield*/, this.handleReject(peer, packet)];
-                    case 32:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 33: return [4 /*yield*/, this.handleMempool(peer, packet)];
-                    case 34:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 35: return [4 /*yield*/, this.handleFilterLoad(peer, packet)];
-                    case 36:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 37: return [4 /*yield*/, this.handleFilterAdd(peer, packet)];
-                    case 38:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 39: return [4 /*yield*/, this.handleFilterClear(peer, packet)];
-                    case 40:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 41: return [4 /*yield*/, this.handleMerkleBlock(peer, packet)];
-                    case 42:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 43: return [4 /*yield*/, this.handleFeeFilter(peer, packet)];
-                    case 44:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 45: return [4 /*yield*/, this.handleSendCmpct(peer, packet)];
-                    case 46:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 47: return [4 /*yield*/, this.handleCmpctBlock(peer, packet)];
-                    case 48:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 49: return [4 /*yield*/, this.handleGetBlockTxn(peer, packet)];
-                    case 50:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 51: return [4 /*yield*/, this.handleBlockTxn(peer, packet)];
-                    case 52:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 53: return [4 /*yield*/, this.handleUnknown(peer, packet)];
-                    case 54:
-                        _b.sent();
-                        return [3 /*break*/, 56];
-                    case 55:
-                        assert(false, 'Bad packet type.');
-                        return [3 /*break*/, 56];
-                    case 56:
-                        this.emit('packet', packet, peer);
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async handlePacket(peer, packet) {
+        switch (packet.type) {
+            case packetTypes.VERSION:
+                await this.handleVersion(peer, packet);
+                break;
+            case packetTypes.VERACK:
+                await this.handleVerack(peer, packet);
+                break;
+            case packetTypes.PING:
+                await this.handlePing(peer, packet);
+                break;
+            case packetTypes.PONG:
+                await this.handlePong(peer, packet);
+                break;
+            case packetTypes.GETADDR:
+                await this.handleGetAddr(peer, packet);
+                break;
+            case packetTypes.ADDR:
+                await this.handleAddr(peer, packet);
+                break;
+            case packetTypes.INV:
+                await this.handleInv(peer, packet);
+                break;
+            case packetTypes.GETDATA:
+                await this.handleGetData(peer, packet);
+                break;
+            case packetTypes.NOTFOUND:
+                await this.handleNotFound(peer, packet);
+                break;
+            case packetTypes.GETBLOCKS:
+                await this.handleGetBlocks(peer, packet);
+                break;
+            case packetTypes.GETHEADERS:
+                await this.handleGetHeaders(peer, packet);
+                break;
+            case packetTypes.HEADERS:
+                await this.handleHeaders(peer, packet);
+                break;
+            case packetTypes.SENDHEADERS:
+                await this.handleSendHeaders(peer, packet);
+                break;
+            case packetTypes.BLOCK:
+                await this.handleBlock(peer, packet);
+                break;
+            case packetTypes.TX:
+                await this.handleTX(peer, packet);
+                break;
+            case packetTypes.REJECT:
+                await this.handleReject(peer, packet);
+                break;
+            case packetTypes.MEMPOOL:
+                await this.handleMempool(peer, packet);
+                break;
+            case packetTypes.FILTERLOAD:
+                await this.handleFilterLoad(peer, packet);
+                break;
+            case packetTypes.FILTERADD:
+                await this.handleFilterAdd(peer, packet);
+                break;
+            case packetTypes.FILTERCLEAR:
+                await this.handleFilterClear(peer, packet);
+                break;
+            case packetTypes.MERKLEBLOCK:
+                await this.handleMerkleBlock(peer, packet);
+                break;
+            case packetTypes.FEEFILTER:
+                await this.handleFeeFilter(peer, packet);
+                break;
+            case packetTypes.SENDCMPCT:
+                await this.handleSendCmpct(peer, packet);
+                break;
+            case packetTypes.CMPCTBLOCK:
+                await this.handleCmpctBlock(peer, packet);
+                break;
+            case packetTypes.GETBLOCKTXN:
+                await this.handleGetBlockTxn(peer, packet);
+                break;
+            case packetTypes.BLOCKTXN:
+                await this.handleBlockTxn(peer, packet);
+                break;
+            case packetTypes.UNKNOWN:
+                await this.handleUnknown(peer, packet);
+                break;
+            default:
+                assert(false, 'Bad packet type.');
+                break;
+        }
+        this.emit('packet', packet, peer);
+    }
     /**
      * Handle peer connect event.
      * @method
      * @private
      * @param {Peer} peer
      */
-    Pool.prototype.handleConnect = function (peer) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                this.logger.info('Connected to %s.', peer.hostname());
-                if (peer.outbound)
-                    this.hosts.markSuccess(peer.hostname());
-                this.emit('peer connect', peer);
-                return [2 /*return*/];
-            });
-        });
-    };
+    async handleConnect(peer) {
+        this.logger.info('Connected to %s.', peer.hostname());
+        if (peer.outbound)
+            this.hosts.markSuccess(peer.hostname());
+        this.emit('peer connect', peer);
+    }
     /**
      * Handle peer open event.
      * @method
      * @private
      * @param {Peer} peer
      */
-    Pool.prototype.handleOpen = function (peer) {
-        return __awaiter(this, void 0, void 0, function () {
-            var addr;
-            return __generator(this, function (_a) {
-                // Advertise our address.
-                if (!this.options.selfish && this.options.listen) {
-                    addr = this.hosts.getLocal(peer.address);
-                    if (addr)
-                        peer.send(new packets.AddrPacket([addr]));
+    async handleOpen(peer) {
+        // Advertise our address.
+        if (!this.options.selfish && this.options.listen) {
+            const addr = this.hosts.getLocal(peer.address);
+            if (addr)
+                peer.send(new packets.AddrPacket([addr]));
+        }
+        // We want compact blocks!
+        if (this.options.compact)
+            peer.sendCompact(this.options.blockMode);
+        // Find some more peers.
+        if (!this.hosts.isFull())
+            peer.sendGetAddr();
+        // Relay our spv filter if we have one.
+        if (this.spvFilter)
+            peer.sendFilterLoad(this.spvFilter);
+        // Announce our currently broadcasted items.
+        this.announceList(peer);
+        // Set a fee rate filter.
+        if (this.options.feeRate !== -1)
+            peer.sendFeeRate(this.options.feeRate);
+        // Start syncing the chain.
+        if (peer.outbound)
+            this.sendSync(peer);
+        if (peer.outbound) {
+            this.hosts.markAck(peer.hostname(), peer.services);
+            // If we don't have an ack'd
+            // loader yet consider it dead.
+            if (!peer.loader) {
+                if (this.peers.load && !this.peers.load.handshake) {
+                    assert(this.peers.load.loader);
+                    this.peers.load.loader = false;
+                    this.peers.load = null;
                 }
-                // We want compact blocks!
-                if (this.options.compact)
-                    peer.sendCompact(this.options.blockMode);
-                // Find some more peers.
-                if (!this.hosts.isFull())
-                    peer.sendGetAddr();
-                // Relay our spv filter if we have one.
-                if (this.spvFilter)
-                    peer.sendFilterLoad(this.spvFilter);
-                // Announce our currently broadcasted items.
-                this.announceList(peer);
-                // Set a fee rate filter.
-                if (this.options.feeRate !== -1)
-                    peer.sendFeeRate(this.options.feeRate);
-                // Start syncing the chain.
-                if (peer.outbound)
-                    this.sendSync(peer);
-                if (peer.outbound) {
-                    this.hosts.markAck(peer.hostname(), peer.services);
-                    // If we don't have an ack'd
-                    // loader yet consider it dead.
-                    if (!peer.loader) {
-                        if (this.peers.load && !this.peers.load.handshake) {
-                            assert(this.peers.load.loader);
-                            this.peers.load.loader = false;
-                            this.peers.load = null;
-                        }
-                    }
-                    // If we do not have a loader,
-                    // use this peer.
-                    if (!this.peers.load)
-                        this.setLoader(peer);
-                }
-                this.emit('peer open', peer);
-                return [2 /*return*/];
-            });
-        });
-    };
+            }
+            // If we do not have a loader,
+            // use this peer.
+            if (!this.peers.load)
+                this.setLoader(peer);
+        }
+        this.emit('peer open', peer);
+    }
     /**
      * Handle peer close event.
      * @method
@@ -1381,52 +1048,41 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {Boolean} connected
      */
-    Pool.prototype.handleClose = function (peer, connected) {
-        return __awaiter(this, void 0, void 0, function () {
-            var outbound, loader, size;
-            return __generator(this, function (_a) {
-                outbound = peer.outbound;
-                loader = peer.loader;
-                size = peer.blockMap.size;
-                this.removePeer(peer);
-                if (loader) {
-                    this.logger.info('Removed loader peer (%s).', peer.hostname());
-                    if (this.checkpoints)
-                        this.resetChain();
-                }
-                this.nonces.remove(peer.hostname());
-                this.emit('peer close', peer, connected);
-                if (!this.opened)
-                    return [2 /*return*/];
-                if (this.disconnecting)
-                    return [2 /*return*/];
-                if (this.chain.synced && size > 0) {
-                    this.logger.warning('Peer disconnected with requested blocks.');
-                    this.logger.warning('Resending sync...');
-                    this.forceSync();
-                }
-                if (!outbound)
-                    return [2 /*return*/];
-                this.refill();
-                return [2 /*return*/];
-            });
-        });
-    };
+    async handleClose(peer, connected) {
+        const outbound = peer.outbound;
+        const loader = peer.loader;
+        const size = peer.blockMap.size;
+        this.removePeer(peer);
+        if (loader) {
+            this.logger.info('Removed loader peer (%s).', peer.hostname());
+            if (this.checkpoints)
+                this.resetChain();
+        }
+        this.nonces.remove(peer.hostname());
+        this.emit('peer close', peer, connected);
+        if (!this.opened)
+            return;
+        if (this.disconnecting)
+            return;
+        if (this.chain.synced && size > 0) {
+            this.logger.warning('Peer disconnected with requested blocks.');
+            this.logger.warning('Resending sync...');
+            this.forceSync();
+        }
+        if (!outbound)
+            return;
+        this.refill();
+    }
     /**
      * Handle ban event.
      * @method
      * @private
      * @param {Peer} peer
      */
-    Pool.prototype.handleBan = function (peer) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                this.ban(peer.address);
-                this.emit('ban', peer);
-                return [2 /*return*/];
-            });
-        });
-    };
+    async handleBan(peer) {
+        this.ban(peer.address);
+        this.emit('ban', peer);
+    }
     /**
      * Handle peer version event.
      * @method
@@ -1434,18 +1090,13 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {VersionPacket} packet
      */
-    Pool.prototype.handleVersion = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                this.logger.info('Received version (%s): version=%d height=%d services=%s agent=%s', peer.hostname(), packet.version, packet.height, packet.services.toString(2), packet.agent);
-                this.network.time.add(peer.hostname(), packet.time);
-                this.nonces.remove(peer.hostname());
-                if (!peer.outbound && packet.remote.isRoutable())
-                    this.hosts.markLocal(packet.remote);
-                return [2 /*return*/];
-            });
-        });
-    };
+    async handleVersion(peer, packet) {
+        this.logger.info('Received version (%s): version=%d height=%d services=%s agent=%s', peer.hostname(), packet.version, packet.height, packet.services.toString(2), packet.agent);
+        this.network.time.add(peer.hostname(), packet.time);
+        this.nonces.remove(peer.hostname());
+        if (!peer.outbound && packet.remote.isRoutable())
+            this.hosts.markLocal(packet.remote);
+    }
     /**
      * Handle `verack` packet.
      * @method
@@ -1453,14 +1104,9 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {VerackPacket} packet
      */
-    Pool.prototype.handleVerack = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                ;
-                return [2 /*return*/];
-            });
-        });
-    };
+    async handleVerack(peer, packet) {
+        ;
+    }
     /**
      * Handle `ping` packet.
      * @method
@@ -1468,14 +1114,9 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {PingPacket} packet
      */
-    Pool.prototype.handlePing = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                ;
-                return [2 /*return*/];
-            });
-        });
-    };
+    async handlePing(peer, packet) {
+        ;
+    }
     /**
      * Handle `pong` packet.
      * @method
@@ -1483,14 +1124,9 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {PongPacket} packet
      */
-    Pool.prototype.handlePong = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                ;
-                return [2 /*return*/];
-            });
-        });
-    };
+    async handlePong(peer, packet) {
+        ;
+    }
     /**
      * Handle `getaddr` packet.
      * @method
@@ -1498,35 +1134,28 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {GetAddrPacket} packet
      */
-    Pool.prototype.handleGetAddr = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            var addrs, items, _i, addrs_1, addr;
-            return __generator(this, function (_a) {
-                if (this.options.selfish)
-                    return [2 /*return*/];
-                if (peer.sentAddr) {
-                    this.logger.debug('Ignoring repeated getaddr (%s).', peer.hostname());
-                    return [2 /*return*/];
-                }
-                peer.sentAddr = true;
-                addrs = this.hosts.toArray();
-                items = [];
-                for (_i = 0, addrs_1 = addrs; _i < addrs_1.length; _i++) {
-                    addr = addrs_1[_i];
-                    if (!peer.addrFilter.added(addr.hostname, 'ascii'))
-                        continue;
-                    items.push(addr);
-                    if (items.length === 1000)
-                        break;
-                }
-                if (items.length === 0)
-                    return [2 /*return*/];
-                this.logger.debug('Sending %d addrs to peer (%s)', items.length, peer.hostname());
-                peer.send(new packets.AddrPacket(items));
-                return [2 /*return*/];
-            });
-        });
-    };
+    async handleGetAddr(peer, packet) {
+        if (this.options.selfish)
+            return;
+        if (peer.sentAddr) {
+            this.logger.debug('Ignoring repeated getaddr (%s).', peer.hostname());
+            return;
+        }
+        peer.sentAddr = true;
+        const addrs = this.hosts.toArray();
+        const items = [];
+        for (const addr of addrs) {
+            if (!peer.addrFilter.added(addr.hostname, 'ascii'))
+                continue;
+            items.push(addr);
+            if (items.length === 1000)
+                break;
+        }
+        if (items.length === 0)
+            return;
+        this.logger.debug('Sending %d addrs to peer (%s)', items.length, peer.hostname());
+        peer.send(new packets.AddrPacket(items));
+    }
     /**
      * Handle peer addr event.
      * @method
@@ -1534,32 +1163,25 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {AddrPacket} packet
      */
-    Pool.prototype.handleAddr = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            var addrs, now, services, _i, addrs_2, addr;
-            return __generator(this, function (_a) {
-                addrs = packet.items;
-                now = this.network.now();
-                services = this.options.getRequiredServices();
-                for (_i = 0, addrs_2 = addrs; _i < addrs_2.length; _i++) {
-                    addr = addrs_2[_i];
-                    peer.addrFilter.add(addr.hostname, 'ascii');
-                    if (!addr.isRoutable())
-                        continue;
-                    if (!addr.hasServices(services))
-                        continue;
-                    if (addr.time <= 100000000 || addr.time > now + 10 * 60)
-                        addr.time = now - 5 * 24 * 60 * 60;
-                    if (addr.port === 0)
-                        continue;
-                    this.hosts.add(addr, peer.address);
-                }
-                this.logger.info('Received %d addrs (hosts=%d, peers=%d) (%s).', addrs.length, this.hosts.size(), this.peers.size(), peer.hostname());
-                this.fillOutbound();
-                return [2 /*return*/];
-            });
-        });
-    };
+    async handleAddr(peer, packet) {
+        const addrs = packet.items;
+        const now = this.network.now();
+        const services = this.options.getRequiredServices();
+        for (const addr of addrs) {
+            peer.addrFilter.add(addr.hostname, 'ascii');
+            if (!addr.isRoutable())
+                continue;
+            if (!addr.hasServices(services))
+                continue;
+            if (addr.time <= 100000000 || addr.time > now + 10 * 60)
+                addr.time = now - 5 * 24 * 60 * 60;
+            if (addr.port === 0)
+                continue;
+            this.hosts.add(addr, peer.address);
+        }
+        this.logger.info('Received %d addrs (hosts=%d, peers=%d) (%s).', addrs.length, this.hosts.size(), this.peers.size(), peer.hostname());
+        this.fillOutbound();
+    }
     /**
      * Handle `inv` packet.
      * @method
@@ -1567,27 +1189,15 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {InvPacket} packet
      */
-    Pool.prototype.handleInv = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            var unlock;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.locker.lock()];
-                    case 1:
-                        unlock = _a.sent();
-                        _a.label = 2;
-                    case 2:
-                        _a.trys.push([2, , 4, 5]);
-                        return [4 /*yield*/, this._handleInv(peer, packet)];
-                    case 3: return [2 /*return*/, _a.sent()];
-                    case 4:
-                        unlock();
-                        return [7 /*endfinally*/];
-                    case 5: return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async handleInv(peer, packet) {
+        const unlock = await this.locker.lock();
+        try {
+            return await this._handleInv(peer, packet);
+        }
+        finally {
+            unlock();
+        }
+    }
     /**
      * Handle `inv` packet (without a lock).
      * @method
@@ -1595,55 +1205,38 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {InvPacket} packet
      */
-    Pool.prototype._handleInv = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            var items, blocks, txs, unknown, _i, items_1, item;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        items = packet.items;
-                        if (items.length > common.MAX_INV) {
-                            peer.increaseBan(100);
-                            return [2 /*return*/];
-                        }
-                        blocks = [];
-                        txs = [];
-                        unknown = -1;
-                        for (_i = 0, items_1 = items; _i < items_1.length; _i++) {
-                            item = items_1[_i];
-                            switch (item.type) {
-                                case invTypes.BLOCK:
-                                    blocks.push(item.hash);
-                                    break;
-                                case invTypes.TX:
-                                    txs.push(item.hash);
-                                    break;
-                                default:
-                                    unknown = item.type;
-                                    continue;
-                            }
-                            peer.invFilter.add(item.hash);
-                        }
-                        this.logger.spam('Received inv packet with %d items: blocks=%d txs=%d (%s).', items.length, blocks.length, txs.length, peer.hostname());
-                        if (unknown !== -1) {
-                            this.logger.warning('Peer sent an unknown inv type: %d (%s).', unknown, peer.hostname());
-                        }
-                        if (!(blocks.length > 0)) return [3 /*break*/, 2];
-                        return [4 /*yield*/, this.handleBlockInv(peer, blocks)];
-                    case 1:
-                        _a.sent();
-                        _a.label = 2;
-                    case 2:
-                        if (!(txs.length > 0)) return [3 /*break*/, 4];
-                        return [4 /*yield*/, this.handleTXInv(peer, txs)];
-                    case 3:
-                        _a.sent();
-                        _a.label = 4;
-                    case 4: return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async _handleInv(peer, packet) {
+        const items = packet.items;
+        if (items.length > common.MAX_INV) {
+            peer.increaseBan(100);
+            return;
+        }
+        const blocks = [];
+        const txs = [];
+        let unknown = -1;
+        for (const item of items) {
+            switch (item.type) {
+                case invTypes.BLOCK:
+                    blocks.push(item.hash);
+                    break;
+                case invTypes.TX:
+                    txs.push(item.hash);
+                    break;
+                default:
+                    unknown = item.type;
+                    continue;
+            }
+            peer.invFilter.add(item.hash);
+        }
+        this.logger.spam('Received inv packet with %d items: blocks=%d txs=%d (%s).', items.length, blocks.length, txs.length, peer.hostname());
+        if (unknown !== -1) {
+            this.logger.warning('Peer sent an unknown inv type: %d (%s).', unknown, peer.hostname());
+        }
+        if (blocks.length > 0)
+            await this.handleBlockInv(peer, blocks);
+        if (txs.length > 0)
+            await this.handleTXInv(peer, txs);
+    }
     /**
      * Handle `inv` packet from peer (containing only BLOCK types).
      * @method
@@ -1652,74 +1245,61 @@ var Pool = /** @class */ (function (_super) {
      * @param {Hash[]} hashes
      * @returns {Promise}
      */
-    Pool.prototype.handleBlockInv = function (peer, hashes) {
-        return __awaiter(this, void 0, void 0, function () {
-            var hash, items, exists, i, hash, height;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        assert(hashes.length > 0);
-                        if (!this.syncing)
-                            return [2 /*return*/];
-                        // Always keep track of the peer's best hash.
-                        if (!peer.loader || this.chain.synced) {
-                            hash = hashes[hashes.length - 1];
-                            peer.bestHash = hash;
-                        }
-                        // Ignore for now if we're still syncing
-                        if (!this.chain.synced && !peer.loader)
-                            return [2 /*return*/];
-                        if (this.options.hasWitness() && !peer.hasWitness())
-                            return [2 /*return*/];
-                        // Request headers instead.
-                        if (this.checkpoints)
-                            return [2 /*return*/];
-                        this.logger.debug('Received %d block hashes from peer (%s).', hashes.length, peer.hostname());
-                        items = [];
-                        exists = null;
-                        i = 0;
-                        _a.label = 1;
-                    case 1:
-                        if (!(i < hashes.length)) return [3 /*break*/, 7];
-                        hash = hashes[i];
-                        if (!this.chain.hasOrphan(hash)) return [3 /*break*/, 3];
-                        this.logger.debug('Received known orphan hash (%s).', peer.hostname());
-                        return [4 /*yield*/, this.resolveOrphan(peer, hash)];
-                    case 2:
-                        _a.sent();
-                        return [3 /*break*/, 6];
-                    case 3: return [4 /*yield*/, this.hasBlock(hash)];
-                    case 4:
-                        // Request the block if we don't have it.
-                        if (!(_a.sent())) {
-                            items.push(hash);
-                            return [3 /*break*/, 6];
-                        }
-                        exists = hash;
-                        if (!(i === hashes.length - 1)) return [3 /*break*/, 6];
-                        this.logger.debug('Received existing hash (%s).', peer.hostname());
-                        return [4 /*yield*/, this.getBlocks(peer, hash)];
-                    case 5:
-                        _a.sent();
-                        _a.label = 6;
-                    case 6:
-                        i++;
-                        return [3 /*break*/, 1];
-                    case 7:
-                        if (!(exists && this.chain.synced)) return [3 /*break*/, 9];
-                        return [4 /*yield*/, this.chain.getHeight(exists)];
-                    case 8:
-                        height = _a.sent();
-                        if (height !== -1)
-                            peer.bestHeight = height;
-                        _a.label = 9;
-                    case 9:
-                        this.getBlock(peer, items);
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async handleBlockInv(peer, hashes) {
+        assert(hashes.length > 0);
+        if (!this.syncing)
+            return;
+        // Always keep track of the peer's best hash.
+        if (!peer.loader || this.chain.synced) {
+            const hash = hashes[hashes.length - 1];
+            peer.bestHash = hash;
+        }
+        // Ignore for now if we're still syncing
+        if (!this.chain.synced && !peer.loader)
+            return;
+        if (this.options.hasWitness() && !peer.hasWitness())
+            return;
+        // Request headers instead.
+        if (this.checkpoints)
+            return;
+        this.logger.debug('Received %d block hashes from peer (%s).', hashes.length, peer.hostname());
+        const items = [];
+        let exists = null;
+        for (let i = 0; i < hashes.length; i++) {
+            const hash = hashes[i];
+            // Resolve orphan chain.
+            if (this.chain.hasOrphan(hash)) {
+                this.logger.debug('Received known orphan hash (%s).', peer.hostname());
+                await this.resolveOrphan(peer, hash);
+                continue;
+            }
+            // Request the block if we don't have it.
+            if (!await this.hasBlock(hash)) {
+                items.push(hash);
+                continue;
+            }
+            exists = hash;
+            // Normally we request the hashContinue.
+            // In the odd case where we already have
+            // it, we can do one of two things: either
+            // force re-downloading of the block to
+            // continue the sync, or do a getblocks
+            // from the last hash (this will reset
+            // the hashContinue on the remote node).
+            if (i === hashes.length - 1) {
+                this.logger.debug('Received existing hash (%s).', peer.hostname());
+                await this.getBlocks(peer, hash);
+            }
+        }
+        // Attempt to update the peer's best height
+        // with the last existing hash we know of.
+        if (exists && this.chain.synced) {
+            const height = await this.chain.getHeight(exists);
+            if (height !== -1)
+                peer.bestHeight = height;
+        }
+        this.getBlock(peer, items);
+    }
     /**
      * Handle peer inv packet (txs).
      * @method
@@ -1727,17 +1307,12 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {Hash[]} hashes
      */
-    Pool.prototype.handleTXInv = function (peer, hashes) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                assert(hashes.length > 0);
-                if (this.syncing && !this.chain.synced)
-                    return [2 /*return*/];
-                this.ensureTX(peer, hashes);
-                return [2 /*return*/];
-            });
-        });
-    };
+    async handleTXInv(peer, hashes) {
+        assert(hashes.length > 0);
+        if (this.syncing && !this.chain.synced)
+            return;
+        this.ensureTX(peer, hashes);
+    }
     /**
      * Handle `getdata` packet.
      * @method
@@ -1745,160 +1320,124 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {GetDataPacket} packet
      */
-    Pool.prototype.handleGetData = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            var items, notFound, txs, blocks, compact, unknown, _i, items_2, item, tx, _a, result, block, merkle, _b, _c, tx, height, result, block;
-            return __generator(this, function (_d) {
-                switch (_d.label) {
-                    case 0:
-                        items = packet.items;
-                        if (items.length > common.MAX_INV) {
-                            this.logger.warning('Peer sent inv with >50k items (%s).', peer.hostname());
-                            peer.increaseBan(100);
-                            peer.destroy();
-                            return [2 /*return*/];
-                        }
-                        notFound = [];
-                        txs = 0;
-                        blocks = 0;
-                        compact = 0;
-                        unknown = -1;
-                        _i = 0, items_2 = items;
-                        _d.label = 1;
-                    case 1:
-                        if (!(_i < items_2.length)) return [3 /*break*/, 17];
-                        item = items_2[_i];
-                        if (!item.isTX()) return [3 /*break*/, 3];
-                        return [4 /*yield*/, this.getItem(peer, item)];
-                    case 2:
-                        tx = _d.sent();
-                        if (!tx) {
-                            notFound.push(item);
-                            return [3 /*break*/, 16];
-                        }
-                        // Coinbases are an insta-ban from any node.
-                        // This should technically never happen, but
-                        // it's worth keeping here just in case. A
-                        // 24-hour ban from any node is rough.
-                        if (tx.isCoinbase()) {
-                            notFound.push(item);
-                            this.logger.warning('Failsafe: tried to relay a coinbase.');
-                            return [3 /*break*/, 16];
-                        }
+    async handleGetData(peer, packet) {
+        const items = packet.items;
+        if (items.length > common.MAX_INV) {
+            this.logger.warning('Peer sent inv with >50k items (%s).', peer.hostname());
+            peer.increaseBan(100);
+            peer.destroy();
+            return;
+        }
+        const notFound = [];
+        let txs = 0;
+        let blocks = 0;
+        let compact = 0;
+        let unknown = -1;
+        for (const item of items) {
+            if (item.isTX()) {
+                const tx = await this.getItem(peer, item);
+                if (!tx) {
+                    notFound.push(item);
+                    continue;
+                }
+                // Coinbases are an insta-ban from any node.
+                // This should technically never happen, but
+                // it's worth keeping here just in case. A
+                // 24-hour ban from any node is rough.
+                if (tx.isCoinbase()) {
+                    notFound.push(item);
+                    this.logger.warning('Failsafe: tried to relay a coinbase.');
+                    continue;
+                }
+                peer.send(new packets.TXPacket(tx, item.hasWitness()));
+                txs += 1;
+                continue;
+            }
+            switch (item.type) {
+                case invTypes.BLOCK:
+                case invTypes.WITNESS_BLOCK: {
+                    const result = await this.sendBlock(peer, item, item.hasWitness());
+                    if (!result) {
+                        notFound.push(item);
+                        continue;
+                    }
+                    blocks += 1;
+                    break;
+                }
+                case invTypes.FILTERED_BLOCK:
+                case invTypes.WITNESS_FILTERED_BLOCK: {
+                    if (!this.options.bip37) {
+                        this.logger.debug('Peer requested a merkleblock without bip37 enabled (%s).', peer.hostname());
+                        peer.destroy();
+                        return;
+                    }
+                    if (!peer.spvFilter) {
+                        notFound.push(item);
+                        continue;
+                    }
+                    const block = await this.getItem(peer, item);
+                    if (!block) {
+                        notFound.push(item);
+                        continue;
+                    }
+                    const merkle = block.toMerkle(peer.spvFilter);
+                    peer.send(new packets.MerkleBlockPacket(merkle));
+                    for (const tx of merkle.txs) {
                         peer.send(new packets.TXPacket(tx, item.hasWitness()));
                         txs += 1;
-                        return [3 /*break*/, 16];
-                    case 3:
-                        _a = item.type;
-                        switch (_a) {
-                            case invTypes.BLOCK: return [3 /*break*/, 4];
-                            case invTypes.WITNESS_BLOCK: return [3 /*break*/, 4];
-                            case invTypes.FILTERED_BLOCK: return [3 /*break*/, 6];
-                            case invTypes.WITNESS_FILTERED_BLOCK: return [3 /*break*/, 6];
-                            case invTypes.CMPCT_BLOCK: return [3 /*break*/, 8];
-                        }
-                        return [3 /*break*/, 13];
-                    case 4: return [4 /*yield*/, this.sendBlock(peer, item, item.hasWitness())];
-                    case 5:
-                        result = _d.sent();
-                        if (!result) {
-                            notFound.push(item);
-                            return [3 /*break*/, 16];
-                        }
-                        blocks += 1;
-                        return [3 /*break*/, 14];
-                    case 6:
-                        if (!this.options.bip37) {
-                            this.logger.debug('Peer requested a merkleblock without bip37 enabled (%s).', peer.hostname());
-                            peer.destroy();
-                            return [2 /*return*/];
-                        }
-                        if (!peer.spvFilter) {
-                            notFound.push(item);
-                            return [3 /*break*/, 16];
-                        }
-                        return [4 /*yield*/, this.getItem(peer, item)];
-                    case 7:
-                        block = _d.sent();
-                        if (!block) {
-                            notFound.push(item);
-                            return [3 /*break*/, 16];
-                        }
-                        merkle = block.toMerkle(peer.spvFilter);
-                        peer.send(new packets.MerkleBlockPacket(merkle));
-                        for (_b = 0, _c = merkle.txs; _b < _c.length; _b++) {
-                            tx = _c[_b];
-                            peer.send(new packets.TXPacket(tx, item.hasWitness()));
-                            txs += 1;
-                        }
-                        blocks += 1;
-                        return [3 /*break*/, 14];
-                    case 8: return [4 /*yield*/, this.chain.getHeight(item.hash)];
-                    case 9:
-                        height = _d.sent();
-                        if (!(height < this.chain.tip.height - 10)) return [3 /*break*/, 11];
-                        return [4 /*yield*/, this.sendBlock(peer, item, peer.compactWitness)];
-                    case 10:
-                        result = _d.sent();
-                        if (!result) {
-                            notFound.push(item);
-                            return [3 /*break*/, 16];
-                        }
-                        blocks += 1;
-                        return [3 /*break*/, 14];
-                    case 11: return [4 /*yield*/, this.getItem(peer, item)];
-                    case 12:
-                        block = _d.sent();
-                        if (!block) {
-                            notFound.push(item);
-                            return [3 /*break*/, 16];
-                        }
-                        peer.sendCompactBlock(block);
-                        blocks += 1;
-                        compact += 1;
-                        return [3 /*break*/, 14];
-                    case 13:
-                        {
-                            unknown = item.type;
-                            notFound.push(item);
-                            return [3 /*break*/, 16];
-                        }
-                        _d.label = 14;
-                    case 14:
-                        if (peer.hashContinue && item.hash.equals(peer.hashContinue)) {
-                            peer.sendInv([new InvItem(invTypes.BLOCK, this.chain.tip.hash)]);
-                            peer.hashContinue = null;
-                        }
-                        // Wait for the peer to read
-                        // before we pull more data
-                        // out of the database.
-                        return [4 /*yield*/, peer.drain()];
-                    case 15:
-                        // Wait for the peer to read
-                        // before we pull more data
-                        // out of the database.
-                        _d.sent();
-                        _d.label = 16;
-                    case 16:
-                        _i++;
-                        return [3 /*break*/, 1];
-                    case 17:
-                        if (notFound.length > 0)
-                            peer.send(new packets.NotFoundPacket(notFound));
-                        if (txs > 0) {
-                            this.logger.debug('Served %d txs with getdata (notfound=%d) (%s).', txs, notFound.length, peer.hostname());
-                        }
-                        if (blocks > 0) {
-                            this.logger.debug('Served %d blocks with getdata (notfound=%d, cmpct=%d) (%s).', blocks, notFound.length, compact, peer.hostname());
-                        }
-                        if (unknown !== -1) {
-                            this.logger.warning('Peer sent an unknown getdata type: %d (%s).', unknown, peer.hostname());
-                        }
-                        return [2 /*return*/];
+                    }
+                    blocks += 1;
+                    break;
                 }
-            });
-        });
-    };
+                case invTypes.CMPCT_BLOCK: {
+                    const height = await this.chain.getHeight(item.hash);
+                    // Fallback to full block.
+                    if (height < this.chain.tip.height - 10) {
+                        const result = await this.sendBlock(peer, item, peer.compactWitness);
+                        if (!result) {
+                            notFound.push(item);
+                            continue;
+                        }
+                        blocks += 1;
+                        break;
+                    }
+                    const block = await this.getItem(peer, item);
+                    if (!block) {
+                        notFound.push(item);
+                        continue;
+                    }
+                    peer.sendCompactBlock(block);
+                    blocks += 1;
+                    compact += 1;
+                    break;
+                }
+                default: {
+                    unknown = item.type;
+                    notFound.push(item);
+                    continue;
+                }
+            }
+            if (peer.hashContinue && item.hash.equals(peer.hashContinue)) {
+                peer.sendInv([new InvItem(invTypes.BLOCK, this.chain.tip.hash)]);
+                peer.hashContinue = null;
+            }
+            // Wait for the peer to read
+            // before we pull more data
+            // out of the database.
+            await peer.drain();
+        }
+        if (notFound.length > 0)
+            peer.send(new packets.NotFoundPacket(notFound));
+        if (txs > 0) {
+            this.logger.debug('Served %d txs with getdata (notfound=%d) (%s).', txs, notFound.length, peer.hostname());
+        }
+        if (blocks > 0) {
+            this.logger.debug('Served %d blocks with getdata (notfound=%d, cmpct=%d) (%s).', blocks, notFound.length, compact, peer.hostname());
+        }
+        if (unknown !== -1) {
+            this.logger.warning('Peer sent an unknown getdata type: %d (%s).', unknown, peer.hostname());
+        }
+    }
     /**
      * Handle peer notfound packet.
      * @method
@@ -1906,23 +1445,16 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {NotFoundPacket} packet
      */
-    Pool.prototype.handleNotFound = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            var items, _i, items_3, item;
-            return __generator(this, function (_a) {
-                items = packet.items;
-                for (_i = 0, items_3 = items; _i < items_3.length; _i++) {
-                    item = items_3[_i];
-                    if (!this.resolveItem(peer, item)) {
-                        this.logger.warning('Peer sent notfound for unrequested item: %h (%s).', item.hash, peer.hostname());
-                        peer.destroy();
-                        return [2 /*return*/];
-                    }
-                }
-                return [2 /*return*/];
-            });
-        });
-    };
+    async handleNotFound(peer, packet) {
+        const items = packet.items;
+        for (const item of items) {
+            if (!this.resolveItem(peer, item)) {
+                this.logger.warning('Peer sent notfound for unrequested item: %h (%s).', item.hash, peer.hostname());
+                peer.destroy();
+                return;
+            }
+        }
+    }
     /**
      * Handle `getblocks` packet.
      * @method
@@ -1930,51 +1462,31 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {GetBlocksPacket} packet
      */
-    Pool.prototype.handleGetBlocks = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            var hash, blocks;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (!this.chain.synced)
-                            return [2 /*return*/];
-                        if (this.options.selfish)
-                            return [2 /*return*/];
-                        if (this.chain.options.spv)
-                            return [2 /*return*/];
-                        if (this.chain.options.prune)
-                            return [2 /*return*/];
-                        return [4 /*yield*/, this.chain.findLocator(packet.locator)];
-                    case 1:
-                        hash = _a.sent();
-                        if (!hash) return [3 /*break*/, 3];
-                        return [4 /*yield*/, this.chain.getNextHash(hash)];
-                    case 2:
-                        hash = _a.sent();
-                        _a.label = 3;
-                    case 3:
-                        blocks = [];
-                        _a.label = 4;
-                    case 4:
-                        if (!hash) return [3 /*break*/, 6];
-                        if (packet.stop && hash.equals(packet.stop))
-                            return [3 /*break*/, 6];
-                        blocks.push(new InvItem(invTypes.BLOCK, hash));
-                        if (blocks.length === 500) {
-                            peer.hashContinue = hash;
-                            return [3 /*break*/, 6];
-                        }
-                        return [4 /*yield*/, this.chain.getNextHash(hash)];
-                    case 5:
-                        hash = _a.sent();
-                        return [3 /*break*/, 4];
-                    case 6:
-                        peer.sendInv(blocks);
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async handleGetBlocks(peer, packet) {
+        if (!this.chain.synced)
+            return;
+        if (this.options.selfish)
+            return;
+        if (this.chain.options.spv)
+            return;
+        if (this.chain.options.prune)
+            return;
+        let hash = await this.chain.findLocator(packet.locator);
+        if (hash)
+            hash = await this.chain.getNextHash(hash);
+        const blocks = [];
+        while (hash) {
+            if (packet.stop && hash.equals(packet.stop))
+                break;
+            blocks.push(new InvItem(invTypes.BLOCK, hash));
+            if (blocks.length === 500) {
+                peer.hashContinue = hash;
+                break;
+            }
+            hash = await this.chain.getNextHash(hash);
+        }
+        peer.sendInv(blocks);
+    }
     /**
      * Handle `getheaders` packet.
      * @method
@@ -1982,60 +1494,38 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {GetHeadersPacket} packet
      */
-    Pool.prototype.handleGetHeaders = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            var hash, entry, headers;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (!this.chain.synced)
-                            return [2 /*return*/];
-                        if (this.options.selfish)
-                            return [2 /*return*/];
-                        if (this.chain.options.spv)
-                            return [2 /*return*/];
-                        if (this.chain.options.prune)
-                            return [2 /*return*/];
-                        if (!(packet.locator.length > 0)) return [3 /*break*/, 4];
-                        return [4 /*yield*/, this.chain.findLocator(packet.locator)];
-                    case 1:
-                        hash = _a.sent();
-                        if (!hash) return [3 /*break*/, 3];
-                        return [4 /*yield*/, this.chain.getNextHash(hash)];
-                    case 2:
-                        hash = _a.sent();
-                        _a.label = 3;
-                    case 3: return [3 /*break*/, 5];
-                    case 4:
-                        hash = packet.stop;
-                        _a.label = 5;
-                    case 5:
-                        if (!hash) return [3 /*break*/, 7];
-                        return [4 /*yield*/, this.chain.getEntry(hash)];
-                    case 6:
-                        entry = _a.sent();
-                        _a.label = 7;
-                    case 7:
-                        headers = [];
-                        _a.label = 8;
-                    case 8:
-                        if (!entry) return [3 /*break*/, 10];
-                        headers.push(entry.toHeaders());
-                        if (packet.stop && entry.hash.equals(packet.stop))
-                            return [3 /*break*/, 10];
-                        if (headers.length === 2000)
-                            return [3 /*break*/, 10];
-                        return [4 /*yield*/, this.chain.getNext(entry)];
-                    case 9:
-                        entry = _a.sent();
-                        return [3 /*break*/, 8];
-                    case 10:
-                        peer.sendHeaders(headers);
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async handleGetHeaders(peer, packet) {
+        if (!this.chain.synced)
+            return;
+        if (this.options.selfish)
+            return;
+        if (this.chain.options.spv)
+            return;
+        if (this.chain.options.prune)
+            return;
+        let hash;
+        if (packet.locator.length > 0) {
+            hash = await this.chain.findLocator(packet.locator);
+            if (hash)
+                hash = await this.chain.getNextHash(hash);
+        }
+        else {
+            hash = packet.stop;
+        }
+        let entry;
+        if (hash)
+            entry = await this.chain.getEntry(hash);
+        const headers = [];
+        while (entry) {
+            headers.push(entry.toHeaders());
+            if (packet.stop && entry.hash.equals(packet.stop))
+                break;
+            if (headers.length === 2000)
+                break;
+            entry = await this.chain.getNext(entry);
+        }
+        peer.sendHeaders(headers);
+    }
     /**
      * Handle `headers` packet from a given peer.
      * @method
@@ -2044,27 +1534,15 @@ var Pool = /** @class */ (function (_super) {
      * @param {HeadersPacket} packet
      * @returns {Promise}
      */
-    Pool.prototype.handleHeaders = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            var unlock;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.locker.lock()];
-                    case 1:
-                        unlock = _a.sent();
-                        _a.label = 2;
-                    case 2:
-                        _a.trys.push([2, , 4, 5]);
-                        return [4 /*yield*/, this._handleHeaders(peer, packet)];
-                    case 3: return [2 /*return*/, _a.sent()];
-                    case 4:
-                        unlock();
-                        return [7 /*endfinally*/];
-                    case 5: return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async handleHeaders(peer, packet) {
+        const unlock = await this.locker.lock();
+        try {
+            return await this._handleHeaders(peer, packet);
+        }
+        finally {
+            unlock();
+        }
+    }
     /**
      * Handle `headers` packet from
      * a given peer without a lock.
@@ -2074,71 +1552,64 @@ var Pool = /** @class */ (function (_super) {
      * @param {HeadersPacket} packet
      * @returns {Promise}
      */
-    Pool.prototype._handleHeaders = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            var headers, checkpoint, node, _i, headers_1, header, last, hash, height;
-            return __generator(this, function (_a) {
-                headers = packet.items;
-                if (!this.checkpoints)
-                    return [2 /*return*/];
-                if (!this.syncing)
-                    return [2 /*return*/];
-                if (!peer.loader)
-                    return [2 /*return*/];
-                if (headers.length === 0)
-                    return [2 /*return*/];
-                if (headers.length > 2000) {
-                    peer.increaseBan(100);
-                    return [2 /*return*/];
+    async _handleHeaders(peer, packet) {
+        const headers = packet.items;
+        if (!this.checkpoints)
+            return;
+        if (!this.syncing)
+            return;
+        if (!peer.loader)
+            return;
+        if (headers.length === 0)
+            return;
+        if (headers.length > 2000) {
+            peer.increaseBan(100);
+            return;
+        }
+        assert(this.headerChain.size > 0);
+        let checkpoint = false;
+        let node = null;
+        for (const header of headers) {
+            const last = this.headerChain.tail;
+            const hash = header.hash();
+            const height = last.height + 1;
+            if (!header.verify()) {
+                this.logger.warning('Peer sent an invalid header (%s).', peer.hostname());
+                peer.increaseBan(100);
+                peer.destroy();
+                return;
+            }
+            if (!header.prevBlock.equals(last.hash)) {
+                this.logger.warning('Peer sent a bad header chain (%s).', peer.hostname());
+                peer.destroy();
+                return;
+            }
+            node = new HeaderEntry(hash, height);
+            if (node.height === this.headerTip.height) {
+                if (!node.hash.equals(this.headerTip.hash)) {
+                    this.logger.warning('Peer sent an invalid checkpoint (%s).', peer.hostname());
+                    peer.destroy();
+                    return;
                 }
-                assert(this.headerChain.size > 0);
-                checkpoint = false;
-                node = null;
-                for (_i = 0, headers_1 = headers; _i < headers_1.length; _i++) {
-                    header = headers_1[_i];
-                    last = this.headerChain.tail;
-                    hash = header.hash();
-                    height = last.height + 1;
-                    if (!header.verify()) {
-                        this.logger.warning('Peer sent an invalid header (%s).', peer.hostname());
-                        peer.increaseBan(100);
-                        peer.destroy();
-                        return [2 /*return*/];
-                    }
-                    if (!header.prevBlock.equals(last.hash)) {
-                        this.logger.warning('Peer sent a bad header chain (%s).', peer.hostname());
-                        peer.destroy();
-                        return [2 /*return*/];
-                    }
-                    node = new HeaderEntry(hash, height);
-                    if (node.height === this.headerTip.height) {
-                        if (!node.hash.equals(this.headerTip.hash)) {
-                            this.logger.warning('Peer sent an invalid checkpoint (%s).', peer.hostname());
-                            peer.destroy();
-                            return [2 /*return*/];
-                        }
-                        checkpoint = true;
-                    }
-                    if (!this.headerNext)
-                        this.headerNext = node;
-                    this.headerChain.push(node);
-                }
-                this.logger.debug('Received %d headers from peer (%s).', headers.length, peer.hostname());
-                // If we received a valid header
-                // chain, consider this a "block".
-                peer.blockTime = Date.now();
-                // Request the blocks we just added.
-                if (checkpoint) {
-                    this.headerChain.shift();
-                    this.resolveHeaders(peer);
-                    return [2 /*return*/];
-                }
-                // Request more headers.
-                peer.sendGetHeaders([node.hash], this.headerTip.hash);
-                return [2 /*return*/];
-            });
-        });
-    };
+                checkpoint = true;
+            }
+            if (!this.headerNext)
+                this.headerNext = node;
+            this.headerChain.push(node);
+        }
+        this.logger.debug('Received %d headers from peer (%s).', headers.length, peer.hostname());
+        // If we received a valid header
+        // chain, consider this a "block".
+        peer.blockTime = Date.now();
+        // Request the blocks we just added.
+        if (checkpoint) {
+            this.headerChain.shift();
+            this.resolveHeaders(peer);
+            return;
+        }
+        // Request more headers.
+        peer.sendGetHeaders([node.hash], this.headerTip.hash);
+    }
     /**
      * Handle `sendheaders` packet.
      * @method
@@ -2147,14 +1618,9 @@ var Pool = /** @class */ (function (_super) {
      * @param {SendHeadersPacket} packet
      * @returns {Promise}
      */
-    Pool.prototype.handleSendHeaders = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                ;
-                return [2 /*return*/];
-            });
-        });
-    };
+    async handleSendHeaders(peer, packet) {
+        ;
+    }
     /**
      * Handle `block` packet. Attempt to add to chain.
      * @method
@@ -2163,25 +1629,14 @@ var Pool = /** @class */ (function (_super) {
      * @param {BlockPacket} packet
      * @returns {Promise}
      */
-    Pool.prototype.handleBlock = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            var flags;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        flags = chainCommon.flags.DEFAULT_FLAGS;
-                        if (this.options.spv) {
-                            this.logger.warning('Peer sent unsolicited block (%s).', peer.hostname());
-                            return [2 /*return*/];
-                        }
-                        return [4 /*yield*/, this.addBlock(peer, packet.block, flags)];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async handleBlock(peer, packet) {
+        const flags = chainCommon.flags.DEFAULT_FLAGS;
+        if (this.options.spv) {
+            this.logger.warning('Peer sent unsolicited block (%s).', peer.hostname());
+            return;
+        }
+        await this.addBlock(peer, packet.block, flags);
+    }
     /**
      * Attempt to add block to chain.
      * @method
@@ -2190,29 +1645,16 @@ var Pool = /** @class */ (function (_super) {
      * @param {Block} block
      * @returns {Promise}
      */
-    Pool.prototype.addBlock = function (peer, block, flags) {
-        return __awaiter(this, void 0, void 0, function () {
-            var hash, unlock;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        hash = block.hash();
-                        return [4 /*yield*/, this.locker.lock(hash)];
-                    case 1:
-                        unlock = _a.sent();
-                        _a.label = 2;
-                    case 2:
-                        _a.trys.push([2, , 4, 5]);
-                        return [4 /*yield*/, this._addBlock(peer, block, flags)];
-                    case 3: return [2 /*return*/, _a.sent()];
-                    case 4:
-                        unlock();
-                        return [7 /*endfinally*/];
-                    case 5: return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async addBlock(peer, block, flags) {
+        const hash = block.hash();
+        const unlock = await this.locker.lock(hash);
+        try {
+            return await this._addBlock(peer, block, flags);
+        }
+        finally {
+            unlock();
+        }
+    }
     /**
      * Attempt to add block to chain (without a lock).
      * @method
@@ -2221,68 +1663,55 @@ var Pool = /** @class */ (function (_super) {
      * @param {Block} block
      * @returns {Promise}
      */
-    Pool.prototype._addBlock = function (peer, block, flags) {
-        return __awaiter(this, void 0, void 0, function () {
-            var hash, entry, err_1, height;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (!this.syncing)
-                            return [2 /*return*/];
-                        hash = block.hash();
-                        if (!this.resolveBlock(peer, hash)) {
-                            this.logger.warning('Received unrequested block: %h (%s).', block.hash(), peer.hostname());
-                            peer.destroy();
-                            return [2 /*return*/];
-                        }
-                        peer.blockTime = Date.now();
-                        _a.label = 1;
-                    case 1:
-                        _a.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, this.chain.add(block, flags, peer.id)];
-                    case 2:
-                        entry = _a.sent();
-                        return [3 /*break*/, 4];
-                    case 3:
-                        err_1 = _a.sent();
-                        if (err_1.type === 'VerifyError') {
-                            peer.reject('block', err_1);
-                            this.logger.warning(err_1);
-                            return [2 /*return*/];
-                        }
-                        throw err_1;
-                    case 4:
-                        if (!!entry) return [3 /*break*/, 6];
-                        if (this.checkpoints) {
-                            this.logger.warning('Peer sent orphan block with getheaders (%s).', peer.hostname());
-                            return [2 /*return*/];
-                        }
-                        height = block.getCoinbaseHeight();
-                        if (height !== -1) {
-                            peer.bestHash = hash;
-                            peer.bestHeight = height;
-                            this.resolveHeight(hash, height);
-                        }
-                        this.logger.debug('Peer sent an orphan block. Resolving.');
-                        return [4 /*yield*/, this.resolveOrphan(peer, hash)];
-                    case 5:
-                        _a.sent();
-                        return [2 /*return*/];
-                    case 6:
-                        if (this.chain.synced) {
-                            peer.bestHash = entry.hash;
-                            peer.bestHeight = entry.height;
-                            this.resolveHeight(entry.hash, entry.height);
-                        }
-                        this.logStatus(block);
-                        return [4 /*yield*/, this.resolveChain(peer, hash)];
-                    case 7:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async _addBlock(peer, block, flags) {
+        if (!this.syncing)
+            return;
+        const hash = block.hash();
+        if (!this.resolveBlock(peer, hash)) {
+            this.logger.warning('Received unrequested block: %h (%s).', block.hash(), peer.hostname());
+            peer.destroy();
+            return;
+        }
+        peer.blockTime = Date.now();
+        let entry;
+        try {
+            entry = await this.chain.add(block, flags, peer.id);
+        }
+        catch (err) {
+            if (err.type === 'VerifyError') {
+                peer.reject('block', err);
+                this.logger.warning(err);
+                return;
+            }
+            throw err;
+        }
+        // Block was orphaned.
+        if (!entry) {
+            if (this.checkpoints) {
+                this.logger.warning('Peer sent orphan block with getheaders (%s).', peer.hostname());
+                return;
+            }
+            // During a getblocks sync, peers send
+            // their best tip frequently. We can grab
+            // the height commitment from the coinbase.
+            const height = block.getCoinbaseHeight();
+            if (height !== -1) {
+                peer.bestHash = hash;
+                peer.bestHeight = height;
+                this.resolveHeight(hash, height);
+            }
+            this.logger.debug('Peer sent an orphan block. Resolving.');
+            await this.resolveOrphan(peer, hash);
+            return;
+        }
+        if (this.chain.synced) {
+            peer.bestHash = entry.hash;
+            peer.bestHeight = entry.height;
+            this.resolveHeight(entry.hash, entry.height);
+        }
+        this.logStatus(block);
+        await this.resolveChain(peer, hash);
+    }
     /**
      * Resolve header chain.
      * @method
@@ -2291,45 +1720,34 @@ var Pool = /** @class */ (function (_super) {
      * @param {Hash} hash
      * @returns {Promise}
      */
-    Pool.prototype.resolveChain = function (peer, hash) {
-        return __awaiter(this, void 0, void 0, function () {
-            var node;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (!this.checkpoints)
-                            return [2 /*return*/];
-                        if (!peer.loader)
-                            return [2 /*return*/];
-                        if (peer.destroyed)
-                            throw new Error('Peer was destroyed (header chain resolution).');
-                        node = this.headerChain.head;
-                        assert(node);
-                        if (!hash.equals(node.hash)) {
-                            this.logger.warning('Header hash mismatch %h != %h (%s).', hash, node.hash, peer.hostname());
-                            peer.destroy();
-                            return [2 /*return*/];
-                        }
-                        if (node.height < this.network.lastCheckpoint) {
-                            if (node.height === this.headerTip.height) {
-                                this.logger.info('Received checkpoint %h (%d).', node.hash, node.height);
-                                this.headerTip = this.getNextTip(node.height);
-                                peer.sendGetHeaders([hash], this.headerTip.hash);
-                                return [2 /*return*/];
-                            }
-                            this.headerChain.shift();
-                            this.resolveHeaders(peer);
-                            return [2 /*return*/];
-                        }
-                        this.logger.info('Switching to getblocks (%s).', peer.hostname());
-                        return [4 /*yield*/, this.switchSync(peer, hash)];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async resolveChain(peer, hash) {
+        if (!this.checkpoints)
+            return;
+        if (!peer.loader)
+            return;
+        if (peer.destroyed)
+            throw new Error('Peer was destroyed (header chain resolution).');
+        const node = this.headerChain.head;
+        assert(node);
+        if (!hash.equals(node.hash)) {
+            this.logger.warning('Header hash mismatch %h != %h (%s).', hash, node.hash, peer.hostname());
+            peer.destroy();
+            return;
+        }
+        if (node.height < this.network.lastCheckpoint) {
+            if (node.height === this.headerTip.height) {
+                this.logger.info('Received checkpoint %h (%d).', node.hash, node.height);
+                this.headerTip = this.getNextTip(node.height);
+                peer.sendGetHeaders([hash], this.headerTip.hash);
+                return;
+            }
+            this.headerChain.shift();
+            this.resolveHeaders(peer);
+            return;
+        }
+        this.logger.info('Switching to getblocks (%s).', peer.hostname());
+        await this.switchSync(peer, hash);
+    }
     /**
      * Switch to getblocks.
      * @method
@@ -2338,24 +1756,14 @@ var Pool = /** @class */ (function (_super) {
      * @param {Hash} hash
      * @returns {Promise}
      */
-    Pool.prototype.switchSync = function (peer, hash) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        assert(this.checkpoints);
-                        this.checkpoints = false;
-                        this.headerTip = null;
-                        this.headerChain.reset();
-                        this.headerNext = null;
-                        return [4 /*yield*/, this.getBlocks(peer, hash)];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async switchSync(peer, hash) {
+        assert(this.checkpoints);
+        this.checkpoints = false;
+        this.headerTip = null;
+        this.headerChain.reset();
+        this.headerNext = null;
+        await this.getBlocks(peer, hash);
+    }
     /**
      * Handle bad orphan.
      * @method
@@ -2364,8 +1772,8 @@ var Pool = /** @class */ (function (_super) {
      * @param {VerifyError} err
      * @param {Number} id
      */
-    Pool.prototype.handleBadOrphan = function (msg, err, id) {
-        var peer = this.peers.find(id);
+    handleBadOrphan(msg, err, id) {
+        const peer = this.peers.find(id);
         if (!peer) {
             this.logger.warning('Could not find offending peer for orphan: %h (%d).', err.hash, id);
             return;
@@ -2373,13 +1781,13 @@ var Pool = /** @class */ (function (_super) {
         this.logger.debug('Punishing peer for sending a bad orphan (%s).', peer.hostname());
         // Punish the original peer who sent this.
         peer.reject(msg, err);
-    };
+    }
     /**
      * Log sync status.
      * @private
      * @param {Block} block
      */
-    Pool.prototype.logStatus = function (block) {
+    logStatus(block) {
         if (this.chain.height % 20 === 0) {
             this.logger.debug('Status:'
                 + ' time=%s height=%d progress=%s'
@@ -2389,7 +1797,7 @@ var Pool = /** @class */ (function (_super) {
         if (this.chain.height % 2000 === 0) {
             this.logger.info('Received 2000 more blocks (height=%d, hash=%h).', this.chain.height, block.hash());
         }
-    };
+    }
     /**
      * Handle a transaction. Attempt to add to mempool.
      * @method
@@ -2398,29 +1806,16 @@ var Pool = /** @class */ (function (_super) {
      * @param {TXPacket} packet
      * @returns {Promise}
      */
-    Pool.prototype.handleTX = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            var hash, unlock;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        hash = packet.tx.hash();
-                        return [4 /*yield*/, this.locker.lock(hash)];
-                    case 1:
-                        unlock = _a.sent();
-                        _a.label = 2;
-                    case 2:
-                        _a.trys.push([2, , 4, 5]);
-                        return [4 /*yield*/, this._handleTX(peer, packet)];
-                    case 3: return [2 /*return*/, _a.sent()];
-                    case 4:
-                        unlock();
-                        return [7 /*endfinally*/];
-                    case 5: return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async handleTX(peer, packet) {
+        const hash = packet.tx.hash();
+        const unlock = await this.locker.lock(hash);
+        try {
+            return await this._handleTX(peer, packet);
+        }
+        finally {
+            unlock();
+        }
+    }
     /**
      * Handle a transaction. Attempt to add to mempool (without a lock).
      * @method
@@ -2429,72 +1824,58 @@ var Pool = /** @class */ (function (_super) {
      * @param {TXPacket} packet
      * @returns {Promise}
      */
-    Pool.prototype._handleTX = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            var tx, hash, flags, block, missing, err_2;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        tx = packet.tx;
-                        hash = tx.hash();
-                        flags = chainCommon.flags.VERIFY_NONE;
-                        block = peer.merkleBlock;
-                        if (!block) return [3 /*break*/, 3];
-                        assert(peer.merkleMatches > 0);
-                        assert(peer.merkleMap);
-                        if (!block.hasTX(hash)) return [3 /*break*/, 3];
-                        if (peer.merkleMap.has(hash)) {
-                            this.logger.warning('Peer sent duplicate merkle tx: %h (%s).', tx.hash(), peer.hostname());
-                            peer.increaseBan(100);
-                            return [2 /*return*/];
-                        }
-                        peer.merkleMap.add(hash);
-                        block.txs.push(tx);
-                        if (!(--peer.merkleMatches === 0)) return [3 /*break*/, 2];
-                        peer.merkleBlock = null;
-                        peer.merkleTime = -1;
-                        peer.merkleMatches = 0;
-                        peer.merkleMap = null;
-                        return [4 /*yield*/, this._addBlock(peer, block, flags)];
-                    case 1:
-                        _a.sent();
-                        _a.label = 2;
-                    case 2: return [2 /*return*/];
-                    case 3:
-                        if (!this.resolveTX(peer, hash)) {
-                            this.logger.warning('Peer sent unrequested tx: %h (%s).', tx.hash(), peer.hostname());
-                            peer.destroy();
-                            return [2 /*return*/];
-                        }
-                        if (!this.mempool) {
-                            this.emit('tx', tx);
-                            return [2 /*return*/];
-                        }
-                        _a.label = 4;
-                    case 4:
-                        _a.trys.push([4, 6, , 7]);
-                        return [4 /*yield*/, this.mempool.addTX(tx, peer.id)];
-                    case 5:
-                        missing = _a.sent();
-                        return [3 /*break*/, 7];
-                    case 6:
-                        err_2 = _a.sent();
-                        if (err_2.type === 'VerifyError') {
-                            peer.reject('tx', err_2);
-                            this.logger.info(err_2);
-                            return [2 /*return*/];
-                        }
-                        throw err_2;
-                    case 7:
-                        if (missing && missing.length > 0) {
-                            this.logger.debug('Requesting %d missing transactions (%s).', missing.length, peer.hostname());
-                            this.ensureTX(peer, missing);
-                        }
-                        return [2 /*return*/];
+    async _handleTX(peer, packet) {
+        const tx = packet.tx;
+        const hash = tx.hash();
+        const flags = chainCommon.flags.VERIFY_NONE;
+        const block = peer.merkleBlock;
+        if (block) {
+            assert(peer.merkleMatches > 0);
+            assert(peer.merkleMap);
+            if (block.hasTX(hash)) {
+                if (peer.merkleMap.has(hash)) {
+                    this.logger.warning('Peer sent duplicate merkle tx: %h (%s).', tx.hash(), peer.hostname());
+                    peer.increaseBan(100);
+                    return;
                 }
-            });
-        });
-    };
+                peer.merkleMap.add(hash);
+                block.txs.push(tx);
+                if (--peer.merkleMatches === 0) {
+                    peer.merkleBlock = null;
+                    peer.merkleTime = -1;
+                    peer.merkleMatches = 0;
+                    peer.merkleMap = null;
+                    await this._addBlock(peer, block, flags);
+                }
+                return;
+            }
+        }
+        if (!this.resolveTX(peer, hash)) {
+            this.logger.warning('Peer sent unrequested tx: %h (%s).', tx.hash(), peer.hostname());
+            peer.destroy();
+            return;
+        }
+        if (!this.mempool) {
+            this.emit('tx', tx);
+            return;
+        }
+        let missing;
+        try {
+            missing = await this.mempool.addTX(tx, peer.id);
+        }
+        catch (err) {
+            if (err.type === 'VerifyError') {
+                peer.reject('tx', err);
+                this.logger.info(err);
+                return;
+            }
+            throw err;
+        }
+        if (missing && missing.length > 0) {
+            this.logger.debug('Requesting %d missing transactions (%s).', missing.length, peer.hostname());
+            this.ensureTX(peer, missing);
+        }
+    }
     /**
      * Handle peer reject event.
      * @method
@@ -2502,21 +1883,15 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {RejectPacket} packet
      */
-    Pool.prototype.handleReject = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            var entry;
-            return __generator(this, function (_a) {
-                this.logger.warning('Received reject (%s): msg=%s code=%s reason=%s hash=%h.', peer.hostname(), packet.message, packet.getCode(), packet.reason, packet.hash);
-                if (!packet.hash)
-                    return [2 /*return*/];
-                entry = this.invMap.get(packet.hash);
-                if (!entry)
-                    return [2 /*return*/];
-                entry.handleReject(peer);
-                return [2 /*return*/];
-            });
-        });
-    };
+    async handleReject(peer, packet) {
+        this.logger.warning('Received reject (%s): msg=%s code=%s reason=%s hash=%h.', peer.hostname(), packet.message, packet.getCode(), packet.reason, packet.hash);
+        if (!packet.hash)
+            return;
+        const entry = this.invMap.get(packet.hash);
+        if (!entry)
+            return;
+        entry.handleReject(peer);
+    }
     /**
      * Handle `mempool` packet.
      * @method
@@ -2524,32 +1899,24 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {MempoolPacket} packet
      */
-    Pool.prototype.handleMempool = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            var items, _i, _a, hash;
-            return __generator(this, function (_b) {
-                if (!this.mempool)
-                    return [2 /*return*/];
-                if (!this.chain.synced)
-                    return [2 /*return*/];
-                if (this.options.selfish)
-                    return [2 /*return*/];
-                if (!this.options.bip37) {
-                    this.logger.debug('Peer requested mempool without bip37 enabled (%s).', peer.hostname());
-                    peer.destroy();
-                    return [2 /*return*/];
-                }
-                items = [];
-                for (_i = 0, _a = this.mempool.map.keys(); _i < _a.length; _i++) {
-                    hash = _a[_i];
-                    items.push(new InvItem(invTypes.TX, hash));
-                }
-                this.logger.debug('Sending mempool snapshot (%s).', peer.hostname());
-                peer.queueInv(items);
-                return [2 /*return*/];
-            });
-        });
-    };
+    async handleMempool(peer, packet) {
+        if (!this.mempool)
+            return;
+        if (!this.chain.synced)
+            return;
+        if (this.options.selfish)
+            return;
+        if (!this.options.bip37) {
+            this.logger.debug('Peer requested mempool without bip37 enabled (%s).', peer.hostname());
+            peer.destroy();
+            return;
+        }
+        const items = [];
+        for (const hash of this.mempool.map.keys())
+            items.push(new InvItem(invTypes.TX, hash));
+        this.logger.debug('Sending mempool snapshot (%s).', peer.hostname());
+        peer.queueInv(items);
+    }
     /**
      * Handle `filterload` packet.
      * @method
@@ -2557,14 +1924,9 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {FilterLoadPacket} packet
      */
-    Pool.prototype.handleFilterLoad = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                ;
-                return [2 /*return*/];
-            });
-        });
-    };
+    async handleFilterLoad(peer, packet) {
+        ;
+    }
     /**
      * Handle `filteradd` packet.
      * @method
@@ -2572,14 +1934,9 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {FilterAddPacket} packet
      */
-    Pool.prototype.handleFilterAdd = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                ;
-                return [2 /*return*/];
-            });
-        });
-    };
+    async handleFilterAdd(peer, packet) {
+        ;
+    }
     /**
      * Handle `filterclear` packet.
      * @method
@@ -2587,14 +1944,9 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {FilterClearPacket} packet
      */
-    Pool.prototype.handleFilterClear = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                ;
-                return [2 /*return*/];
-            });
-        });
-    };
+    async handleFilterClear(peer, packet) {
+        ;
+    }
     /**
      * Handle `merkleblock` packet.
      * @method
@@ -2602,29 +1954,16 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {MerkleBlockPacket} block
      */
-    Pool.prototype.handleMerkleBlock = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            var hash, unlock;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        hash = packet.block.hash();
-                        return [4 /*yield*/, this.locker.lock(hash)];
-                    case 1:
-                        unlock = _a.sent();
-                        _a.label = 2;
-                    case 2:
-                        _a.trys.push([2, , 4, 5]);
-                        return [4 /*yield*/, this._handleMerkleBlock(peer, packet)];
-                    case 3: return [2 /*return*/, _a.sent()];
-                    case 4:
-                        unlock();
-                        return [7 /*endfinally*/];
-                    case 5: return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async handleMerkleBlock(peer, packet) {
+        const hash = packet.block.hash();
+        const unlock = await this.locker.lock(hash);
+        try {
+            return await this._handleMerkleBlock(peer, packet);
+        }
+        finally {
+            unlock();
+        }
+    }
     /**
      * Handle `merkleblock` packet (without a lock).
      * @method
@@ -2632,54 +1971,43 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {MerkleBlockPacket} block
      */
-    Pool.prototype._handleMerkleBlock = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            var block, hash, tree, flags;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (!this.syncing)
-                            return [2 /*return*/];
-                        // Potential DoS.
-                        if (!this.options.spv) {
-                            this.logger.warning('Peer sent unsolicited merkleblock (%s).', peer.hostname());
-                            peer.increaseBan(100);
-                            return [2 /*return*/];
-                        }
-                        block = packet.block;
-                        hash = block.hash();
-                        if (!peer.blockMap.has(hash)) {
-                            this.logger.warning('Peer sent an unrequested merkleblock (%s).', peer.hostname());
-                            peer.destroy();
-                            return [2 /*return*/];
-                        }
-                        if (peer.merkleBlock) {
-                            this.logger.warning('Peer sent a merkleblock prematurely (%s).', peer.hostname());
-                            peer.increaseBan(100);
-                            return [2 /*return*/];
-                        }
-                        if (!block.verify()) {
-                            this.logger.warning('Peer sent an invalid merkleblock (%s).', peer.hostname());
-                            peer.increaseBan(100);
-                            return [2 /*return*/];
-                        }
-                        tree = block.getTree();
-                        if (!(tree.matches.length === 0)) return [3 /*break*/, 2];
-                        flags = chainCommon.flags.VERIFY_NONE;
-                        return [4 /*yield*/, this._addBlock(peer, block, flags)];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                    case 2:
-                        peer.merkleBlock = block;
-                        peer.merkleTime = Date.now();
-                        peer.merkleMatches = tree.matches.length;
-                        peer.merkleMap = new BufferSet();
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async _handleMerkleBlock(peer, packet) {
+        if (!this.syncing)
+            return;
+        // Potential DoS.
+        if (!this.options.spv) {
+            this.logger.warning('Peer sent unsolicited merkleblock (%s).', peer.hostname());
+            peer.increaseBan(100);
+            return;
+        }
+        const block = packet.block;
+        const hash = block.hash();
+        if (!peer.blockMap.has(hash)) {
+            this.logger.warning('Peer sent an unrequested merkleblock (%s).', peer.hostname());
+            peer.destroy();
+            return;
+        }
+        if (peer.merkleBlock) {
+            this.logger.warning('Peer sent a merkleblock prematurely (%s).', peer.hostname());
+            peer.increaseBan(100);
+            return;
+        }
+        if (!block.verify()) {
+            this.logger.warning('Peer sent an invalid merkleblock (%s).', peer.hostname());
+            peer.increaseBan(100);
+            return;
+        }
+        const tree = block.getTree();
+        if (tree.matches.length === 0) {
+            const flags = chainCommon.flags.VERIFY_NONE;
+            await this._addBlock(peer, block, flags);
+            return;
+        }
+        peer.merkleBlock = block;
+        peer.merkleTime = Date.now();
+        peer.merkleMatches = tree.matches.length;
+        peer.merkleMap = new BufferSet();
+    }
     /**
      * Handle `sendcmpct` packet.
      * @method
@@ -2687,14 +2015,9 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {FeeFilterPacket} packet
      */
-    Pool.prototype.handleFeeFilter = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                ;
-                return [2 /*return*/];
-            });
-        });
-    };
+    async handleFeeFilter(peer, packet) {
+        ;
+    }
     /**
      * Handle `sendcmpct` packet.
      * @method
@@ -2702,14 +2025,9 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {SendCmpctPacket} packet
      */
-    Pool.prototype.handleSendCmpct = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                ;
-                return [2 /*return*/];
-            });
-        });
-    };
+    async handleSendCmpct(peer, packet) {
+        ;
+    }
     /**
      * Handle `cmpctblock` packet.
      * @method
@@ -2717,93 +2035,83 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {CompactBlockPacket} packet
      */
-    Pool.prototype.handleCmpctBlock = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            var block, hash, witness, result, full, flags;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        block = packet.block;
-                        hash = block.hash();
-                        witness = peer.compactWitness;
-                        if (!this.syncing)
-                            return [2 /*return*/];
-                        if (!this.options.compact) {
-                            this.logger.info('Peer sent unsolicited cmpctblock (%s).', peer.hostname());
-                            this.destroy();
-                            return [2 /*return*/];
-                        }
-                        if (!peer.hasCompactSupport() || !peer.hasCompact()) {
-                            this.logger.info('Peer sent unsolicited cmpctblock (%s).', peer.hostname());
-                            this.destroy();
-                            return [2 /*return*/];
-                        }
-                        if (peer.compactBlocks.has(hash)) {
-                            this.logger.debug('Peer sent us a duplicate compact block (%s).', peer.hostname());
-                            return [2 /*return*/];
-                        }
-                        if (this.compactBlocks.has(hash)) {
-                            this.logger.debug('Already waiting for compact block %h (%s).', hash, peer.hostname());
-                            return [2 /*return*/];
-                        }
-                        if (!peer.blockMap.has(hash)) {
-                            if (this.options.blockMode !== 1) {
-                                this.logger.warning('Peer sent us an unrequested compact block (%s).', peer.hostname());
-                                peer.destroy();
-                                return [2 /*return*/];
-                            }
-                            peer.blockMap.set(hash, Date.now());
-                            assert(!this.blockMap.has(hash));
-                            this.blockMap.add(hash);
-                        }
-                        if (!this.mempool) {
-                            this.logger.warning('Requesting compact blocks without a mempool!');
-                            return [2 /*return*/];
-                        }
-                        if (!block.verify()) {
-                            this.logger.debug('Peer sent an invalid compact block (%s).', peer.hostname());
-                            peer.increaseBan(100);
-                            return [2 /*return*/];
-                        }
-                        try {
-                            result = block.init();
-                        }
-                        catch (e) {
-                            this.logger.debug('Peer sent an invalid compact block (%s).', peer.hostname());
-                            peer.increaseBan(100);
-                            return [2 /*return*/];
-                        }
-                        if (!result) {
-                            this.logger.warning('Siphash collision for %h. Requesting full block (%s).', block.hash(), peer.hostname());
-                            peer.getFullBlock(hash);
-                            peer.increaseBan(10);
-                            return [2 /*return*/];
-                        }
-                        full = block.fillMempool(witness, this.mempool);
-                        if (!full) return [3 /*break*/, 2];
-                        this.logger.debug('Received full compact block %h (%s).', block.hash(), peer.hostname());
-                        flags = chainCommon.flags.VERIFY_BODY;
-                        return [4 /*yield*/, this.addBlock(peer, block.toBlock(), flags)];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                    case 2:
-                        if (peer.compactBlocks.size >= 15) {
-                            this.logger.warning('Compact block DoS attempt (%s).', peer.hostname());
-                            peer.destroy();
-                            return [2 /*return*/];
-                        }
-                        block.now = Date.now();
-                        assert(!peer.compactBlocks.has(hash));
-                        peer.compactBlocks.set(hash, block);
-                        this.compactBlocks.add(hash);
-                        this.logger.debug('Received non-full compact block %h tx=%d/%d (%s).', block.hash(), block.count, block.totalTX, peer.hostname());
-                        peer.send(new packets.GetBlockTxnPacket(block.toRequest()));
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async handleCmpctBlock(peer, packet) {
+        const block = packet.block;
+        const hash = block.hash();
+        const witness = peer.compactWitness;
+        if (!this.syncing)
+            return;
+        if (!this.options.compact) {
+            this.logger.info('Peer sent unsolicited cmpctblock (%s).', peer.hostname());
+            this.destroy();
+            return;
+        }
+        if (!peer.hasCompactSupport() || !peer.hasCompact()) {
+            this.logger.info('Peer sent unsolicited cmpctblock (%s).', peer.hostname());
+            this.destroy();
+            return;
+        }
+        if (peer.compactBlocks.has(hash)) {
+            this.logger.debug('Peer sent us a duplicate compact block (%s).', peer.hostname());
+            return;
+        }
+        if (this.compactBlocks.has(hash)) {
+            this.logger.debug('Already waiting for compact block %h (%s).', hash, peer.hostname());
+            return;
+        }
+        if (!peer.blockMap.has(hash)) {
+            if (this.options.blockMode !== 1) {
+                this.logger.warning('Peer sent us an unrequested compact block (%s).', peer.hostname());
+                peer.destroy();
+                return;
+            }
+            peer.blockMap.set(hash, Date.now());
+            assert(!this.blockMap.has(hash));
+            this.blockMap.add(hash);
+        }
+        if (!this.mempool) {
+            this.logger.warning('Requesting compact blocks without a mempool!');
+            return;
+        }
+        if (!block.verify()) {
+            this.logger.debug('Peer sent an invalid compact block (%s).', peer.hostname());
+            peer.increaseBan(100);
+            return;
+        }
+        let result;
+        try {
+            result = block.init();
+        }
+        catch (e) {
+            this.logger.debug('Peer sent an invalid compact block (%s).', peer.hostname());
+            peer.increaseBan(100);
+            return;
+        }
+        if (!result) {
+            this.logger.warning('Siphash collision for %h. Requesting full block (%s).', block.hash(), peer.hostname());
+            peer.getFullBlock(hash);
+            peer.increaseBan(10);
+            return;
+        }
+        const full = block.fillMempool(witness, this.mempool);
+        if (full) {
+            this.logger.debug('Received full compact block %h (%s).', block.hash(), peer.hostname());
+            const flags = chainCommon.flags.VERIFY_BODY;
+            await this.addBlock(peer, block.toBlock(), flags);
+            return;
+        }
+        if (peer.compactBlocks.size >= 15) {
+            this.logger.warning('Compact block DoS attempt (%s).', peer.hostname());
+            peer.destroy();
+            return;
+        }
+        block.now = Date.now();
+        assert(!peer.compactBlocks.has(hash));
+        peer.compactBlocks.set(hash, block);
+        this.compactBlocks.add(hash);
+        this.logger.debug('Received non-full compact block %h tx=%d/%d (%s).', block.hash(), block.count, block.totalTX, peer.hostname());
+        peer.send(new packets.GetBlockTxnPacket(block.toRequest()));
+    }
     /**
      * Handle `getblocktxn` packet.
      * @method
@@ -2811,43 +2119,30 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {GetBlockTxnPacket} packet
      */
-    Pool.prototype.handleGetBlockTxn = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            var req, item, block, height, res;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        req = packet.request;
-                        if (this.chain.options.spv)
-                            return [2 /*return*/];
-                        if (this.chain.options.prune)
-                            return [2 /*return*/];
-                        if (this.options.selfish)
-                            return [2 /*return*/];
-                        item = new InvItem(invTypes.BLOCK, req.hash);
-                        return [4 /*yield*/, this.getItem(peer, item)];
-                    case 1:
-                        block = _a.sent();
-                        if (!block) {
-                            this.logger.debug('Peer sent getblocktxn for non-existent block (%s).', peer.hostname());
-                            peer.increaseBan(100);
-                            return [2 /*return*/];
-                        }
-                        return [4 /*yield*/, this.chain.getHeight(req.hash)];
-                    case 2:
-                        height = _a.sent();
-                        if (height < this.chain.tip.height - 15) {
-                            this.logger.debug('Peer sent a getblocktxn for a block > 15 deep (%s)', peer.hostname());
-                            return [2 /*return*/];
-                        }
-                        this.logger.debug('Sending blocktxn for %h to peer (%s).', block.hash(), peer.hostname());
-                        res = BIP152.TXResponse.fromBlock(block, req);
-                        peer.send(new packets.BlockTxnPacket(res, peer.compactWitness));
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async handleGetBlockTxn(peer, packet) {
+        const req = packet.request;
+        if (this.chain.options.spv)
+            return;
+        if (this.chain.options.prune)
+            return;
+        if (this.options.selfish)
+            return;
+        const item = new InvItem(invTypes.BLOCK, req.hash);
+        const block = await this.getItem(peer, item);
+        if (!block) {
+            this.logger.debug('Peer sent getblocktxn for non-existent block (%s).', peer.hostname());
+            peer.increaseBan(100);
+            return;
+        }
+        const height = await this.chain.getHeight(req.hash);
+        if (height < this.chain.tip.height - 15) {
+            this.logger.debug('Peer sent a getblocktxn for a block > 15 deep (%s)', peer.hostname());
+            return;
+        }
+        this.logger.debug('Sending blocktxn for %h to peer (%s).', block.hash(), peer.hostname());
+        const res = BIP152.TXResponse.fromBlock(block, req);
+        peer.send(new packets.BlockTxnPacket(res, peer.compactWitness));
+    }
     /**
      * Handle `blocktxn` packet.
      * @method
@@ -2855,37 +2150,26 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {BlockTxnPacket} packet
      */
-    Pool.prototype.handleBlockTxn = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            var res, block, flags;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        res = packet.response;
-                        block = peer.compactBlocks.get(res.hash);
-                        flags = chainCommon.flags.VERIFY_BODY;
-                        if (!block) {
-                            this.logger.debug('Peer sent unsolicited blocktxn (%s).', peer.hostname());
-                            return [2 /*return*/];
-                        }
-                        peer.compactBlocks["delete"](res.hash);
-                        assert(this.compactBlocks.has(res.hash));
-                        this.compactBlocks["delete"](res.hash);
-                        if (!block.fillMissing(res)) {
-                            this.logger.warning('Peer sent non-full blocktxn for %h. Requesting full block (%s).', block.hash(), peer.hostname());
-                            peer.getFullBlock(res.hash);
-                            peer.increaseBan(10);
-                            return [2 /*return*/];
-                        }
-                        this.logger.debug('Filled compact block %h (%s).', block.hash(), peer.hostname());
-                        return [4 /*yield*/, this.addBlock(peer, block.toBlock(), flags)];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async handleBlockTxn(peer, packet) {
+        const res = packet.response;
+        const block = peer.compactBlocks.get(res.hash);
+        const flags = chainCommon.flags.VERIFY_BODY;
+        if (!block) {
+            this.logger.debug('Peer sent unsolicited blocktxn (%s).', peer.hostname());
+            return;
+        }
+        peer.compactBlocks.delete(res.hash);
+        assert(this.compactBlocks.has(res.hash));
+        this.compactBlocks.delete(res.hash);
+        if (!block.fillMissing(res)) {
+            this.logger.warning('Peer sent non-full blocktxn for %h. Requesting full block (%s).', block.hash(), peer.hostname());
+            peer.getFullBlock(res.hash);
+            peer.increaseBan(10);
+            return;
+        }
+        this.logger.debug('Filled compact block %h (%s).', block.hash(), peer.hostname());
+        await this.addBlock(peer, block.toBlock(), flags);
+    }
     /**
      * Handle `unknown` packet.
      * @method
@@ -2893,46 +2177,40 @@ var Pool = /** @class */ (function (_super) {
      * @param {Peer} peer
      * @param {UnknownPacket} packet
      */
-    Pool.prototype.handleUnknown = function (peer, packet) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                this.logger.warning('Unknown packet: %s (%s).', packet.cmd, peer.hostname());
-                return [2 /*return*/];
-            });
-        });
-    };
+    async handleUnknown(peer, packet) {
+        this.logger.warning('Unknown packet: %s (%s).', packet.cmd, peer.hostname());
+    }
     /**
      * Create an inbound peer from an existing socket.
      * @private
      * @param {net.Socket} socket
      */
-    Pool.prototype.addInbound = function (socket) {
+    addInbound(socket) {
         if (!this.opened) {
             socket.destroy();
             return;
         }
-        var peer = this.createInbound(socket);
+        const peer = this.createInbound(socket);
         this.logger.info('Added inbound peer (%s).', peer.hostname());
         this.peers.add(peer);
-    };
+    }
     /**
      * Allocate a host from the host list.
      * @returns {NetAddress}
      */
-    Pool.prototype.getHost = function () {
-        for (var _i = 0, _a = this.hosts.nodes; _i < _a.length; _i++) {
-            var addr = _a[_i];
+    getHost() {
+        for (const addr of this.hosts.nodes) {
             if (this.peers.has(addr.hostname))
                 continue;
             return addr;
         }
-        var services = this.options.getRequiredServices();
-        var now = this.network.now();
-        for (var i = 0; i < 100; i++) {
-            var entry = this.hosts.getHost();
+        const services = this.options.getRequiredServices();
+        const now = this.network.now();
+        for (let i = 0; i < 100; i++) {
+            const entry = this.hosts.getHost();
             if (!entry)
                 break;
-            var addr = entry.addr;
+            const addr = entry.addr;
             if (this.peers.has(addr.hostname))
                 continue;
             if (!addr.isValid())
@@ -2950,13 +2228,13 @@ var Pool = /** @class */ (function (_super) {
             return entry.addr;
         }
         return null;
-    };
+    }
     /**
      * Create an outbound non-loader peer. These primarily
      * exist for transaction relaying.
      * @private
      */
-    Pool.prototype.addOutbound = function () {
+    addOutbound() {
         if (!this.opened)
             return;
         if (this.peers.outbound >= this.options.maxOutbound)
@@ -2965,153 +2243,146 @@ var Pool = /** @class */ (function (_super) {
         // have a loader peer yet.
         if (!this.peers.load)
             return;
-        var addr = this.getHost();
+        const addr = this.getHost();
         if (!addr)
             return;
-        var peer = this.createOutbound(addr);
+        const peer = this.createOutbound(addr);
         this.peers.add(peer);
         this.emit('peer', peer);
-    };
+    }
     /**
      * Attempt to refill the pool with peers (no lock).
      * @private
      */
-    Pool.prototype.fillOutbound = function () {
-        var need = this.options.maxOutbound - this.peers.outbound;
+    fillOutbound() {
+        const need = this.options.maxOutbound - this.peers.outbound;
         if (!this.peers.load)
             this.addLoader();
         if (need <= 0)
             return;
         this.logger.debug('Refilling peers (%d/%d).', this.peers.outbound, this.options.maxOutbound);
-        for (var i = 0; i < need; i++)
+        for (let i = 0; i < need; i++)
             this.addOutbound();
-    };
+    }
     /**
      * Attempt to refill the pool with peers (no lock).
      * @private
      */
-    Pool.prototype.refill = function () {
-        var _this = this;
+    refill() {
         if (this.pendingRefill != null)
             return;
-        this.pendingRefill = setTimeout(function () {
-            _this.pendingRefill = null;
-            _this.fillOutbound();
+        this.pendingRefill = setTimeout(() => {
+            this.pendingRefill = null;
+            this.fillOutbound();
         }, 3000);
-    };
+    }
     /**
      * Remove a peer from any list. Drop all load requests.
      * @private
      * @param {Peer} peer
      */
-    Pool.prototype.removePeer = function (peer) {
+    removePeer(peer) {
         this.peers.remove(peer);
-        for (var _i = 0, _a = peer.blockMap.keys(); _i < _a.length; _i++) {
-            var hash = _a[_i];
+        for (const hash of peer.blockMap.keys())
             this.resolveBlock(peer, hash);
-        }
-        for (var _b = 0, _c = peer.txMap.keys(); _b < _c.length; _b++) {
-            var hash = _c[_b];
+        for (const hash of peer.txMap.keys())
             this.resolveTX(peer, hash);
-        }
-        for (var _d = 0, _e = peer.compactBlocks.keys(); _d < _e.length; _d++) {
-            var hash = _e[_d];
+        for (const hash of peer.compactBlocks.keys()) {
             assert(this.compactBlocks.has(hash));
-            this.compactBlocks["delete"](hash);
+            this.compactBlocks.delete(hash);
         }
         peer.compactBlocks.clear();
-    };
+    }
     /**
      * Ban peer.
      * @param {NetAddress} addr
      */
-    Pool.prototype.ban = function (addr) {
-        var peer = this.peers.get(addr.hostname);
+    ban(addr) {
+        const peer = this.peers.get(addr.hostname);
         this.logger.debug('Banning peer (%s).', addr.hostname);
         this.hosts.ban(addr.host);
         this.hosts.remove(addr.hostname);
         if (peer)
             peer.destroy();
-    };
+    }
     /**
      * Unban peer.
      * @param {NetAddress} addr
      */
-    Pool.prototype.unban = function (addr) {
+    unban(addr) {
         this.hosts.unban(addr.host);
-    };
+    }
     /**
      * Set the spv filter.
      * @param {BloomFilter} filter
      * @param {String?} enc
      */
-    Pool.prototype.setFilter = function (filter) {
+    setFilter(filter) {
         if (!this.options.spv)
             return;
         this.spvFilter = filter;
         this.queueFilterLoad();
-    };
+    }
     /**
      * Watch a an address hash (filterload, SPV-only).
      * @param {Buffer|Hash} data
      * @param {String?} enc
      */
-    Pool.prototype.watch = function (data, enc) {
+    watch(data, enc) {
         if (!this.options.spv)
             return;
         this.spvFilter.add(data, enc);
         this.queueFilterLoad();
-    };
+    }
     /**
      * Reset the spv filter (filterload, SPV-only).
      */
-    Pool.prototype.unwatch = function () {
+    unwatch() {
         if (!this.options.spv)
             return;
         this.spvFilter.reset();
         this.queueFilterLoad();
-    };
+    }
     /**
      * Queue a resend of the bloom filter.
      */
-    Pool.prototype.queueFilterLoad = function () {
-        var _this = this;
+    queueFilterLoad() {
         if (!this.options.spv)
             return;
         if (this.pendingFilter != null)
             return;
-        this.pendingFilter = setTimeout(function () {
-            _this.pendingFilter = null;
-            _this.sendFilterLoad();
+        this.pendingFilter = setTimeout(() => {
+            this.pendingFilter = null;
+            this.sendFilterLoad();
         }, 100);
-    };
+    }
     /**
      * Resend the bloom filter to peers.
      */
-    Pool.prototype.sendFilterLoad = function () {
+    sendFilterLoad() {
         if (!this.options.spv)
             return;
         assert(this.spvFilter);
-        for (var peer = this.peers.head(); peer; peer = peer.next)
+        for (let peer = this.peers.head(); peer; peer = peer.next)
             peer.sendFilterLoad(this.spvFilter);
-    };
+    }
     /**
      * Add an address to the bloom filter (SPV-only).
      * @param {Address|AddressString} address
      */
-    Pool.prototype.watchAddress = function (address) {
+    watchAddress(address) {
         if (typeof address === 'string')
             address = Address.fromString(address, this.network);
-        var hash = Address.getHash(address);
+        const hash = Address.getHash(address);
         this.watch(hash);
-    };
+    }
     /**
      * Add an outpoint to the bloom filter (SPV-only).
      * @param {Outpoint} outpoint
      */
-    Pool.prototype.watchOutpoint = function (outpoint) {
+    watchOutpoint(outpoint) {
         this.watch(outpoint.toRaw());
-    };
+    }
     /**
      * Send `getblocks` to peer after building
      * locator and resolving orphan root.
@@ -3120,22 +2391,12 @@ var Pool = /** @class */ (function (_super) {
      * @param {Hash} orphan - Orphan hash to resolve.
      * @returns {Promise}
      */
-    Pool.prototype.resolveOrphan = function (peer, orphan) {
-        return __awaiter(this, void 0, void 0, function () {
-            var locator, root;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.chain.getLocator()];
-                    case 1:
-                        locator = _a.sent();
-                        root = this.chain.getOrphanRoot(orphan);
-                        assert(root);
-                        peer.sendGetBlocks(locator, root);
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async resolveOrphan(peer, orphan) {
+        const locator = await this.chain.getLocator();
+        const root = this.chain.getOrphanRoot(orphan);
+        assert(root);
+        peer.sendGetBlocks(locator, root);
+    }
     /**
      * Send `getheaders` to peer after building locator.
      * @method
@@ -3144,20 +2405,10 @@ var Pool = /** @class */ (function (_super) {
      * @param {Hash?} stop
      * @returns {Promise}
      */
-    Pool.prototype.getHeaders = function (peer, tip, stop) {
-        return __awaiter(this, void 0, void 0, function () {
-            var locator;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.chain.getLocator(tip)];
-                    case 1:
-                        locator = _a.sent();
-                        peer.sendGetHeaders(locator, stop);
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async getHeaders(peer, tip, stop) {
+        const locator = await this.chain.getLocator(tip);
+        peer.sendGetHeaders(locator, stop);
+    }
     /**
      * Send `getblocks` to peer after building locator.
      * @method
@@ -3166,36 +2417,25 @@ var Pool = /** @class */ (function (_super) {
      * @param {Hash?} stop
      * @returns {Promise}
      */
-    Pool.prototype.getBlocks = function (peer, tip, stop) {
-        return __awaiter(this, void 0, void 0, function () {
-            var locator;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.chain.getLocator(tip)];
-                    case 1:
-                        locator = _a.sent();
-                        peer.sendGetBlocks(locator, stop);
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async getBlocks(peer, tip, stop) {
+        const locator = await this.chain.getLocator(tip);
+        peer.sendGetBlocks(locator, stop);
+    }
     /**
      * Queue a `getdata` request to be sent.
      * @param {Peer} peer
      * @param {Hash[]} hashes
      */
-    Pool.prototype.getBlock = function (peer, hashes) {
+    getBlock(peer, hashes) {
         if (!this.opened)
             return;
         if (!peer.handshake)
             throw new Error('Peer handshake not complete (getdata).');
         if (peer.destroyed)
             throw new Error('Peer is destroyed (getdata).');
-        var now = Date.now();
-        var items = [];
-        for (var _i = 0, hashes_1 = hashes; _i < hashes_1.length; _i++) {
-            var hash = hashes_1[_i];
+        let now = Date.now();
+        const items = [];
+        for (const hash of hashes) {
             if (this.blockMap.has(hash))
                 continue;
             this.blockMap.add(hash);
@@ -3213,23 +2453,22 @@ var Pool = /** @class */ (function (_super) {
         }
         this.logger.debug('Requesting %d/%d blocks from peer with getdata (%s).', items.length, this.blockMap.size, peer.hostname());
         peer.getBlock(items);
-    };
+    }
     /**
      * Queue a `getdata` request to be sent.
      * @param {Peer} peer
      * @param {Hash[]} hashes
      */
-    Pool.prototype.getTX = function (peer, hashes) {
+    getTX(peer, hashes) {
         if (!this.opened)
             return;
         if (!peer.handshake)
             throw new Error('Peer handshake not complete (getdata).');
         if (peer.destroyed)
             throw new Error('Peer is destroyed (getdata).');
-        var now = Date.now();
-        var items = [];
-        for (var _i = 0, hashes_2 = hashes; _i < hashes_2.length; _i++) {
-            var hash = hashes_2[_i];
+        let now = Date.now();
+        const items = [];
+        for (const hash of hashes) {
             if (this.txMap.has(hash))
                 continue;
             this.txMap.add(hash);
@@ -3246,37 +2485,28 @@ var Pool = /** @class */ (function (_super) {
         }
         this.logger.debug('Requesting %d/%d txs from peer with getdata (%s).', items.length, this.txMap.size, peer.hostname());
         peer.getTX(items);
-    };
+    }
     /**
      * Test whether the chain has or has seen an item.
      * @method
      * @param {Hash} hash
      * @returns {Promise} - Returns Boolean.
      */
-    Pool.prototype.hasBlock = function (hash) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        // Check the lock.
-                        if (this.locker.has(hash))
-                            return [2 /*return*/, true];
-                        return [4 /*yield*/, this.chain.has(hash)];
-                    case 1:
-                        // Check the chain.
-                        if (_a.sent())
-                            return [2 /*return*/, true];
-                        return [2 /*return*/, false];
-                }
-            });
-        });
-    };
+    async hasBlock(hash) {
+        // Check the lock.
+        if (this.locker.has(hash))
+            return true;
+        // Check the chain.
+        if (await this.chain.has(hash))
+            return true;
+        return false;
+    }
     /**
      * Test whether the mempool has or has seen an item.
      * @param {Hash} hash
      * @returns {Boolean}
      */
-    Pool.prototype.hasTX = function (hash) {
+    hasTX(hash) {
         // Check the lock queue.
         if (this.locker.has(hash))
             return true;
@@ -3297,72 +2527,71 @@ var Pool = /** @class */ (function (_super) {
             }
         }
         return false;
-    };
+    }
     /**
      * Queue a `getdata` request to be sent.
      * Check tx existence before requesting.
      * @param {Peer} peer
      * @param {Hash[]} hashes
      */
-    Pool.prototype.ensureTX = function (peer, hashes) {
-        var items = [];
-        for (var _i = 0, hashes_3 = hashes; _i < hashes_3.length; _i++) {
-            var hash = hashes_3[_i];
+    ensureTX(peer, hashes) {
+        const items = [];
+        for (const hash of hashes) {
             if (this.hasTX(hash))
                 continue;
             items.push(hash);
         }
         this.getTX(peer, items);
-    };
+    }
     /**
      * Fulfill a requested tx.
      * @param {Peer} peer
      * @param {Hash} hash
      * @returns {Boolean}
      */
-    Pool.prototype.resolveTX = function (peer, hash) {
+    resolveTX(peer, hash) {
         if (!peer.txMap.has(hash))
             return false;
-        peer.txMap["delete"](hash);
+        peer.txMap.delete(hash);
         assert(this.txMap.has(hash));
-        this.txMap["delete"](hash);
+        this.txMap.delete(hash);
         return true;
-    };
+    }
     /**
      * Fulfill a requested block.
      * @param {Peer} peer
      * @param {Hash} hash
      * @returns {Boolean}
      */
-    Pool.prototype.resolveBlock = function (peer, hash) {
+    resolveBlock(peer, hash) {
         if (!peer.blockMap.has(hash))
             return false;
-        peer.blockMap["delete"](hash);
+        peer.blockMap.delete(hash);
         assert(this.blockMap.has(hash));
-        this.blockMap["delete"](hash);
+        this.blockMap.delete(hash);
         return true;
-    };
+    }
     /**
      * Fulfill a requested item.
      * @param {Peer} peer
      * @param {InvItem} item
      * @returns {Boolean}
      */
-    Pool.prototype.resolveItem = function (peer, item) {
+    resolveItem(peer, item) {
         if (item.isBlock())
             return this.resolveBlock(peer, item.hash);
         if (item.isTX())
             return this.resolveTX(peer, item.hash);
         return false;
-    };
+    }
     /**
      * Broadcast a transaction or block.
      * @param {TX|Block} msg
      * @returns {Promise}
      */
-    Pool.prototype.broadcast = function (msg) {
-        var hash = msg.hash();
-        var item = this.invMap.get(hash);
+    broadcast(msg) {
+        const hash = msg.hash();
+        let item = this.invMap.get(hash);
         if (item) {
             item.refresh();
             item.announce();
@@ -3372,42 +2601,40 @@ var Pool = /** @class */ (function (_super) {
             item.start();
             item.announce();
         }
-        return new Promise(function (resolve, reject) {
+        return new Promise((resolve, reject) => {
             item.addJob(resolve, reject);
         });
-    };
+    }
     /**
      * Announce a block to all peers.
      * @param {Block|Blocks[]} blocks
      */
-    Pool.prototype.announceBlock = function (blocks) {
-        for (var peer = this.peers.head(); peer; peer = peer.next)
+    announceBlock(blocks) {
+        for (let peer = this.peers.head(); peer; peer = peer.next)
             peer.announceBlock(blocks);
-    };
+    }
     /**
      * Announce a transaction to all peers.
      * @param {TX|TX[]} txs
      */
-    Pool.prototype.announceTX = function (txs) {
-        for (var peer = this.peers.head(); peer; peer = peer.next)
+    announceTX(txs) {
+        for (let peer = this.peers.head(); peer; peer = peer.next)
             peer.announceTX(txs);
-    };
+    }
     /**
      * Returns human readable list of services
      * that are available.
      * @returns {String[]}
      */
-    Pool.prototype.getServiceNames = function () {
-        var enabled = [];
-        for (var _i = 0, _a = Object.entries(services); _i < _a.length; _i++) {
-            var _b = _a[_i], service = _b[0], bit = _b[1];
+    getServiceNames() {
+        const enabled = [];
+        for (const [service, bit] of Object.entries(services)) {
             if (this.options.hasServices(bit))
                 enabled.push(service);
         }
         return enabled;
-    };
-    return Pool;
-}(EventEmitter));
+    }
+}
 /**
  * Discovery interval for UPNP and DNS seeds.
  * @const {Number}
@@ -3418,12 +2645,12 @@ Pool.DISCOVERY_INTERVAL = 120000;
  * Pool Options
  * @alias module:net.PoolOptions
  */
-var PoolOptions = /** @class */ (function () {
+class PoolOptions {
     /**
      * Create pool options.
      * @constructor
      */
-    function PoolOptions(options) {
+    constructor(options) {
         this.network = Network.primary;
         this.logger = null;
         this.chain = null;
@@ -3470,7 +2697,7 @@ var PoolOptions = /** @class */ (function () {
      * @param {Object} options
      * @returns {PoolOptions}
      */
-    PoolOptions.prototype.fromOptions = function (options) {
+    fromOptions(options) {
         assert(options, 'Pool requires options.');
         assert(options.chain && typeof options.chain === 'object', 'Pool options require a blockchain.');
         this.chain = options.chain;
@@ -3526,7 +2753,7 @@ var PoolOptions = /** @class */ (function () {
         }
         if (options.host != null) {
             assert(typeof options.host === 'string');
-            var raw = IP.toBuffer(options.host);
+            const raw = IP.toBuffer(options.host);
             this.host = IP.toString(raw);
             if (IP.isRoutable(raw))
                 this.publicHost = this.host;
@@ -3660,90 +2887,90 @@ var PoolOptions = /** @class */ (function () {
             this.requiredServices = options.requiredServices;
         }
         return this;
-    };
+    }
     /**
      * Instantiate options from object.
      * @param {Object} options
      * @returns {PoolOptions}
      */
-    PoolOptions.fromOptions = function (options) {
+    static fromOptions(options) {
         return new PoolOptions().fromOptions(options);
-    };
+    }
     /**
      * Get the chain height.
      * @private
      * @returns {Number}
      */
-    PoolOptions.prototype.getHeight = function () {
+    getHeight() {
         return this.chain.height;
-    };
+    }
     /**
      * Test whether the chain is synced.
      * @private
      * @returns {Boolean}
      */
-    PoolOptions.prototype.isFull = function () {
+    isFull() {
         return this.chain.synced;
-    };
+    }
     /**
      * Get required services for outbound peers.
      * @private
      * @returns {Number}
      */
-    PoolOptions.prototype.getRequiredServices = function () {
-        var services = this.requiredServices;
+    getRequiredServices() {
+        let services = this.requiredServices;
         if (this.hasWitness())
             services |= common.services.WITNESS;
         return services;
-    };
+    }
     /**
      * Test whether required services are available.
      * @param {Number} services
      * @returns {Boolean}
      */
-    PoolOptions.prototype.hasServices = function (services) {
+    hasServices(services) {
         return (this.services & services) === services;
-    };
+    }
     /**
      * Whether segwit is enabled.
      * @private
      * @returns {Boolean}
      */
-    PoolOptions.prototype.hasWitness = function () {
+    hasWitness() {
         return this.chain.state.hasWitness();
-    };
+    }
     /**
      * Create a version packet nonce.
      * @private
      * @param {String} hostname
      * @returns {Buffer}
      */
-    PoolOptions.prototype.createNonce = function (hostname) {
+    createNonce(hostname) {
         return this.nonces.alloc(hostname);
-    };
+    }
     /**
      * Test whether version nonce is ours.
      * @private
      * @param {Buffer} nonce
      * @returns {Boolean}
      */
-    PoolOptions.prototype.hasNonce = function (nonce) {
+    hasNonce(nonce) {
         return this.nonces.has(nonce);
-    };
+    }
     /**
      * Get fee rate for txid.
      * @private
      * @param {Hash} hash
      * @returns {Rate}
      */
-    PoolOptions.prototype.getRate = function (hash) {
+    getRate(hash) {
         if (!this.mempool)
             return -1;
-        var entry = this.mempool.getEntry(hash);
+        const entry = this.mempool.getEntry(hash);
         if (!entry)
             return -1;
         return entry.getRate();
-    };
+    }
     /**
      * Default createSocket call.
      * @private
@@ -3751,35 +2978,34 @@ var PoolOptions = /** @class */ (function () {
      * @param {String} host
      * @returns {net.Socket}
      */
-    PoolOptions.prototype._createSocket = function (port, host) {
+    _createSocket(port, host) {
         if (this.proxy)
             return socks.connect(this.proxy, port, host);
         return tcp.createSocket(port, host);
-    };
+    }
     /**
      * Default resolve call.
      * @private
      * @param {String} name
      * @returns {String[]}
      */
-    PoolOptions.prototype._resolve = function (name) {
+    _resolve(name) {
         if (this.onion)
             return socks.resolve(this.proxy, name);
         return dns.lookup(name);
-    };
-    return PoolOptions;
-}());
+    }
+}
 /**
  * Peer List
  * @alias module:net.PeerList
  */
-var PeerList = /** @class */ (function () {
+class PeerList {
     /**
      * Create peer list.
      * @constructor
      * @param {Object} options
      */
-    function PeerList() {
+    constructor() {
         this.map = new Map();
         this.ids = new Map();
         this.list = new List();
@@ -3791,28 +3017,28 @@ var PeerList = /** @class */ (function () {
      * Get the list head.
      * @returns {Peer}
      */
-    PeerList.prototype.head = function () {
+    head() {
         return this.list.head;
-    };
+    }
     /**
      * Get the list tail.
      * @returns {Peer}
      */
-    PeerList.prototype.tail = function () {
+    tail() {
         return this.list.tail;
-    };
+    }
     /**
      * Get list size.
      * @returns {Number}
      */
-    PeerList.prototype.size = function () {
+    size() {
         return this.list.size;
-    };
+    }
     /**
      * Add peer to list.
      * @param {Peer} peer
      */
-    PeerList.prototype.add = function (peer) {
+    add(peer) {
         assert(this.list.push(peer));
         assert(!this.map.has(peer.hostname()));
         this.map.set(peer.hostname(), peer);
@@ -3822,17 +3048,17 @@ var PeerList = /** @class */ (function () {
             this.outbound += 1;
         else
             this.inbound += 1;
-    };
+    }
     /**
      * Remove peer from list.
      * @param {Peer} peer
      */
-    PeerList.prototype.remove = function (peer) {
+    remove(peer) {
         assert(this.list.remove(peer));
         assert(this.ids.has(peer.id));
-        this.ids["delete"](peer.id);
+        this.ids.delete(peer.id);
         assert(this.map.has(peer.hostname()));
-        this.map["delete"](peer.hostname());
+        this.map.delete(peer.hostname());
         if (peer === this.load) {
             assert(peer.loader);
             peer.loader = false;
@@ -3842,43 +3068,42 @@ var PeerList = /** @class */ (function () {
             this.outbound -= 1;
         else
             this.inbound -= 1;
-    };
+    }
     /**
      * Get peer by hostname.
      * @param {String} hostname
      * @returns {Peer}
      */
-    PeerList.prototype.get = function (hostname) {
+    get(hostname) {
         return this.map.get(hostname);
-    };
+    }
     /**
      * Test whether a peer exists.
      * @param {String} hostname
      * @returns {Boolean}
      */
-    PeerList.prototype.has = function (hostname) {
+    has(hostname) {
         return this.map.has(hostname);
-    };
+    }
     /**
      * Get peer by ID.
      * @param {Number} id
      * @returns {Peer}
      */
-    PeerList.prototype.find = function (id) {
+    find(id) {
         return this.ids.get(id);
-    };
+    }
     /**
      * Destroy peer list (kills peers).
      */
-    PeerList.prototype.destroy = function () {
-        var next;
-        for (var peer = this.list.head; peer; peer = next) {
+    destroy() {
+        let next;
+        for (let peer = this.list.head; peer; peer = next) {
             next = peer.next;
             peer.destroy();
         }
-    };
-    return PeerList;
-}());
+    }
+}
 /**
  * Broadcast Item
  * Represents an item that is broadcasted via an inv/getdata cycle.
@@ -3889,59 +3114,56 @@ var PeerList = /** @class */ (function () {
  * @emits BroadcastItem#reject
  * @emits BroadcastItem#timeout
  */
-var BroadcastItem = /** @class */ (function (_super) {
-    __extends(BroadcastItem, _super);
+class BroadcastItem extends EventEmitter {
     /**
      * Create broadcast item.
      * @constructor
      * @param {Pool} pool
      * @param {TX|Block} msg
      */
-    function BroadcastItem(pool, msg) {
-        var _this = _super.call(this) || this;
+    constructor(pool, msg) {
+        super();
         assert(!msg.mutable, 'Cannot broadcast mutable item.');
-        var item = msg.toInv();
-        _this.pool = pool;
-        _this.hash = item.hash;
-        _this.type = item.type;
-        _this.msg = msg;
-        _this.jobs = [];
-        return _this;
+        const item = msg.toInv();
+        this.pool = pool;
+        this.hash = item.hash;
+        this.type = item.type;
+        this.msg = msg;
+        this.jobs = [];
     }
     /**
      * Add a job to be executed on ack, timeout, or reject.
      */
-    BroadcastItem.prototype.addJob = function (resolve, reject) {
-        this.jobs.push({ resolve: resolve, reject: reject });
-    };
+    addJob(resolve, reject) {
+        this.jobs.push({ resolve, reject });
+    }
     /**
      * Start the broadcast.
      */
-    BroadcastItem.prototype.start = function () {
+    start() {
         assert(!this.timeout, 'Already started.');
         assert(!this.pool.invMap.has(this.hash), 'Already started.');
         this.pool.invMap.set(this.hash, this);
         this.refresh();
         return this;
-    };
+    }
     /**
      * Refresh the timeout on the broadcast.
      */
-    BroadcastItem.prototype.refresh = function () {
-        var _this = this;
+    refresh() {
         if (this.timeout != null) {
             clearTimeout(this.timeout);
             this.timeout = null;
         }
-        this.timeout = setTimeout(function () {
-            _this.emit('timeout');
-            _this.reject(new Error('Timed out.'));
+        this.timeout = setTimeout(() => {
+            this.emit('timeout');
+            this.reject(new Error('Timed out.'));
         }, this.pool.options.invTimeout);
-    };
+    }
     /**
      * Announce the item.
      */
-    BroadcastItem.prototype.announce = function () {
+    announce() {
         switch (this.type) {
             case invTypes.TX:
                 this.pool.announceTX(this.msg);
@@ -3953,94 +3175,84 @@ var BroadcastItem = /** @class */ (function (_super) {
                 assert(false, 'Bad type.');
                 break;
         }
-    };
+    }
     /**
      * Finish the broadcast.
      */
-    BroadcastItem.prototype.cleanup = function () {
+    cleanup() {
         assert(this.timeout != null, 'Already finished.');
         assert(this.pool.invMap.has(this.hash), 'Already finished.');
         clearTimeout(this.timeout);
         this.timeout = null;
-        this.pool.invMap["delete"](this.hash);
-    };
+        this.pool.invMap.delete(this.hash);
+    }
     /**
      * Finish the broadcast, return with an error.
      * @param {Error} err
      */
-    BroadcastItem.prototype.reject = function (err) {
+    reject(err) {
         this.cleanup();
-        for (var _i = 0, _a = this.jobs; _i < _a.length; _i++) {
-            var job = _a[_i];
+        for (const job of this.jobs)
             job.reject(err);
-        }
         this.jobs.length = 0;
-    };
+    }
     /**
      * Finish the broadcast successfully.
      */
-    BroadcastItem.prototype.resolve = function () {
+    resolve() {
         this.cleanup();
-        for (var _i = 0, _a = this.jobs; _i < _a.length; _i++) {
-            var job = _a[_i];
+        for (const job of this.jobs)
             job.resolve(false);
-        }
         this.jobs.length = 0;
-    };
+    }
     /**
      * Handle an ack from a peer.
      * @param {Peer} peer
      */
-    BroadcastItem.prototype.handleAck = function (peer) {
-        var _this = this;
-        setTimeout(function () {
-            _this.emit('ack', peer);
-            for (var _i = 0, _a = _this.jobs; _i < _a.length; _i++) {
-                var job = _a[_i];
+    handleAck(peer) {
+        setTimeout(() => {
+            this.emit('ack', peer);
+            for (const job of this.jobs)
                 job.resolve(true);
-            }
-            _this.jobs.length = 0;
+            this.jobs.length = 0;
         }, 1000);
-    };
+    }
     /**
      * Handle a reject from a peer.
      * @param {Peer} peer
      */
-    BroadcastItem.prototype.handleReject = function (peer) {
+    handleReject(peer) {
         this.emit('reject', peer);
-        for (var _i = 0, _a = this.jobs; _i < _a.length; _i++) {
-            var job = _a[_i];
+        for (const job of this.jobs)
             job.resolve(false);
-        }
         this.jobs.length = 0;
-    };
+    }
     /**
      * Inspect the broadcast item.
      * @returns {String}
      */
-    BroadcastItem.prototype[inspectSymbol] = function () {
-        var type = this.type === invTypes.TX ? 'tx' : 'block';
-        var hash = util.revHex(this.hash);
-        return "<BroadcastItem: type=".concat(type, " hash=").concat(hash, ">");
-    };
-    return BroadcastItem;
-}(EventEmitter));
+    [inspectSymbol]() {
+        const type = this.type === invTypes.TX ? 'tx' : 'block';
+        const hash = util.revHex(this.hash);
+        return `<BroadcastItem: type=${type} hash=${hash}>`;
+    }
+}
 /**
  * Nonce List
  * @ignore
  */
-var NonceList = /** @class */ (function () {
+class NonceList {
     /**
      * Create nonce list.
      * @constructor
      */
-    function NonceList() {
+    constructor() {
         this.map = new BufferMap();
         this.hosts = new Map();
     }
-    NonceList.prototype.alloc = function (hostname) {
+    alloc(hostname) {
         for (;;) {
-            var nonce = common.nonce();
+            const nonce = common.nonce();
             if (this.map.has(nonce))
                 continue;
             this.map.set(nonce, hostname);
@@ -4048,39 +3260,38 @@ var NonceList = /** @class */ (function () {
             this.hosts.set(hostname, nonce);
             return nonce;
         }
-    };
-    NonceList.prototype.has = function (nonce) {
+    }
+    has(nonce) {
         return this.map.has(nonce);
-    };
-    NonceList.prototype.remove = function (hostname) {
-        var key = this.hosts.get(hostname);
+    }
+    remove(hostname) {
+        const key = this.hosts.get(hostname);
         if (!key)
             return false;
-        this.hosts["delete"](hostname);
+        this.hosts.delete(hostname);
         assert(this.map.has(key));
-        this.map["delete"](key);
+        this.map.delete(key);
         return true;
-    };
-    return NonceList;
-}());
+    }
+}
 /**
  * Header Entry
  * @ignore
  */
-var HeaderEntry = /** @class */ (function () {
+class HeaderEntry {
     /**
      * Create header entry.
      * @constructor
      */
-    function HeaderEntry(hash, height) {
+    constructor(hash, height) {
         this.hash = hash;
         this.height = height;
         this.prev = null;
         this.next = null;
     }
-    return HeaderEntry;
-}());
+}
 /*
  * Expose
  */
 module.exports = Pool;
+//# sourceMappingURL=pool.js.map

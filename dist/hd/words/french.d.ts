@@ -30,6 +30,28 @@ declare const _exports: {
     reduceRight(callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string): string;
     reduceRight(callbackfn: (previousValue: string, currentValue: string, currentIndex: number, array: string[]) => string, initialValue: string): string;
     reduceRight<U_2>(callbackfn: (previousValue: U_2, currentValue: string, currentIndex: number, array: string[]) => U_2, initialValue: U_2): U_2;
+    find<S_2 extends string>(predicate: (this: void, value: string, index: number, obj: string[]) => value is S_2, thisArg?: any): S_2;
+    find(predicate: (value: string, index: number, obj: string[]) => unknown, thisArg?: any): string;
+    findIndex(predicate: (value: string, index: number, obj: string[]) => unknown, thisArg?: any): number;
+    fill(value: string, start?: number, end?: number): string[];
+    copyWithin(target: number, start: number, end?: number): string[];
+    entries(): IterableIterator<[number, string]>;
+    keys(): IterableIterator<number>;
+    values(): IterableIterator<string>;
+    includes(searchElement: string, fromIndex?: number): boolean;
+    flatMap<U_3, This = undefined>(callback: (this: This, value: string, index: number, array: string[]) => U_3 | readonly U_3[], thisArg?: This): U_3[];
+    flat<A, D extends number = 1>(this: A, depth?: D): FlatArray<A, D>[];
+    at(index: number): string;
+    [Symbol.iterator](): IterableIterator<string>;
+    [Symbol.unscopables](): {
+        copyWithin: boolean;
+        entries: boolean;
+        fill: boolean;
+        find: boolean;
+        findIndex: boolean;
+        keys: boolean;
+        values: boolean;
+    };
 };
 export = _exports;
 //# sourceMappingURL=french.d.ts.map

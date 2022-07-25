@@ -20,7 +20,7 @@ declare class TimeData {
      */
     constructor(limit?: number);
     samples: any[];
-    known: any;
+    known: Map<any, any>;
     limit: number;
     offset: number;
     checked: boolean;

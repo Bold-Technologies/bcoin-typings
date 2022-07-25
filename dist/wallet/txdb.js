@@ -5,67 +5,31 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-var assert = require('bsert');
-var bio = require('bufio');
-var BufferSet = require('buffer-map').BufferSet;
-var util = require('../utils/util');
-var Amount = require('../btc/amount');
-var CoinView = require('../coins/coinview');
-var Coin = require('../primitives/coin');
-var Outpoint = require('../primitives/outpoint');
-var records = require('./records');
-var layout = require('./layout').txdb;
-var consensus = require('../protocol/consensus');
-var policy = require('../protocol/policy');
-var TXRecord = records.TXRecord;
-var inspectSymbol = require('../utils').inspectSymbol;
+const assert = require('bsert');
+const bio = require('bufio');
+const { BufferSet } = require('buffer-map');
+const util = require('../utils/util');
+const Amount = require('../btc/amount');
+const CoinView = require('../coins/coinview');
+const Coin = require('../primitives/coin');
+const Outpoint = require('../primitives/outpoint');
+const records = require('./records');
+const layout = require('./layout').txdb;
+const consensus = require('../protocol/consensus');
+const policy = require('../protocol/policy');
+const { TXRecord } = records;
+const { inspectSymbol } = require('../utils');
 /**
  * TXDB
  * @alias module:wallet.TXDB
  */
-var TXDB = /** @class */ (function () {
+class TXDB {
     /**
      * Create a TXDB.
      * @constructor
      * @param {WalletDB} wdb
      */
-    function TXDB(wdb, wid) {
+    constructor(wdb, wid) {
         this.wdb = wdb;
         this.db = wdb.db;
         this.logger = wdb.logger;
@@ -78,18 +42,12 @@ var TXDB = /** @class */ (function () {
      * Open TXDB.
      * @returns {Promise}
      */
-    TXDB.prototype.open = function (wallet) {
-        return __awaiter(this, void 0, void 0, function () {
-            var prefix;
-            return __generator(this, function (_a) {
-                prefix = layout.prefix.encode(wallet.wid);
-                this.wid = wallet.wid;
-                this.bucket = this.db.bucket(prefix);
-                this.wallet = wallet;
-                return [2 /*return*/];
-            });
-        });
-    };
+    async open(wallet) {
+        const prefix = layout.prefix.encode(wallet.wid);
+        this.wid = wallet.wid;
+        this.bucket = this.db.bucket(prefix);
+        this.wallet = wallet;
+    }
     /**
      * Emit transaction event.
      * @private
@@ -97,413 +55,309 @@ var TXDB = /** @class */ (function () {
      * @param {Object} data
      * @param {Details} details
      */
-    TXDB.prototype.emit = function (event, data, details) {
+    emit(event, data, details) {
         this.wdb.emit(event, this.wallet, data, details);
         this.wallet.emit(event, data, details);
-    };
+    }
     /**
      * Get wallet path for output.
      * @param {Output} output
      * @returns {Promise} - Returns {@link Path}.
      */
-    TXDB.prototype.getPath = function (output) {
-        var hash = output.getHash();
+    getPath(output) {
+        const hash = output.getHash();
         if (!hash)
             return null;
         return this.wdb.getPath(this.wid, hash);
-    };
+    }
     /**
      * Test whether path exists for output.
      * @param {Output} output
      * @returns {Promise} - Returns Boolean.
      */
-    TXDB.prototype.hasPath = function (output) {
-        var hash = output.getHash();
+    hasPath(output) {
+        const hash = output.getHash();
         if (!hash)
             return false;
         return this.wdb.hasPath(this.wid, hash);
-    };
+    }
     /**
      * Save credit.
      * @param {Credit} credit
      * @param {Path} path
      */
-    TXDB.prototype.saveCredit = function (b, credit, path) {
-        return __awaiter(this, void 0, void 0, function () {
-            var coin;
-            return __generator(this, function (_a) {
-                coin = credit.coin;
-                b.put(layout.c.encode(coin.hash, coin.index), credit.toRaw());
-                b.put(layout.C.encode(path.account, coin.hash, coin.index), null);
-                return [2 /*return*/, this.addOutpointMap(b, coin.hash, coin.index)];
-            });
-        });
-    };
+    async saveCredit(b, credit, path) {
+        const { coin } = credit;
+        b.put(layout.c.encode(coin.hash, coin.index), credit.toRaw());
+        b.put(layout.C.encode(path.account, coin.hash, coin.index), null);
+        return this.addOutpointMap(b, coin.hash, coin.index);
+    }
     /**
      * Remove credit.
      * @param {Credit} credit
      * @param {Path} path
      */
-    TXDB.prototype.removeCredit = function (b, credit, path) {
-        return __awaiter(this, void 0, void 0, function () {
-            var coin;
-            return __generator(this, function (_a) {
-                coin = credit.coin;
-                b.del(layout.c.encode(coin.hash, coin.index));
-                b.del(layout.C.encode(path.account, coin.hash, coin.index));
-                return [2 /*return*/, this.removeOutpointMap(b, coin.hash, coin.index)];
-            });
-        });
-    };
+    async removeCredit(b, credit, path) {
+        const { coin } = credit;
+        b.del(layout.c.encode(coin.hash, coin.index));
+        b.del(layout.C.encode(path.account, coin.hash, coin.index));
+        return this.removeOutpointMap(b, coin.hash, coin.index);
+    }
     /**
      * Spend credit.
      * @param {Credit} credit
      * @param {TX} tx
      * @param {Number} index
      */
-    TXDB.prototype.spendCredit = function (b, credit, tx, index) {
-        var prevout = tx.inputs[index].prevout;
-        var spender = Outpoint.fromTX(tx, index);
+    spendCredit(b, credit, tx, index) {
+        const prevout = tx.inputs[index].prevout;
+        const spender = Outpoint.fromTX(tx, index);
         b.put(layout.s.encode(prevout.hash, prevout.index), spender.toRaw());
         b.put(layout.d.encode(spender.hash, spender.index), credit.coin.toRaw());
-    };
+    }
     /**
      * Unspend credit.
      * @param {TX} tx
      * @param {Number} index
      */
-    TXDB.prototype.unspendCredit = function (b, tx, index) {
-        var prevout = tx.inputs[index].prevout;
-        var spender = Outpoint.fromTX(tx, index);
+    unspendCredit(b, tx, index) {
+        const prevout = tx.inputs[index].prevout;
+        const spender = Outpoint.fromTX(tx, index);
         b.del(layout.s.encode(prevout.hash, prevout.index));
         b.del(layout.d.encode(spender.hash, spender.index));
-    };
+    }
     /**
      * Write input record.
      * @param {TX} tx
      * @param {Number} index
      */
-    TXDB.prototype.writeInput = function (b, tx, index) {
-        return __awaiter(this, void 0, void 0, function () {
-            var prevout, spender;
-            return __generator(this, function (_a) {
-                prevout = tx.inputs[index].prevout;
-                spender = Outpoint.fromTX(tx, index);
-                b.put(layout.s.encode(prevout.hash, prevout.index), spender.toRaw());
-                return [2 /*return*/, this.addOutpointMap(b, prevout.hash, prevout.index)];
-            });
-        });
-    };
+    async writeInput(b, tx, index) {
+        const prevout = tx.inputs[index].prevout;
+        const spender = Outpoint.fromTX(tx, index);
+        b.put(layout.s.encode(prevout.hash, prevout.index), spender.toRaw());
+        return this.addOutpointMap(b, prevout.hash, prevout.index);
+    }
     /**
      * Remove input record.
      * @param {TX} tx
      * @param {Number} index
      */
-    TXDB.prototype.removeInput = function (b, tx, index) {
-        return __awaiter(this, void 0, void 0, function () {
-            var prevout;
-            return __generator(this, function (_a) {
-                prevout = tx.inputs[index].prevout;
-                b.del(layout.s.encode(prevout.hash, prevout.index));
-                return [2 /*return*/, this.removeOutpointMap(b, prevout.hash, prevout.index)];
-            });
-        });
-    };
+    async removeInput(b, tx, index) {
+        const prevout = tx.inputs[index].prevout;
+        b.del(layout.s.encode(prevout.hash, prevout.index));
+        return this.removeOutpointMap(b, prevout.hash, prevout.index);
+    }
     /**
      * Update wallet balance.
      * @param {BalanceDelta} state
      */
-    TXDB.prototype.updateBalance = function (b, state) {
-        return __awaiter(this, void 0, void 0, function () {
-            var balance;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.getWalletBalance()];
-                    case 1:
-                        balance = _a.sent();
-                        state.applyTo(balance);
-                        b.put(layout.R.encode(), balance.toRaw());
-                        return [2 /*return*/, balance];
-                }
-            });
-        });
-    };
+    async updateBalance(b, state) {
+        const balance = await this.getWalletBalance();
+        state.applyTo(balance);
+        b.put(layout.R.encode(), balance.toRaw());
+        return balance;
+    }
     /**
      * Update account balance.
      * @param {Number} acct
      * @param {Balance} delta
      */
-    TXDB.prototype.updateAccountBalance = function (b, acct, delta) {
-        return __awaiter(this, void 0, void 0, function () {
-            var balance;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.getAccountBalance(acct)];
-                    case 1:
-                        balance = _a.sent();
-                        delta.applyTo(balance);
-                        b.put(layout.r.encode(acct), balance.toRaw());
-                        return [2 /*return*/, balance];
-                }
-            });
-        });
-    };
+    async updateAccountBalance(b, acct, delta) {
+        const balance = await this.getAccountBalance(acct);
+        delta.applyTo(balance);
+        b.put(layout.r.encode(acct), balance.toRaw());
+        return balance;
+    }
     /**
      * Test a whether a coin has been spent.
      * @param {Hash} hash
      * @param {Number} index
      * @returns {Promise} - Returns Boolean.
      */
-    TXDB.prototype.getSpent = function (hash, index) {
-        return __awaiter(this, void 0, void 0, function () {
-            var data;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.bucket.get(layout.s.encode(hash, index))];
-                    case 1:
-                        data = _a.sent();
-                        if (!data)
-                            return [2 /*return*/, null];
-                        return [2 /*return*/, Outpoint.fromRaw(data)];
-                }
-            });
-        });
-    };
+    async getSpent(hash, index) {
+        const data = await this.bucket.get(layout.s.encode(hash, index));
+        if (!data)
+            return null;
+        return Outpoint.fromRaw(data);
+    }
     /**
      * Test a whether a coin has been spent.
      * @param {Hash} hash
      * @param {Number} index
      * @returns {Promise} - Returns Boolean.
      */
-    TXDB.prototype.isSpent = function (hash, index) {
+    isSpent(hash, index) {
         return this.bucket.has(layout.s.encode(hash, index));
-    };
+    }
     /**
      * Append to global map.
      * @param {Number} height
      * @returns {Promise}
      */
-    TXDB.prototype.addBlockMap = function (b, height) {
+    addBlockMap(b, height) {
         return this.wdb.addBlockMap(b.root(), height, this.wid);
-    };
+    }
     /**
      * Remove from global map.
      * @param {Number} height
      * @returns {Promise}
      */
-    TXDB.prototype.removeBlockMap = function (b, height) {
+    removeBlockMap(b, height) {
         return this.wdb.removeBlockMap(b.root(), height, this.wid);
-    };
+    }
     /**
      * Append to global map.
      * @param {Hash} hash
      * @returns {Promise}
      */
-    TXDB.prototype.addTXMap = function (b, hash) {
+    addTXMap(b, hash) {
         return this.wdb.addTXMap(b.root(), hash, this.wid);
-    };
+    }
     /**
      * Remove from global map.
      * @param {Hash} hash
      * @returns {Promise}
      */
-    TXDB.prototype.removeTXMap = function (b, hash) {
+    removeTXMap(b, hash) {
         return this.wdb.removeTXMap(b.root(), hash, this.wid);
-    };
+    }
     /**
      * Append to global map.
      * @param {Hash} hash
      * @param {Number} index
      * @returns {Promise}
      */
-    TXDB.prototype.addOutpointMap = function (b, hash, index) {
+    addOutpointMap(b, hash, index) {
         return this.wdb.addOutpointMap(b.root(), hash, index, this.wid);
-    };
+    }
     /**
      * Remove from global map.
      * @param {Hash} hash
      * @param {Number} index
      * @returns {Promise}
      */
-    TXDB.prototype.removeOutpointMap = function (b, hash, index) {
+    removeOutpointMap(b, hash, index) {
         return this.wdb.removeOutpointMap(b.root(), hash, index, this.wid);
-    };
+    }
     /**
      * List block records.
      * @returns {Promise}
      */
-    TXDB.prototype.getBlocks = function () {
+    getBlocks() {
         return this.bucket.keys({
             gte: layout.b.min(),
             lte: layout.b.max(),
-            parse: function (key) { return layout.b.decode(key)[0]; }
+            parse: key => layout.b.decode(key)[0]
         });
-    };
+    }
     /**
      * Get block record.
      * @param {Number} height
      * @returns {Promise}
      */
-    TXDB.prototype.getBlock = function (height) {
-        return __awaiter(this, void 0, void 0, function () {
-            var data;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.bucket.get(layout.b.encode(height))];
-                    case 1:
-                        data = _a.sent();
-                        if (!data)
-                            return [2 /*return*/, null];
-                        return [2 /*return*/, BlockRecord.fromRaw(data)];
-                }
-            });
-        });
-    };
+    async getBlock(height) {
+        const data = await this.bucket.get(layout.b.encode(height));
+        if (!data)
+            return null;
+        return BlockRecord.fromRaw(data);
+    }
     /**
      * Append to the global block record.
      * @param {Hash} hash
      * @param {BlockMeta} block
      * @returns {Promise}
      */
-    TXDB.prototype.addBlock = function (b, hash, block) {
-        return __awaiter(this, void 0, void 0, function () {
-            var key, data, blk, raw, size;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        key = layout.b.encode(block.height);
-                        return [4 /*yield*/, this.bucket.get(key)];
-                    case 1:
-                        data = _a.sent();
-                        if (!data) {
-                            blk = BlockRecord.fromMeta(block);
-                            blk.add(hash);
-                            b.put(key, blk.toRaw());
-                            return [2 /*return*/];
-                        }
-                        raw = Buffer.allocUnsafe(data.length + 32);
-                        data.copy(raw, 0);
-                        size = raw.readUInt32LE(40, true);
-                        raw.writeUInt32LE(size + 1, 40, true);
-                        hash.copy(raw, data.length);
-                        b.put(key, raw);
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async addBlock(b, hash, block) {
+        const key = layout.b.encode(block.height);
+        const data = await this.bucket.get(key);
+        if (!data) {
+            const blk = BlockRecord.fromMeta(block);
+            blk.add(hash);
+            b.put(key, blk.toRaw());
+            return;
+        }
+        const raw = Buffer.allocUnsafe(data.length + 32);
+        data.copy(raw, 0);
+        const size = raw.readUInt32LE(40, true);
+        raw.writeUInt32LE(size + 1, 40, true);
+        hash.copy(raw, data.length);
+        b.put(key, raw);
+    }
     /**
      * Remove from the global block record.
      * @param {Hash} hash
      * @param {Number} height
      * @returns {Promise}
      */
-    TXDB.prototype.removeBlock = function (b, hash, height) {
-        return __awaiter(this, void 0, void 0, function () {
-            var key, data, size, raw;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        key = layout.b.encode(height);
-                        return [4 /*yield*/, this.bucket.get(key)];
-                    case 1:
-                        data = _a.sent();
-                        if (!data)
-                            return [2 /*return*/];
-                        size = data.readUInt32LE(40, true);
-                        assert(size > 0);
-                        assert(data.slice(-32).equals(hash));
-                        if (size === 1) {
-                            b.del(key);
-                            return [2 /*return*/];
-                        }
-                        raw = data.slice(0, -32);
-                        raw.writeUInt32LE(size - 1, 40, true);
-                        b.put(key, raw);
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async removeBlock(b, hash, height) {
+        const key = layout.b.encode(height);
+        const data = await this.bucket.get(key);
+        if (!data)
+            return;
+        const size = data.readUInt32LE(40, true);
+        assert(size > 0);
+        assert(data.slice(-32).equals(hash));
+        if (size === 1) {
+            b.del(key);
+            return;
+        }
+        const raw = data.slice(0, -32);
+        raw.writeUInt32LE(size - 1, 40, true);
+        b.put(key, raw);
+    }
     /**
      * Remove from the global block record.
      * @param {Hash} hash
      * @param {Number} height
      * @returns {Promise}
      */
-    TXDB.prototype.spliceBlock = function (b, hash, height) {
-        return __awaiter(this, void 0, void 0, function () {
-            var block;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.getBlock(height)];
-                    case 1:
-                        block = _a.sent();
-                        if (!block)
-                            return [2 /*return*/];
-                        if (!block.remove(hash))
-                            return [2 /*return*/];
-                        if (block.hashes.size === 0) {
-                            b.del(layout.b.encode(height));
-                            return [2 /*return*/];
-                        }
-                        b.put(layout.b.encode(height), block.toRaw());
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async spliceBlock(b, hash, height) {
+        const block = await this.getBlock(height);
+        if (!block)
+            return;
+        if (!block.remove(hash))
+            return;
+        if (block.hashes.size === 0) {
+            b.del(layout.b.encode(height));
+            return;
+        }
+        b.put(layout.b.encode(height), block.toRaw());
+    }
     /**
      * Add transaction without a batch.
      * @private
      * @param {TX} tx
      * @returns {Promise}
      */
-    TXDB.prototype.add = function (tx, block) {
-        return __awaiter(this, void 0, void 0, function () {
-            var hash, existing, wtx;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        hash = tx.hash();
-                        return [4 /*yield*/, this.getTX(hash)];
-                    case 1:
-                        existing = _a.sent();
-                        assert(!tx.mutable, 'Cannot add mutable TX to wallet.');
-                        if (existing) {
-                            // Existing tx is already confirmed. Ignore.
-                            if (existing.height !== -1)
-                                return [2 /*return*/, null];
-                            // The incoming tx won't confirm the
-                            // existing one anyway. Ignore.
-                            if (!block)
-                                return [2 /*return*/, null];
-                            // Confirm transaction.
-                            return [2 /*return*/, this.confirm(existing, block)];
-                        }
-                        wtx = TXRecord.fromTX(tx, block);
-                        if (!!block) return [3 /*break*/, 3];
-                        return [4 /*yield*/, this.removeConflicts(tx, true)];
-                    case 2:
-                        // Potentially remove double-spenders.
-                        // Only remove if they're not confirmed.
-                        if (!(_a.sent()))
-                            return [2 /*return*/, null];
-                        return [3 /*break*/, 5];
-                    case 3: 
-                    // Potentially remove double-spenders.
-                    return [4 /*yield*/, this.removeConflicts(tx, false)];
-                    case 4:
-                        // Potentially remove double-spenders.
-                        _a.sent();
-                        _a.label = 5;
-                    case 5: 
-                    // Finally we can do a regular insertion.
-                    return [2 /*return*/, this.insert(wtx, block)];
-                }
-            });
-        });
-    };
+    async add(tx, block) {
+        const hash = tx.hash();
+        const existing = await this.getTX(hash);
+        assert(!tx.mutable, 'Cannot add mutable TX to wallet.');
+        if (existing) {
+            // Existing tx is already confirmed. Ignore.
+            if (existing.height !== -1)
+                return null;
+            // The incoming tx won't confirm the
+            // existing one anyway. Ignore.
+            if (!block)
+                return null;
+            // Confirm transaction.
+            return this.confirm(existing, block);
+        }
+        const wtx = TXRecord.fromTX(tx, block);
+        if (!block) {
+            // Potentially remove double-spenders.
+            // Only remove if they're not confirmed.
+            if (!await this.removeConflicts(tx, true))
+                return null;
+        }
+        else {
+            // Potentially remove double-spenders.
+            await this.removeConflicts(tx, false);
+        }
+        // Finally we can do a regular insertion.
+        return this.insert(wtx, block);
+    }
     /**
      * Insert transaction.
      * @private
@@ -511,174 +365,127 @@ var TXDB = /** @class */ (function () {
      * @param {BlockMeta} block
      * @returns {Promise}
      */
-    TXDB.prototype.insert = function (wtx, block) {
-        return __awaiter(this, void 0, void 0, function () {
-            var b, tx, hash, height, details, state, own, i, input, _a, hash_1, index, credit, coin, path, i, output, path, credit, _i, _b, _c, acct, delta, balance;
-            return __generator(this, function (_d) {
-                switch (_d.label) {
-                    case 0:
-                        b = this.bucket.batch();
-                        tx = wtx.tx, hash = wtx.hash;
-                        height = block ? block.height : -1;
-                        details = new Details(wtx, block);
-                        state = new BalanceDelta();
-                        own = false;
-                        if (!!tx.isCoinbase()) return [3 /*break*/, 12];
-                        i = 0;
-                        _d.label = 1;
-                    case 1:
-                        if (!(i < tx.inputs.length)) return [3 /*break*/, 12];
-                        input = tx.inputs[i];
-                        _a = input.prevout, hash_1 = _a.hash, index = _a.index;
-                        return [4 /*yield*/, this.getCredit(hash_1, index)];
-                    case 2:
-                        credit = _d.sent();
-                        if (!!credit) return [3 /*break*/, 5];
-                        if (!!block) return [3 /*break*/, 4];
-                        return [4 /*yield*/, this.writeInput(b, tx, i)];
-                    case 3:
-                        _d.sent();
-                        _d.label = 4;
-                    case 4: return [3 /*break*/, 11];
-                    case 5:
-                        coin = credit.coin;
-                        return [4 /*yield*/, this.getPath(coin)];
-                    case 6:
-                        path = _d.sent();
-                        assert(path);
-                        // Build the tx details object
-                        // as we go, for speed.
-                        details.setInput(i, path, coin);
-                        // Write an undo coin for the credit
-                        // and add it to the stxo set.
-                        this.spendCredit(b, credit, tx, i);
-                        // Unconfirmed balance should always
-                        // be updated as it reflects the on-chain
-                        // balance _and_ mempool balance assuming
-                        // everything in the mempool were to confirm.
-                        state.tx(path, 1);
-                        state.coin(path, -1);
-                        state.unconfirmed(path, -coin.value);
-                        if (!!block) return [3 /*break*/, 8];
-                        // If the tx is not mined, we do not
-                        // disconnect the coin, we simply mark
-                        // a `spent` flag on the credit. This
-                        // effectively prevents the mempool
-                        // from altering our utxo state
-                        // permanently. It also makes it
-                        // possible to compare the on-chain
-                        // state vs. the mempool state.
-                        credit.spent = true;
-                        return [4 /*yield*/, this.saveCredit(b, credit, path)];
-                    case 7:
-                        _d.sent();
-                        return [3 /*break*/, 10];
-                    case 8:
-                        // If the tx is mined, we can safely
-                        // remove the coin being spent. This
-                        // coin will be indexed as an undo
-                        // coin so it can be reconnected
-                        // later during a reorg.
-                        state.confirmed(path, -coin.value);
-                        return [4 /*yield*/, this.removeCredit(b, credit, path)];
-                    case 9:
-                        _d.sent();
-                        _d.label = 10;
-                    case 10:
-                        own = true;
-                        _d.label = 11;
-                    case 11:
-                        i++;
-                        return [3 /*break*/, 1];
-                    case 12:
-                        i = 0;
-                        _d.label = 13;
-                    case 13:
-                        if (!(i < tx.outputs.length)) return [3 /*break*/, 17];
-                        output = tx.outputs[i];
-                        return [4 /*yield*/, this.getPath(output)];
-                    case 14:
-                        path = _d.sent();
-                        if (!path)
-                            return [3 /*break*/, 16];
-                        details.setOutput(i, path);
-                        credit = Credit.fromTX(tx, i, height);
-                        credit.own = own;
-                        state.tx(path, 1);
-                        state.coin(path, 1);
-                        state.unconfirmed(path, output.value);
-                        if (block)
-                            state.confirmed(path, output.value);
-                        return [4 /*yield*/, this.saveCredit(b, credit, path)];
-                    case 15:
-                        _d.sent();
-                        _d.label = 16;
-                    case 16:
-                        i++;
-                        return [3 /*break*/, 13];
-                    case 17:
-                        // If this didn't update any coins,
-                        // it's not our transaction.
-                        if (!state.updated())
-                            return [2 /*return*/, null];
-                        // Save and index the transaction record.
-                        b.put(layout.t.encode(hash), wtx.toRaw());
-                        b.put(layout.m.encode(wtx.mtime, hash), null);
-                        if (!block)
-                            b.put(layout.p.encode(hash), null);
-                        else
-                            b.put(layout.h.encode(height, hash), null);
-                        _i = 0, _b = state.accounts;
-                        _d.label = 18;
-                    case 18:
-                        if (!(_i < _b.length)) return [3 /*break*/, 21];
-                        _c = _b[_i], acct = _c[0], delta = _c[1];
-                        return [4 /*yield*/, this.updateAccountBalance(b, acct, delta)];
-                    case 19:
-                        _d.sent();
-                        b.put(layout.T.encode(acct, hash), null);
-                        b.put(layout.M.encode(acct, wtx.mtime, hash), null);
-                        if (!block)
-                            b.put(layout.P.encode(acct, hash), null);
-                        else
-                            b.put(layout.H.encode(acct, height, hash), null);
-                        _d.label = 20;
-                    case 20:
-                        _i++;
-                        return [3 /*break*/, 18];
-                    case 21:
-                        if (!block) return [3 /*break*/, 24];
-                        return [4 /*yield*/, this.addBlockMap(b, height)];
-                    case 22:
-                        _d.sent();
-                        return [4 /*yield*/, this.addBlock(b, tx.hash(), block)];
-                    case 23:
-                        _d.sent();
-                        return [3 /*break*/, 26];
-                    case 24: return [4 /*yield*/, this.addTXMap(b, hash)];
-                    case 25:
-                        _d.sent();
-                        _d.label = 26;
-                    case 26: return [4 /*yield*/, this.updateBalance(b, state)];
-                    case 27:
-                        balance = _d.sent();
-                        return [4 /*yield*/, b.write()];
-                    case 28:
-                        _d.sent();
-                        // This transaction may unlock some
-                        // coins now that we've seen it.
-                        this.unlockTX(tx);
-                        // Emit events for potential local and
-                        // websocket listeners. Note that these
-                        // will only be emitted if the batch is
-                        // successfully written to disk.
-                        this.emit('tx', tx, details);
-                        this.emit('balance', balance);
-                        return [2 /*return*/, details];
+    async insert(wtx, block) {
+        const b = this.bucket.batch();
+        const { tx, hash } = wtx;
+        const height = block ? block.height : -1;
+        const details = new Details(wtx, block);
+        const state = new BalanceDelta();
+        let own = false;
+        if (!tx.isCoinbase()) {
+            // We need to potentially spend some coins here.
+            for (let i = 0; i < tx.inputs.length; i++) {
+                const input = tx.inputs[i];
+                const { hash, index } = input.prevout;
+                const credit = await this.getCredit(hash, index);
+                if (!credit) {
+                    // Watch all inputs for incoming txs.
+                    // This allows us to check for double spends.
+                    if (!block)
+                        await this.writeInput(b, tx, i);
+                    continue;
                 }
-            });
-        });
-    };
+                const coin = credit.coin;
+                const path = await this.getPath(coin);
+                assert(path);
+                // Build the tx details object
+                // as we go, for speed.
+                details.setInput(i, path, coin);
+                // Write an undo coin for the credit
+                // and add it to the stxo set.
+                this.spendCredit(b, credit, tx, i);
+                // Unconfirmed balance should always
+                // be updated as it reflects the on-chain
+                // balance _and_ mempool balance assuming
+                // everything in the mempool were to confirm.
+                state.tx(path, 1);
+                state.coin(path, -1);
+                state.unconfirmed(path, -coin.value);
+                if (!block) {
+                    // If the tx is not mined, we do not
+                    // disconnect the coin, we simply mark
+                    // a `spent` flag on the credit. This
+                    // effectively prevents the mempool
+                    // from altering our utxo state
+                    // permanently. It also makes it
+                    // possible to compare the on-chain
+                    // state vs. the mempool state.
+                    credit.spent = true;
+                    await this.saveCredit(b, credit, path);
+                }
+                else {
+                    // If the tx is mined, we can safely
+                    // remove the coin being spent. This
+                    // coin will be indexed as an undo
+                    // coin so it can be reconnected
+                    // later during a reorg.
+                    state.confirmed(path, -coin.value);
+                    await this.removeCredit(b, credit, path);
+                }
+                own = true;
+            }
+        }
+        // Potentially add coins to the utxo set.
+        for (let i = 0; i < tx.outputs.length; i++) {
+            const output = tx.outputs[i];
+            const path = await this.getPath(output);
+            if (!path)
+                continue;
+            details.setOutput(i, path);
+            const credit = Credit.fromTX(tx, i, height);
+            credit.own = own;
+            state.tx(path, 1);
+            state.coin(path, 1);
+            state.unconfirmed(path, output.value);
+            if (block)
+                state.confirmed(path, output.value);
+            await this.saveCredit(b, credit, path);
+        }
+        // If this didn't update any coins,
+        // it's not our transaction.
+        if (!state.updated())
+            return null;
+        // Save and index the transaction record.
+        b.put(layout.t.encode(hash), wtx.toRaw());
+        b.put(layout.m.encode(wtx.mtime, hash), null);
+        if (!block)
+            b.put(layout.p.encode(hash), null);
+        else
+            b.put(layout.h.encode(height, hash), null);
+        // Do some secondary indexing for account-based
+        // queries. This saves us a lot of time for
+        // queries later.
+        for (const [acct, delta] of state.accounts) {
+            await this.updateAccountBalance(b, acct, delta);
+            b.put(layout.T.encode(acct, hash), null);
+            b.put(layout.M.encode(acct, wtx.mtime, hash), null);
+            if (!block)
+                b.put(layout.P.encode(acct, hash), null);
+            else
+                b.put(layout.H.encode(acct, height, hash), null);
+        }
+        // Update block records.
+        if (block) {
+            await this.addBlockMap(b, height);
+            await this.addBlock(b, tx.hash(), block);
+        }
+        else {
+            await this.addTXMap(b, hash);
+        }
+        // Commit the new state.
+        const balance = await this.updateBalance(b, state);
+        await b.write();
+        // This transaction may unlock some
+        // coins now that we've seen it.
+        this.unlockTX(tx);
+        // Emit events for potential local and
+        // websocket listeners. Note that these
+        // will only be emitted if the batch is
+        // successfully written to disk.
+        this.emit('tx', tx, details);
+        this.emit('balance', balance);
+        return details;
+    }
     /**
      * Attempt to confirm a transaction.
      * @private
@@ -686,182 +493,124 @@ var TXDB = /** @class */ (function () {
      * @param {BlockMeta} block
      * @returns {Promise}
      */
-    TXDB.prototype.confirm = function (wtx, block) {
-        return __awaiter(this, void 0, void 0, function () {
-            var b, tx, hash, height, details, state, own, credits, i, input, _a, hash_2, index, resolved, credit_1, credit, coin, path, i, output, path, credit, _i, _b, _c, acct, delta, balance;
-            return __generator(this, function (_d) {
-                switch (_d.label) {
-                    case 0:
-                        b = this.bucket.batch();
-                        tx = wtx.tx, hash = wtx.hash;
-                        height = block.height;
-                        details = new Details(wtx, block);
-                        state = new BalanceDelta();
-                        own = false;
-                        wtx.setBlock(block);
-                        if (!!tx.isCoinbase()) return [3 /*break*/, 9];
-                        return [4 /*yield*/, this.getSpentCredits(tx)];
-                    case 1:
-                        credits = _d.sent();
-                        i = 0;
-                        _d.label = 2;
-                    case 2:
-                        if (!(i < tx.inputs.length)) return [3 /*break*/, 9];
-                        input = tx.inputs[i];
-                        _a = input.prevout, hash_2 = _a.hash, index = _a.index;
-                        resolved = false;
-                        if (!!credits[i]) return [3 /*break*/, 5];
-                        return [4 /*yield*/, this.removeInput(b, tx, i)];
-                    case 3:
-                        _d.sent();
-                        return [4 /*yield*/, this.getCredit(hash_2, index)];
-                    case 4:
-                        credit_1 = _d.sent();
-                        if (!credit_1)
-                            return [3 /*break*/, 8];
-                        // Add a spend record and undo coin
-                        // for the coin we now know is ours.
-                        // We don't need to remove the coin
-                        // since it was never added in the
-                        // first place.
-                        this.spendCredit(b, credit_1, tx, i);
-                        credits[i] = credit_1;
-                        resolved = true;
-                        _d.label = 5;
-                    case 5:
-                        credit = credits[i];
-                        coin = credit.coin;
-                        assert(coin.height !== -1);
-                        return [4 /*yield*/, this.getPath(coin)];
-                    case 6:
-                        path = _d.sent();
-                        assert(path);
-                        own = true;
-                        details.setInput(i, path, coin);
-                        if (resolved) {
-                            state.coin(path, -1);
-                            state.unconfirmed(path, -coin.value);
-                        }
-                        // We can now safely remove the credit
-                        // entirely, now that we know it's also
-                        // been removed on-chain.
-                        state.confirmed(path, -coin.value);
-                        return [4 /*yield*/, this.removeCredit(b, credit, path)];
-                    case 7:
-                        _d.sent();
-                        _d.label = 8;
-                    case 8:
-                        i++;
-                        return [3 /*break*/, 2];
-                    case 9:
-                        i = 0;
-                        _d.label = 10;
-                    case 10:
-                        if (!(i < tx.outputs.length)) return [3 /*break*/, 17];
-                        output = tx.outputs[i];
-                        return [4 /*yield*/, this.getPath(output)];
-                    case 11:
-                        path = _d.sent();
-                        if (!path)
-                            return [3 /*break*/, 16];
-                        details.setOutput(i, path);
-                        return [4 /*yield*/, this.getCredit(hash, i)];
-                    case 12:
-                        credit = _d.sent();
-                        if (!credit) {
-                            // This credit didn't belong to us the first time we
-                            // saw the transaction (before confirmation or rescan).
-                            // Create new credit for database.
-                            credit = Credit.fromTX(tx, i, height);
-                            // If this tx spent any of our own coins, we "own" this output,
-                            // meaning if it becomes unconfirmed, we can still confidently spend it.
-                            credit.own = own;
-                            // Add coin to "unconfirmed" balance (which includes confirmed coins)
-                            state.coin(path, 1);
-                            state.unconfirmed(path, credit.coin.value);
-                        }
-                        if (!credit.spent) return [3 /*break*/, 14];
-                        return [4 /*yield*/, this.updateSpentCoin(b, tx, i, height)];
-                    case 13:
-                        _d.sent();
-                        _d.label = 14;
-                    case 14:
-                        // Update coin height and confirmed
-                        // balance. Save once again.
-                        state.confirmed(path, output.value);
-                        credit.coin.height = height;
-                        return [4 /*yield*/, this.saveCredit(b, credit, path)];
-                    case 15:
-                        _d.sent();
-                        _d.label = 16;
-                    case 16:
-                        i++;
-                        return [3 /*break*/, 10];
-                    case 17:
-                        // Save the new serialized transaction as
-                        // the block-related properties have been
-                        // updated. Also reindex for height.
-                        b.put(layout.t.encode(hash), wtx.toRaw());
-                        b.del(layout.p.encode(hash));
-                        b.put(layout.h.encode(height, hash), null);
-                        _i = 0, _b = state.accounts;
-                        _d.label = 18;
-                    case 18:
-                        if (!(_i < _b.length)) return [3 /*break*/, 21];
-                        _c = _b[_i], acct = _c[0], delta = _c[1];
-                        return [4 /*yield*/, this.updateAccountBalance(b, acct, delta)];
-                    case 19:
-                        _d.sent();
-                        b.del(layout.P.encode(acct, hash));
-                        b.put(layout.H.encode(acct, height, hash), null);
-                        _d.label = 20;
-                    case 20:
-                        _i++;
-                        return [3 /*break*/, 18];
-                    case 21: return [4 /*yield*/, this.removeTXMap(b, hash)];
-                    case 22:
-                        _d.sent();
-                        return [4 /*yield*/, this.addBlockMap(b, height)];
-                    case 23:
-                        _d.sent();
-                        return [4 /*yield*/, this.addBlock(b, tx.hash(), block)];
-                    case 24:
-                        _d.sent();
-                        return [4 /*yield*/, this.updateBalance(b, state)];
-                    case 25:
-                        balance = _d.sent();
-                        return [4 /*yield*/, b.write()];
-                    case 26:
-                        _d.sent();
-                        this.unlockTX(tx);
-                        this.emit('confirmed', tx, details);
-                        this.emit('balance', balance);
-                        return [2 /*return*/, details];
+    async confirm(wtx, block) {
+        const b = this.bucket.batch();
+        const { tx, hash } = wtx;
+        const height = block.height;
+        const details = new Details(wtx, block);
+        const state = new BalanceDelta();
+        let own = false;
+        wtx.setBlock(block);
+        if (!tx.isCoinbase()) {
+            const credits = await this.getSpentCredits(tx);
+            // Potentially spend coins. Now that the tx
+            // is mined, we can actually _remove_ coins
+            // from the utxo state.
+            for (let i = 0; i < tx.inputs.length; i++) {
+                const input = tx.inputs[i];
+                const { hash, index } = input.prevout;
+                let resolved = false;
+                // There may be new credits available
+                // that we haven't seen yet.
+                if (!credits[i]) {
+                    await this.removeInput(b, tx, i);
+                    const credit = await this.getCredit(hash, index);
+                    if (!credit)
+                        continue;
+                    // Add a spend record and undo coin
+                    // for the coin we now know is ours.
+                    // We don't need to remove the coin
+                    // since it was never added in the
+                    // first place.
+                    this.spendCredit(b, credit, tx, i);
+                    credits[i] = credit;
+                    resolved = true;
                 }
-            });
-        });
-    };
+                const credit = credits[i];
+                const coin = credit.coin;
+                assert(coin.height !== -1);
+                const path = await this.getPath(coin);
+                assert(path);
+                own = true;
+                details.setInput(i, path, coin);
+                if (resolved) {
+                    state.coin(path, -1);
+                    state.unconfirmed(path, -coin.value);
+                }
+                // We can now safely remove the credit
+                // entirely, now that we know it's also
+                // been removed on-chain.
+                state.confirmed(path, -coin.value);
+                await this.removeCredit(b, credit, path);
+            }
+        }
+        // Update credit heights, including undo coins.
+        for (let i = 0; i < tx.outputs.length; i++) {
+            const output = tx.outputs[i];
+            const path = await this.getPath(output);
+            if (!path)
+                continue;
+            details.setOutput(i, path);
+            let credit = await this.getCredit(hash, i);
+            if (!credit) {
+                // This credit didn't belong to us the first time we
+                // saw the transaction (before confirmation or rescan).
+                // Create new credit for database.
+                credit = Credit.fromTX(tx, i, height);
+                // If this tx spent any of our own coins, we "own" this output,
+                // meaning if it becomes unconfirmed, we can still confidently spend it.
+                credit.own = own;
+                // Add coin to "unconfirmed" balance (which includes confirmed coins)
+                state.coin(path, 1);
+                state.unconfirmed(path, credit.coin.value);
+            }
+            // Credits spent in the mempool add an
+            // undo coin for ease. If this credit is
+            // spent in the mempool, we need to
+            // update the undo coin's height.
+            if (credit.spent)
+                await this.updateSpentCoin(b, tx, i, height);
+            // Update coin height and confirmed
+            // balance. Save once again.
+            state.confirmed(path, output.value);
+            credit.coin.height = height;
+            await this.saveCredit(b, credit, path);
+        }
+        // Save the new serialized transaction as
+        // the block-related properties have been
+        // updated. Also reindex for height.
+        b.put(layout.t.encode(hash), wtx.toRaw());
+        b.del(layout.p.encode(hash));
+        b.put(layout.h.encode(height, hash), null);
+        // Secondary indexing also needs to change.
+        for (const [acct, delta] of state.accounts) {
+            await this.updateAccountBalance(b, acct, delta);
+            b.del(layout.P.encode(acct, hash));
+            b.put(layout.H.encode(acct, height, hash), null);
+        }
+        await this.removeTXMap(b, hash);
+        await this.addBlockMap(b, height);
+        await this.addBlock(b, tx.hash(), block);
+        // Commit the new state. The balance has updated.
+        const balance = await this.updateBalance(b, state);
+        await b.write();
+        this.unlockTX(tx);
+        this.emit('confirmed', tx, details);
+        this.emit('balance', balance);
+        return details;
+    }
     /**
      * Recursively remove a transaction
      * from the database.
      * @param {Hash} hash
      * @returns {Promise}
      */
-    TXDB.prototype.remove = function (hash) {
-        return __awaiter(this, void 0, void 0, function () {
-            var wtx;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.getTX(hash)];
-                    case 1:
-                        wtx = _a.sent();
-                        if (!wtx)
-                            return [2 /*return*/, null];
-                        return [2 /*return*/, this.removeRecursive(wtx)];
-                }
-            });
-        });
-    };
+    async remove(hash) {
+        const wtx = await this.getTX(hash);
+        if (!wtx)
+            return null;
+        return this.removeRecursive(wtx);
+    }
     /**
      * Remove a transaction from the
      * database. Disconnect inputs.
@@ -869,135 +618,92 @@ var TXDB = /** @class */ (function () {
      * @param {TXRecord} wtx
      * @returns {Promise}
      */
-    TXDB.prototype.erase = function (wtx, block) {
-        return __awaiter(this, void 0, void 0, function () {
-            var b, tx, hash, height, details, state, credits, i, credit, coin, path, i, output, path, credit, _i, _a, _b, acct, delta, balance;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
-                    case 0:
-                        b = this.bucket.batch();
-                        tx = wtx.tx, hash = wtx.hash;
-                        height = block ? block.height : -1;
-                        details = new Details(wtx, block);
-                        state = new BalanceDelta();
-                        if (!!tx.isCoinbase()) return [3 /*break*/, 9];
-                        return [4 /*yield*/, this.getSpentCredits(tx)];
-                    case 1:
-                        credits = _c.sent();
-                        i = 0;
-                        _c.label = 2;
-                    case 2:
-                        if (!(i < tx.inputs.length)) return [3 /*break*/, 9];
-                        credit = credits[i];
-                        if (!!credit) return [3 /*break*/, 5];
-                        if (!!block) return [3 /*break*/, 4];
-                        return [4 /*yield*/, this.removeInput(b, tx, i)];
-                    case 3:
-                        _c.sent();
-                        _c.label = 4;
-                    case 4: return [3 /*break*/, 8];
-                    case 5:
-                        coin = credit.coin;
-                        return [4 /*yield*/, this.getPath(coin)];
-                    case 6:
-                        path = _c.sent();
-                        assert(path);
-                        details.setInput(i, path, coin);
-                        // Recalculate the balance, remove
-                        // from stxo set, remove the undo
-                        // coin, and resave the credit.
-                        state.tx(path, -1);
-                        state.coin(path, 1);
-                        state.unconfirmed(path, coin.value);
-                        if (block)
-                            state.confirmed(path, coin.value);
-                        this.unspendCredit(b, tx, i);
-                        credit.spent = false;
-                        return [4 /*yield*/, this.saveCredit(b, credit, path)];
-                    case 7:
-                        _c.sent();
-                        _c.label = 8;
-                    case 8:
-                        i++;
-                        return [3 /*break*/, 2];
-                    case 9:
-                        i = 0;
-                        _c.label = 10;
-                    case 10:
-                        if (!(i < tx.outputs.length)) return [3 /*break*/, 14];
-                        output = tx.outputs[i];
-                        return [4 /*yield*/, this.getPath(output)];
-                    case 11:
-                        path = _c.sent();
-                        if (!path)
-                            return [3 /*break*/, 13];
-                        details.setOutput(i, path);
-                        credit = Credit.fromTX(tx, i, height);
-                        state.tx(path, -1);
-                        state.coin(path, -1);
-                        state.unconfirmed(path, -output.value);
-                        if (block)
-                            state.confirmed(path, -output.value);
-                        return [4 /*yield*/, this.removeCredit(b, credit, path)];
-                    case 12:
-                        _c.sent();
-                        _c.label = 13;
-                    case 13:
-                        i++;
-                        return [3 /*break*/, 10];
-                    case 14:
-                        // Remove the transaction data
-                        // itself as well as unindex.
-                        b.del(layout.t.encode(hash));
-                        b.del(layout.m.encode(wtx.mtime, hash));
-                        if (!block)
-                            b.del(layout.p.encode(hash));
-                        else
-                            b.del(layout.h.encode(height, hash));
-                        _i = 0, _a = state.accounts;
-                        _c.label = 15;
-                    case 15:
-                        if (!(_i < _a.length)) return [3 /*break*/, 18];
-                        _b = _a[_i], acct = _b[0], delta = _b[1];
-                        return [4 /*yield*/, this.updateAccountBalance(b, acct, delta)];
-                    case 16:
-                        _c.sent();
-                        b.del(layout.T.encode(acct, hash));
-                        b.del(layout.M.encode(acct, wtx.mtime, hash));
-                        if (!block)
-                            b.del(layout.P.encode(acct, hash));
-                        else
-                            b.del(layout.H.encode(acct, height, hash));
-                        _c.label = 17;
-                    case 17:
-                        _i++;
-                        return [3 /*break*/, 15];
-                    case 18:
-                        if (!block) return [3 /*break*/, 21];
-                        return [4 /*yield*/, this.removeBlockMap(b, height)];
-                    case 19:
-                        _c.sent();
-                        return [4 /*yield*/, this.spliceBlock(b, hash, height)];
-                    case 20:
-                        _c.sent();
-                        return [3 /*break*/, 23];
-                    case 21: return [4 /*yield*/, this.removeTXMap(b, hash)];
-                    case 22:
-                        _c.sent();
-                        _c.label = 23;
-                    case 23: return [4 /*yield*/, this.updateBalance(b, state)];
-                    case 24:
-                        balance = _c.sent();
-                        return [4 /*yield*/, b.write()];
-                    case 25:
-                        _c.sent();
-                        this.emit('remove tx', tx, details);
-                        this.emit('balance', balance);
-                        return [2 /*return*/, details];
+    async erase(wtx, block) {
+        const b = this.bucket.batch();
+        const { tx, hash } = wtx;
+        const height = block ? block.height : -1;
+        const details = new Details(wtx, block);
+        const state = new BalanceDelta();
+        if (!tx.isCoinbase()) {
+            // We need to undo every part of the
+            // state this transaction ever touched.
+            // Start by getting the undo coins.
+            const credits = await this.getSpentCredits(tx);
+            for (let i = 0; i < tx.inputs.length; i++) {
+                const credit = credits[i];
+                if (!credit) {
+                    if (!block)
+                        await this.removeInput(b, tx, i);
+                    continue;
                 }
-            });
-        });
-    };
+                const coin = credit.coin;
+                const path = await this.getPath(coin);
+                assert(path);
+                details.setInput(i, path, coin);
+                // Recalculate the balance, remove
+                // from stxo set, remove the undo
+                // coin, and resave the credit.
+                state.tx(path, -1);
+                state.coin(path, 1);
+                state.unconfirmed(path, coin.value);
+                if (block)
+                    state.confirmed(path, coin.value);
+                this.unspendCredit(b, tx, i);
+                credit.spent = false;
+                await this.saveCredit(b, credit, path);
+            }
+        }
+        // We need to remove all credits
+        // this transaction created.
+        for (let i = 0; i < tx.outputs.length; i++) {
+            const output = tx.outputs[i];
+            const path = await this.getPath(output);
+            if (!path)
+                continue;
+            details.setOutput(i, path);
+            const credit = Credit.fromTX(tx, i, height);
+            state.tx(path, -1);
+            state.coin(path, -1);
+            state.unconfirmed(path, -output.value);
+            if (block)
+                state.confirmed(path, -output.value);
+            await this.removeCredit(b, credit, path);
+        }
+        // Remove the transaction data
+        // itself as well as unindex.
+        b.del(layout.t.encode(hash));
+        b.del(layout.m.encode(wtx.mtime, hash));
+        if (!block)
+            b.del(layout.p.encode(hash));
+        else
+            b.del(layout.h.encode(height, hash));
+        // Remove all secondary indexing.
+        for (const [acct, delta] of state.accounts) {
+            await this.updateAccountBalance(b, acct, delta);
+            b.del(layout.T.encode(acct, hash));
+            b.del(layout.M.encode(acct, wtx.mtime, hash));
+            if (!block)
+                b.del(layout.P.encode(acct, hash));
+            else
+                b.del(layout.H.encode(acct, height, hash));
+        }
+        // Update block records.
+        if (block) {
+            await this.removeBlockMap(b, height);
+            await this.spliceBlock(b, hash, height);
+        }
+        else {
+            await this.removeTXMap(b, hash);
+        }
+        // Update the transaction counter
+        // and commit new state due to
+        // balance change.
+        const balance = await this.updateBalance(b, state);
+        await b.write();
+        this.emit('remove tx', tx, details);
+        this.emit('balance', balance);
+        return details;
+    }
     /**
      * Remove a transaction and recursively
      * remove all of its spenders.
@@ -1005,231 +711,133 @@ var TXDB = /** @class */ (function () {
      * @param {TXRecord} wtx
      * @returns {Promise}
      */
-    TXDB.prototype.removeRecursive = function (wtx) {
-        return __awaiter(this, void 0, void 0, function () {
-            var tx, hash, i, spent, stx;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        tx = wtx.tx, hash = wtx.hash;
-                        return [4 /*yield*/, this.hasTX(hash)];
-                    case 1:
-                        if (!(_a.sent()))
-                            return [2 /*return*/, null];
-                        i = 0;
-                        _a.label = 2;
-                    case 2:
-                        if (!(i < tx.outputs.length)) return [3 /*break*/, 7];
-                        return [4 /*yield*/, this.getSpent(hash, i)];
-                    case 3:
-                        spent = _a.sent();
-                        if (!spent)
-                            return [3 /*break*/, 6];
-                        return [4 /*yield*/, this.getTX(spent.hash)];
-                    case 4:
-                        stx = _a.sent();
-                        assert(stx);
-                        return [4 /*yield*/, this.removeRecursive(stx)];
-                    case 5:
-                        _a.sent();
-                        _a.label = 6;
-                    case 6:
-                        i++;
-                        return [3 /*break*/, 2];
-                    case 7: 
-                    // Remove the spender.
-                    return [2 /*return*/, this.erase(wtx, wtx.getBlock())];
-                }
-            });
-        });
-    };
+    async removeRecursive(wtx) {
+        const { tx, hash } = wtx;
+        if (!await this.hasTX(hash))
+            return null;
+        for (let i = 0; i < tx.outputs.length; i++) {
+            const spent = await this.getSpent(hash, i);
+            if (!spent)
+                continue;
+            // Remove all of the spender's spenders first.
+            const stx = await this.getTX(spent.hash);
+            assert(stx);
+            await this.removeRecursive(stx);
+        }
+        // Remove the spender.
+        return this.erase(wtx, wtx.getBlock());
+    }
     /**
      * Revert a block.
      * @param {Number} height
      * @returns {Promise}
      */
-    TXDB.prototype.revert = function (height) {
-        return __awaiter(this, void 0, void 0, function () {
-            var block, hashes, i, hash;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.getBlock(height)];
-                    case 1:
-                        block = _a.sent();
-                        if (!block)
-                            return [2 /*return*/, 0];
-                        this.logger.debug('Rescan: reverting block %d', height);
-                        hashes = block.toArray();
-                        i = hashes.length - 1;
-                        _a.label = 2;
-                    case 2:
-                        if (!(i >= 0)) return [3 /*break*/, 5];
-                        hash = hashes[i];
-                        return [4 /*yield*/, this.unconfirm(hash)];
-                    case 3:
-                        _a.sent();
-                        _a.label = 4;
-                    case 4:
-                        i--;
-                        return [3 /*break*/, 2];
-                    case 5: return [2 /*return*/, hashes.length];
-                }
-            });
-        });
-    };
+    async revert(height) {
+        const block = await this.getBlock(height);
+        if (!block)
+            return 0;
+        this.logger.debug('Rescan: reverting block %d', height);
+        const hashes = block.toArray();
+        for (let i = hashes.length - 1; i >= 0; i--) {
+            const hash = hashes[i];
+            await this.unconfirm(hash);
+        }
+        return hashes.length;
+    }
     /**
      * Unconfirm a transaction without a batch.
      * @private
      * @param {Hash} hash
      * @returns {Promise}
      */
-    TXDB.prototype.unconfirm = function (hash) {
-        return __awaiter(this, void 0, void 0, function () {
-            var wtx;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.getTX(hash)];
-                    case 1:
-                        wtx = _a.sent();
-                        if (!wtx)
-                            return [2 /*return*/, null];
-                        if (wtx.height === -1)
-                            return [2 /*return*/, null];
-                        return [2 /*return*/, this.disconnect(wtx, wtx.getBlock())];
-                }
-            });
-        });
-    };
+    async unconfirm(hash) {
+        const wtx = await this.getTX(hash);
+        if (!wtx)
+            return null;
+        if (wtx.height === -1)
+            return null;
+        return this.disconnect(wtx, wtx.getBlock());
+    }
     /**
      * Unconfirm a transaction. Necessary after a reorg.
      * @param {TXRecord} wtx
      * @returns {Promise}
      */
-    TXDB.prototype.disconnect = function (wtx, block) {
-        return __awaiter(this, void 0, void 0, function () {
-            var b, tx, hash, height, details, state, credits, i, credit, coin, path, i, output, path, credit, _i, _a, _b, acct, delta, balance;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
-                    case 0:
-                        b = this.bucket.batch();
-                        tx = wtx.tx, hash = wtx.hash, height = wtx.height;
-                        details = new Details(wtx, block);
-                        state = new BalanceDelta();
-                        assert(block);
-                        wtx.unsetBlock();
-                        if (!!tx.isCoinbase()) return [3 /*break*/, 8];
-                        return [4 /*yield*/, this.getSpentCredits(tx)];
-                    case 1:
-                        credits = _c.sent();
-                        i = 0;
-                        _c.label = 2;
-                    case 2:
-                        if (!(i < tx.inputs.length)) return [3 /*break*/, 8];
-                        credit = credits[i];
-                        if (!!credit) return [3 /*break*/, 4];
-                        return [4 /*yield*/, this.writeInput(b, tx, i)];
-                    case 3:
-                        _c.sent();
-                        return [3 /*break*/, 7];
-                    case 4:
-                        coin = credit.coin;
-                        assert(coin.height !== -1);
-                        return [4 /*yield*/, this.getPath(coin)];
-                    case 5:
-                        path = _c.sent();
-                        assert(path);
-                        details.setInput(i, path, coin);
-                        state.confirmed(path, coin.value);
-                        // Resave the credit and mark it
-                        // as spent in the mempool instead.
-                        credit.spent = true;
-                        return [4 /*yield*/, this.saveCredit(b, credit, path)];
-                    case 6:
-                        _c.sent();
-                        _c.label = 7;
-                    case 7:
-                        i++;
-                        return [3 /*break*/, 2];
-                    case 8:
-                        i = 0;
-                        _c.label = 9;
-                    case 9:
-                        if (!(i < tx.outputs.length)) return [3 /*break*/, 18];
-                        output = tx.outputs[i];
-                        return [4 /*yield*/, this.getPath(output)];
-                    case 10:
-                        path = _c.sent();
-                        if (!path)
-                            return [3 /*break*/, 17];
-                        return [4 /*yield*/, this.getCredit(hash, i)];
-                    case 11:
-                        credit = _c.sent();
-                        if (!!credit) return [3 /*break*/, 13];
-                        return [4 /*yield*/, this.updateSpentCoin(b, tx, i, height)];
-                    case 12:
-                        _c.sent();
-                        return [3 /*break*/, 17];
-                    case 13:
-                        if (!credit.spent) return [3 /*break*/, 15];
-                        return [4 /*yield*/, this.updateSpentCoin(b, tx, i, height)];
-                    case 14:
-                        _c.sent();
-                        _c.label = 15;
-                    case 15:
-                        details.setOutput(i, path);
-                        // Update coin height and confirmed
-                        // balance. Save once again.
-                        credit.coin.height = -1;
-                        state.confirmed(path, -output.value);
-                        return [4 /*yield*/, this.saveCredit(b, credit, path)];
-                    case 16:
-                        _c.sent();
-                        _c.label = 17;
-                    case 17:
-                        i++;
-                        return [3 /*break*/, 9];
-                    case 18: return [4 /*yield*/, this.addTXMap(b, hash)];
-                    case 19:
-                        _c.sent();
-                        return [4 /*yield*/, this.removeBlockMap(b, height)];
-                    case 20:
-                        _c.sent();
-                        return [4 /*yield*/, this.removeBlock(b, tx.hash(), height)];
-                    case 21:
-                        _c.sent();
-                        // We need to update the now-removed
-                        // block properties and reindex due
-                        // to the height change.
-                        b.put(layout.t.encode(hash), wtx.toRaw());
-                        b.put(layout.p.encode(hash), null);
-                        b.del(layout.h.encode(height, hash));
-                        _i = 0, _a = state.accounts;
-                        _c.label = 22;
-                    case 22:
-                        if (!(_i < _a.length)) return [3 /*break*/, 25];
-                        _b = _a[_i], acct = _b[0], delta = _b[1];
-                        return [4 /*yield*/, this.updateAccountBalance(b, acct, delta)];
-                    case 23:
-                        _c.sent();
-                        b.put(layout.P.encode(acct, hash), null);
-                        b.del(layout.H.encode(acct, height, hash));
-                        _c.label = 24;
-                    case 24:
-                        _i++;
-                        return [3 /*break*/, 22];
-                    case 25: return [4 /*yield*/, this.updateBalance(b, state)];
-                    case 26:
-                        balance = _c.sent();
-                        return [4 /*yield*/, b.write()];
-                    case 27:
-                        _c.sent();
-                        this.emit('unconfirmed', tx, details);
-                        this.emit('balance', balance);
-                        return [2 /*return*/, details];
+    async disconnect(wtx, block) {
+        const b = this.bucket.batch();
+        const { tx, hash, height } = wtx;
+        const details = new Details(wtx, block);
+        const state = new BalanceDelta();
+        assert(block);
+        wtx.unsetBlock();
+        if (!tx.isCoinbase()) {
+            // We need to reconnect the coins. Start
+            // by getting all of the undo coins we know
+            // about.
+            const credits = await this.getSpentCredits(tx);
+            for (let i = 0; i < tx.inputs.length; i++) {
+                const credit = credits[i];
+                if (!credit) {
+                    await this.writeInput(b, tx, i);
+                    continue;
                 }
-            });
-        });
-    };
+                const coin = credit.coin;
+                assert(coin.height !== -1);
+                const path = await this.getPath(coin);
+                assert(path);
+                details.setInput(i, path, coin);
+                state.confirmed(path, coin.value);
+                // Resave the credit and mark it
+                // as spent in the mempool instead.
+                credit.spent = true;
+                await this.saveCredit(b, credit, path);
+            }
+        }
+        // We need to remove heights on
+        // the credits and undo coins.
+        for (let i = 0; i < tx.outputs.length; i++) {
+            const output = tx.outputs[i];
+            const path = await this.getPath(output);
+            if (!path)
+                continue;
+            const credit = await this.getCredit(hash, i);
+            // Potentially update undo coin height.
+            if (!credit) {
+                await this.updateSpentCoin(b, tx, i, height);
+                continue;
+            }
+            if (credit.spent)
+                await this.updateSpentCoin(b, tx, i, height);
+            details.setOutput(i, path);
+            // Update coin height and confirmed
+            // balance. Save once again.
+            credit.coin.height = -1;
+            state.confirmed(path, -output.value);
+            await this.saveCredit(b, credit, path);
+        }
+        await this.addTXMap(b, hash);
+        await this.removeBlockMap(b, height);
+        await this.removeBlock(b, tx.hash(), height);
+        // We need to update the now-removed
+        // block properties and reindex due
+        // to the height change.
+        b.put(layout.t.encode(hash), wtx.toRaw());
+        b.put(layout.p.encode(hash), null);
+        b.del(layout.h.encode(height, hash));
+        // Secondary indexing also needs to change.
+        for (const [acct, delta] of state.accounts) {
+            await this.updateAccountBalance(b, acct, delta);
+            b.put(layout.P.encode(acct, hash), null);
+            b.del(layout.H.encode(acct, height, hash));
+        }
+        // Commit state due to unconfirmed
+        // vs. confirmed balance change.
+        const balance = await this.updateBalance(b, state);
+        await b.write();
+        this.emit('unconfirmed', tx, details);
+        this.emit('balance', balance);
+        return details;
+    }
     /**
      * Remove spenders that have not been confirmed. We do this in the
      * odd case of stuck transactions or when a coin is double-spent
@@ -1241,27 +849,17 @@ var TXDB = /** @class */ (function () {
      * @param {TX} ref - Reference tx, the tx that double-spent.
      * @returns {Promise} - Returns Boolean.
      */
-    TXDB.prototype.removeConflict = function (wtx) {
-        return __awaiter(this, void 0, void 0, function () {
-            var tx, details;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        tx = wtx.tx;
-                        this.logger.warning('Handling conflicting tx: %h.', tx.hash());
-                        return [4 /*yield*/, this.removeRecursive(wtx)];
-                    case 1:
-                        details = _a.sent();
-                        if (!details)
-                            return [2 /*return*/, null];
-                        this.logger.warning('Removed conflict: %h.', tx.hash());
-                        // Emit the _removed_ transaction.
-                        this.emit('conflict', tx, details);
-                        return [2 /*return*/, details];
-                }
-            });
-        });
-    };
+    async removeConflict(wtx) {
+        const tx = wtx.tx;
+        this.logger.warning('Handling conflicting tx: %h.', tx.hash());
+        const details = await this.removeRecursive(wtx);
+        if (!details)
+            return null;
+        this.logger.warning('Removed conflict: %h.', tx.hash());
+        // Emit the _removed_ transaction.
+        this.emit('conflict', tx, details);
+        return details;
+    }
     /**
      * Retrieve coins for own inputs, remove
      * double spenders, and verify inputs.
@@ -1269,253 +867,215 @@ var TXDB = /** @class */ (function () {
      * @param {TX} tx
      * @returns {Promise}
      */
-    TXDB.prototype.removeConflicts = function (tx, conf) {
-        return __awaiter(this, void 0, void 0, function () {
-            var txid, spends, _i, _a, prevout, hash, index, spent, spender, _b, spends_1, spender;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
-                    case 0:
-                        if (tx.isCoinbase())
-                            return [2 /*return*/, true];
-                        txid = tx.hash();
-                        spends = [];
-                        _i = 0, _a = tx.inputs;
-                        _c.label = 1;
-                    case 1:
-                        if (!(_i < _a.length)) return [3 /*break*/, 5];
-                        prevout = _a[_i].prevout;
-                        hash = prevout.hash, index = prevout.index;
-                        return [4 /*yield*/, this.getSpent(hash, index)];
-                    case 2:
-                        spent = _c.sent();
-                        if (!spent)
-                            return [3 /*break*/, 4];
-                        // Did _we_ spend it?
-                        if (spent.hash.equals(txid))
-                            return [3 /*break*/, 4];
-                        return [4 /*yield*/, this.getTX(spent.hash)];
-                    case 3:
-                        spender = _c.sent();
-                        assert(spender);
-                        if (conf && spender.height !== -1)
-                            return [2 /*return*/, false];
-                        spends.push(spender);
-                        _c.label = 4;
-                    case 4:
-                        _i++;
-                        return [3 /*break*/, 1];
-                    case 5:
-                        _b = 0, spends_1 = spends;
-                        _c.label = 6;
-                    case 6:
-                        if (!(_b < spends_1.length)) return [3 /*break*/, 9];
-                        spender = spends_1[_b];
-                        // Remove the double spender.
-                        return [4 /*yield*/, this.removeConflict(spender)];
-                    case 7:
-                        // Remove the double spender.
-                        _c.sent();
-                        _c.label = 8;
-                    case 8:
-                        _b++;
-                        return [3 /*break*/, 6];
-                    case 9: return [2 /*return*/, true];
-                }
-            });
-        });
-    };
+    async removeConflicts(tx, conf) {
+        if (tx.isCoinbase())
+            return true;
+        const txid = tx.hash();
+        const spends = [];
+        // Gather all spent records first.
+        for (const { prevout } of tx.inputs) {
+            const { hash, index } = prevout;
+            // Is it already spent?
+            const spent = await this.getSpent(hash, index);
+            if (!spent)
+                continue;
+            // Did _we_ spend it?
+            if (spent.hash.equals(txid))
+                continue;
+            const spender = await this.getTX(spent.hash);
+            assert(spender);
+            if (conf && spender.height !== -1)
+                return false;
+            spends.push(spender);
+        }
+        // Once we know we're not going to
+        // screw things up, remove the double
+        // spenders.
+        for (const spender of spends) {
+            // Remove the double spender.
+            await this.removeConflict(spender);
+        }
+        return true;
+    }
     /**
      * Lock all coins in a transaction.
      * @param {TX} tx
      */
-    TXDB.prototype.lockTX = function (tx) {
+    lockTX(tx) {
         if (tx.isCoinbase())
             return;
-        for (var _i = 0, _a = tx.inputs; _i < _a.length; _i++) {
-            var input = _a[_i];
+        for (const input of tx.inputs)
             this.lockCoin(input.prevout);
-        }
-    };
+    }
     /**
      * Unlock all coins in a transaction.
      * @param {TX} tx
      */
-    TXDB.prototype.unlockTX = function (tx) {
+    unlockTX(tx) {
         if (tx.isCoinbase())
             return;
-        for (var _i = 0, _a = tx.inputs; _i < _a.length; _i++) {
-            var input = _a[_i];
+        for (const input of tx.inputs)
             this.unlockCoin(input.prevout);
-        }
-    };
+    }
     /**
      * Lock a single coin.
      * @param {Coin|Outpoint} coin
      */
-    TXDB.prototype.lockCoin = function (coin) {
-        var key = coin.toKey();
+    lockCoin(coin) {
+        const key = coin.toKey();
         this.locked.add(key);
-    };
+    }
     /**
      * Unlock a single coin.
      * @param {Coin|Outpoint} coin
      */
-    TXDB.prototype.unlockCoin = function (coin) {
-        var key = coin.toKey();
-        return this.locked["delete"](key);
-    };
+    unlockCoin(coin) {
+        const key = coin.toKey();
+        return this.locked.delete(key);
+    }
     /**
      * Unlock all coins.
      */
-    TXDB.prototype.unlockCoins = function () {
-        for (var _i = 0, _a = this.getLocked(); _i < _a.length; _i++) {
-            var coin = _a[_i];
+    unlockCoins() {
+        for (const coin of this.getLocked())
             this.unlockCoin(coin);
-        }
-    };
+    }
     /**
      * Test locked status of a single coin.
      * @param {Coin|Outpoint} coin
      */
-    TXDB.prototype.isLocked = function (coin) {
-        var key = coin.toKey();
+    isLocked(coin) {
+        const key = coin.toKey();
         return this.locked.has(key);
-    };
+    }
     /**
      * Filter array of coins or outpoints
      * for only unlocked ones.
      * @param {Coin[]|Outpoint[]}
      * @returns {Array}
      */
-    TXDB.prototype.filterLocked = function (coins) {
-        var out = [];
-        for (var _i = 0, coins_1 = coins; _i < coins_1.length; _i++) {
-            var coin = coins_1[_i];
+    filterLocked(coins) {
+        const out = [];
+        for (const coin of coins) {
             if (!this.isLocked(coin))
                 out.push(coin);
         }
         return out;
-    };
+    }
     /**
      * Return an array of all locked outpoints.
      * @returns {Outpoint[]}
      */
-    TXDB.prototype.getLocked = function () {
-        var outpoints = [];
-        for (var _i = 0, _a = this.locked.keys(); _i < _a.length; _i++) {
-            var key = _a[_i];
+    getLocked() {
+        const outpoints = [];
+        for (const key of this.locked.keys())
             outpoints.push(Outpoint.fromKey(key));
-        }
         return outpoints;
-    };
+    }
     /**
      * Get hashes of all transactions in the database.
      * @param {Number} acct
      * @returns {Promise} - Returns {@link Hash}[].
      */
-    TXDB.prototype.getAccountHistoryHashes = function (acct) {
+    getAccountHistoryHashes(acct) {
         assert(typeof acct === 'number');
         return this.bucket.keys({
             gte: layout.T.min(acct),
             lte: layout.T.max(acct),
-            parse: function (key) {
-                var _a = layout.T.decode(key), hash = _a[1];
+            parse: (key) => {
+                const [, hash] = layout.T.decode(key);
                 return hash;
             }
         });
-    };
+    }
     /**
      * Get hashes of all transactions in the database.
      * @param {Number} acct
      * @returns {Promise} - Returns {@link Hash}[].
      */
-    TXDB.prototype.getHistoryHashes = function (acct) {
+    getHistoryHashes(acct) {
         assert(typeof acct === 'number');
         if (acct !== -1)
             return this.getAccountHistoryHashes(acct);
         return this.bucket.keys({
             gte: layout.t.min(),
             lte: layout.t.max(),
-            parse: function (key) { return layout.t.decode(key)[0]; }
+            parse: key => layout.t.decode(key)[0]
         });
-    };
+    }
     /**
      * Get hashes of all unconfirmed transactions in the database.
      * @param {Number} acct
      * @returns {Promise} - Returns {@link Hash}[].
      */
-    TXDB.prototype.getAccountPendingHashes = function (acct) {
+    getAccountPendingHashes(acct) {
         assert(typeof acct === 'number');
         return this.bucket.keys({
             gte: layout.P.min(acct),
             lte: layout.P.max(acct),
-            parse: function (key) {
-                var _a = layout.P.decode(key), hash = _a[1];
+            parse: (key) => {
+                const [, hash] = layout.P.decode(key);
                 return hash;
             }
         });
-    };
+    }
     /**
      * Get hashes of all unconfirmed transactions in the database.
      * @param {Number} acct
      * @returns {Promise} - Returns {@link Hash}[].
      */
-    TXDB.prototype.getPendingHashes = function (acct) {
+    getPendingHashes(acct) {
         assert(typeof acct === 'number');
         if (acct !== -1)
             return this.getAccountPendingHashes(acct);
         return this.bucket.keys({
             gte: layout.p.min(),
             lte: layout.p.max(),
-            parse: function (key) { return layout.p.decode(key)[0]; }
+            parse: key => layout.p.decode(key)[0]
         });
-    };
+    }
     /**
      * Test whether the database has a pending transaction.
      * @param {Hash} hash
      * @returns {Promise} - Returns Boolean.
      */
-    TXDB.prototype.hasPending = function (hash) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                return [2 /*return*/, this.bucket.has(layout.p.encode(hash))];
-            });
-        });
-    };
+    async hasPending(hash) {
+        return this.bucket.has(layout.p.encode(hash));
+    }
     /**
      * Get all coin hashes in the database.
      * @param {Number} acct
      * @returns {Promise} - Returns {@link Hash}[].
      */
-    TXDB.prototype.getAccountOutpoints = function (acct) {
+    getAccountOutpoints(acct) {
         assert(typeof acct === 'number');
         return this.bucket.keys({
             gte: layout.C.min(acct),
             lte: layout.C.max(acct),
-            parse: function (key) {
-                var _a = layout.C.decode(key), hash = _a[1], index = _a[2];
+            parse: (key) => {
+                const [, hash, index] = layout.C.decode(key);
                 return new Outpoint(hash, index);
             }
         });
-    };
+    }
     /**
      * Get all coin hashes in the database.
      * @param {Number} acct
      * @returns {Promise} - Returns {@link Hash}[].
      */
-    TXDB.prototype.getOutpoints = function (acct) {
+    getOutpoints(acct) {
         assert(typeof acct === 'number');
         if (acct !== -1)
             return this.getAccountOutpoints(acct);
         return this.bucket.keys({
             gte: layout.c.min(),
             lte: layout.c.max(),
-            parse: function (key) {
-                var _a = layout.c.decode(key), hash = _a[0], index = _a[1];
+            parse: (key) => {
+                const [hash, index] = layout.c.decode(key);
                 return new Outpoint(hash, index);
             }
         });
-    };
+    }
     /**
      * Get TX hashes by height range.
      * @param {Number} acct
@@ -1526,21 +1086,21 @@ var TXDB = /** @class */ (function () {
      * @param {Boolean?} options.reverse - Reverse order.
      * @returns {Promise} - Returns {@link Hash}[].
      */
-    TXDB.prototype.getAccountHeightRangeHashes = function (acct, options) {
+    getAccountHeightRangeHashes(acct, options) {
         assert(typeof acct === 'number');
-        var start = options.start || 0;
-        var end = options.end || 0xffffffff;
+        const start = options.start || 0;
+        const end = options.end || 0xffffffff;
         return this.bucket.keys({
             gte: layout.H.min(acct, start),
             lte: layout.H.max(acct, end),
             limit: options.limit,
             reverse: options.reverse,
-            parse: function (key) {
-                var _a = layout.H.decode(key), hash = _a[2];
+            parse: (key) => {
+                const [, , hash] = layout.H.decode(key);
                 return hash;
             }
         });
-    };
+    }
     /**
      * Get TX hashes by height range.
      * @param {Number} acct
@@ -1551,31 +1111,31 @@ var TXDB = /** @class */ (function () {
      * @param {Boolean?} options.reverse - Reverse order.
      * @returns {Promise} - Returns {@link Hash}[].
      */
-    TXDB.prototype.getHeightRangeHashes = function (acct, options) {
+    getHeightRangeHashes(acct, options) {
         assert(typeof acct === 'number');
         if (acct !== -1)
             return this.getAccountHeightRangeHashes(acct, options);
-        var start = options.start || 0;
-        var end = options.end || 0xffffffff;
+        const start = options.start || 0;
+        const end = options.end || 0xffffffff;
         return this.bucket.keys({
             gte: layout.h.min(start),
             lte: layout.h.max(end),
             limit: options.limit,
             reverse: options.reverse,
-            parse: function (key) {
-                var _a = layout.h.decode(key), hash = _a[1];
+            parse: (key) => {
+                const [, hash] = layout.h.decode(key);
                 return hash;
             }
         });
-    };
+    }
     /**
      * Get TX hashes by height.
      * @param {Number} height
      * @returns {Promise} - Returns {@link Hash}[].
      */
-    TXDB.prototype.getHeightHashes = function (height) {
+    getHeightHashes(height) {
         return this.getHeightRangeHashes({ start: height, end: height });
-    };
+    }
     /**
      * Get TX hashes by timestamp range.
      * @param {Number} acct
@@ -1586,21 +1146,21 @@ var TXDB = /** @class */ (function () {
      * @param {Boolean?} options.reverse - Reverse order.
      * @returns {Promise} - Returns {@link Hash}[].
      */
-    TXDB.prototype.getAccountRangeHashes = function (acct, options) {
+    getAccountRangeHashes(acct, options) {
         assert(typeof acct === 'number');
-        var start = options.start || 0;
-        var end = options.end || 0xffffffff;
+        const start = options.start || 0;
+        const end = options.end || 0xffffffff;
         return this.bucket.keys({
             gte: layout.M.min(acct, start),
             lte: layout.M.max(acct, end),
             limit: options.limit,
             reverse: options.reverse,
-            parse: function (key) {
-                var _a = layout.M.decode(key), hash = _a[2];
+            parse: (key) => {
+                const [, , hash] = layout.M.decode(key);
                 return hash;
             }
         });
-    };
+    }
     /**
      * Get TX hashes by timestamp range.
      * @param {Number} acct
@@ -1611,23 +1171,23 @@ var TXDB = /** @class */ (function () {
      * @param {Boolean?} options.reverse - Reverse order.
      * @returns {Promise} - Returns {@link Hash}[].
      */
-    TXDB.prototype.getRangeHashes = function (acct, options) {
+    getRangeHashes(acct, options) {
         assert(typeof acct === 'number');
         if (acct !== -1)
             return this.getAccountRangeHashes(acct, options);
-        var start = options.start || 0;
-        var end = options.end || 0xffffffff;
+        const start = options.start || 0;
+        const end = options.end || 0xffffffff;
         return this.bucket.keys({
             gte: layout.m.min(start),
             lte: layout.m.max(end),
             limit: options.limit,
             reverse: options.reverse,
-            parse: function (key) {
-                var _a = layout.m.decode(key), hash = _a[1];
+            parse: (key) => {
+                const [, hash] = layout.m.decode(key);
                 return hash;
             }
         });
-    };
+    }
     /**
      * Get transactions by timestamp range.
      * @param {Number} acct
@@ -1638,54 +1198,36 @@ var TXDB = /** @class */ (function () {
      * @param {Boolean?} options.reverse - Reverse order.
      * @returns {Promise} - Returns {@link TX}[].
      */
-    TXDB.prototype.getRange = function (acct, options) {
-        return __awaiter(this, void 0, void 0, function () {
-            var hashes, txs, _i, hashes_1, hash, tx;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.getRangeHashes(acct, options)];
-                    case 1:
-                        hashes = _a.sent();
-                        txs = [];
-                        _i = 0, hashes_1 = hashes;
-                        _a.label = 2;
-                    case 2:
-                        if (!(_i < hashes_1.length)) return [3 /*break*/, 5];
-                        hash = hashes_1[_i];
-                        return [4 /*yield*/, this.getTX(hash)];
-                    case 3:
-                        tx = _a.sent();
-                        assert(tx);
-                        txs.push(tx);
-                        _a.label = 4;
-                    case 4:
-                        _i++;
-                        return [3 /*break*/, 2];
-                    case 5: return [2 /*return*/, txs];
-                }
-            });
-        });
-    };
+    async getRange(acct, options) {
+        const hashes = await this.getRangeHashes(acct, options);
+        const txs = [];
+        for (const hash of hashes) {
+            const tx = await this.getTX(hash);
+            assert(tx);
+            txs.push(tx);
+        }
+        return txs;
+    }
     /**
      * Get last N transactions.
      * @param {Number} acct
      * @param {Number} limit - Max number of transactions.
      * @returns {Promise} - Returns {@link TX}[].
      */
-    TXDB.prototype.getLast = function (acct, limit) {
+    getLast(acct, limit) {
         return this.getRange(acct, {
             start: 0,
             end: 0xffffffff,
             reverse: true,
             limit: limit || 10
         });
-    };
+    }
     /**
      * Get all transactions.
      * @param {Number} acct
      * @returns {Promise} - Returns {@link TX}[].
      */
-    TXDB.prototype.getHistory = function (acct) {
+    getHistory(acct) {
         assert(typeof acct === 'number');
         // Slow case
         if (acct !== -1)
@@ -1694,81 +1236,45 @@ var TXDB = /** @class */ (function () {
         return this.bucket.values({
             gte: layout.t.min(),
             lte: layout.t.max(),
-            parse: function (data) { return TXRecord.fromRaw(data); }
+            parse: data => TXRecord.fromRaw(data)
         });
-    };
+    }
     /**
      * Get all acct transactions.
      * @param {Number} acct
      * @returns {Promise} - Returns {@link TX}[].
      */
-    TXDB.prototype.getAccountHistory = function (acct) {
-        return __awaiter(this, void 0, void 0, function () {
-            var hashes, txs, _i, hashes_2, hash, tx;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.getHistoryHashes(acct)];
-                    case 1:
-                        hashes = _a.sent();
-                        txs = [];
-                        _i = 0, hashes_2 = hashes;
-                        _a.label = 2;
-                    case 2:
-                        if (!(_i < hashes_2.length)) return [3 /*break*/, 5];
-                        hash = hashes_2[_i];
-                        return [4 /*yield*/, this.getTX(hash)];
-                    case 3:
-                        tx = _a.sent();
-                        assert(tx);
-                        txs.push(tx);
-                        _a.label = 4;
-                    case 4:
-                        _i++;
-                        return [3 /*break*/, 2];
-                    case 5: return [2 /*return*/, txs];
-                }
-            });
-        });
-    };
+    async getAccountHistory(acct) {
+        const hashes = await this.getHistoryHashes(acct);
+        const txs = [];
+        for (const hash of hashes) {
+            const tx = await this.getTX(hash);
+            assert(tx);
+            txs.push(tx);
+        }
+        return txs;
+    }
     /**
      * Get unconfirmed transactions.
      * @param {Number} acct
      * @returns {Promise} - Returns {@link TX}[].
      */
-    TXDB.prototype.getPending = function (acct) {
-        return __awaiter(this, void 0, void 0, function () {
-            var hashes, txs, _i, hashes_3, hash, tx;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.getPendingHashes(acct)];
-                    case 1:
-                        hashes = _a.sent();
-                        txs = [];
-                        _i = 0, hashes_3 = hashes;
-                        _a.label = 2;
-                    case 2:
-                        if (!(_i < hashes_3.length)) return [3 /*break*/, 5];
-                        hash = hashes_3[_i];
-                        return [4 /*yield*/, this.getTX(hash)];
-                    case 3:
-                        tx = _a.sent();
-                        assert(tx);
-                        txs.push(tx);
-                        _a.label = 4;
-                    case 4:
-                        _i++;
-                        return [3 /*break*/, 2];
-                    case 5: return [2 /*return*/, txs];
-                }
-            });
-        });
-    };
+    async getPending(acct) {
+        const hashes = await this.getPendingHashes(acct);
+        const txs = [];
+        for (const hash of hashes) {
+            const tx = await this.getTX(hash);
+            assert(tx);
+            txs.push(tx);
+        }
+        return txs;
+    }
     /**
      * Get coins.
      * @param {Number} acct
      * @returns {Promise} - Returns {@link Coin}[].
      */
-    TXDB.prototype.getCredits = function (acct) {
+    getCredits(acct) {
         assert(typeof acct === 'number');
         // Slow case
         if (acct !== -1)
@@ -1777,442 +1283,264 @@ var TXDB = /** @class */ (function () {
         return this.bucket.range({
             gte: layout.c.min(),
             lte: layout.c.max(),
-            parse: function (key, value) {
-                var _a = layout.c.decode(key), hash = _a[0], index = _a[1];
-                var credit = Credit.fromRaw(value);
+            parse: (key, value) => {
+                const [hash, index] = layout.c.decode(key);
+                const credit = Credit.fromRaw(value);
                 credit.coin.hash = hash;
                 credit.coin.index = index;
                 return credit;
             }
         });
-    };
+    }
     /**
      * Get coins by account.
      * @param {Number} acct
      * @returns {Promise} - Returns {@link Coin}[].
      */
-    TXDB.prototype.getAccountCredits = function (acct) {
-        return __awaiter(this, void 0, void 0, function () {
-            var outpoints, credits, _i, outpoints_1, _a, hash, index, credit;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0: return [4 /*yield*/, this.getOutpoints(acct)];
-                    case 1:
-                        outpoints = _b.sent();
-                        credits = [];
-                        _i = 0, outpoints_1 = outpoints;
-                        _b.label = 2;
-                    case 2:
-                        if (!(_i < outpoints_1.length)) return [3 /*break*/, 5];
-                        _a = outpoints_1[_i], hash = _a.hash, index = _a.index;
-                        return [4 /*yield*/, this.getCredit(hash, index)];
-                    case 3:
-                        credit = _b.sent();
-                        if (!credit)
-                            return [3 /*break*/, 4];
-                        credits.push(credit);
-                        _b.label = 4;
-                    case 4:
-                        _i++;
-                        return [3 /*break*/, 2];
-                    case 5: return [2 /*return*/, credits];
-                }
-            });
-        });
-    };
+    async getAccountCredits(acct) {
+        const outpoints = await this.getOutpoints(acct);
+        const credits = [];
+        for (const { hash, index } of outpoints) {
+            const credit = await this.getCredit(hash, index);
+            if (!credit)
+                continue;
+            credits.push(credit);
+        }
+        return credits;
+    }
     /**
      * Fill a transaction with coins (all historical coins).
      * @param {TX} tx
      * @returns {Promise} - Returns {@link TX}.
      */
-    TXDB.prototype.getSpentCredits = function (tx) {
-        return __awaiter(this, void 0, void 0, function () {
-            var hash, credits, i;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (tx.isCoinbase())
-                            return [2 /*return*/, []];
-                        hash = tx.hash();
-                        credits = [];
-                        for (i = 0; i < tx.inputs.length; i++)
-                            credits.push(null);
-                        return [4 /*yield*/, this.bucket.range({
-                                gte: layout.d.min(hash),
-                                lte: layout.d.max(hash),
-                                parse: function (key, value) {
-                                    var _a = layout.d.decode(key), index = _a[1];
-                                    var coin = Coin.fromRaw(value);
-                                    var input = tx.inputs[index];
-                                    assert(input);
-                                    coin.hash = input.prevout.hash;
-                                    coin.index = input.prevout.index;
-                                    credits[index] = new Credit(coin);
-                                }
-                            })];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/, credits];
-                }
-            });
+    async getSpentCredits(tx) {
+        if (tx.isCoinbase())
+            return [];
+        const hash = tx.hash();
+        const credits = [];
+        for (let i = 0; i < tx.inputs.length; i++)
+            credits.push(null);
+        await this.bucket.range({
+            gte: layout.d.min(hash),
+            lte: layout.d.max(hash),
+            parse: (key, value) => {
+                const [, index] = layout.d.decode(key);
+                const coin = Coin.fromRaw(value);
+                const input = tx.inputs[index];
+                assert(input);
+                coin.hash = input.prevout.hash;
+                coin.index = input.prevout.index;
+                credits[index] = new Credit(coin);
+            }
         });
-    };
+        return credits;
+    }
     /**
      * Get coins.
      * @param {Number} acct
      * @returns {Promise} - Returns {@link Coin}[].
      */
-    TXDB.prototype.getCoins = function (acct) {
-        return __awaiter(this, void 0, void 0, function () {
-            var credits, coins, _i, credits_1, credit;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.getCredits(acct)];
-                    case 1:
-                        credits = _a.sent();
-                        coins = [];
-                        for (_i = 0, credits_1 = credits; _i < credits_1.length; _i++) {
-                            credit = credits_1[_i];
-                            if (credit.spent)
-                                continue;
-                            coins.push(credit.coin);
-                        }
-                        return [2 /*return*/, coins];
-                }
-            });
-        });
-    };
+    async getCoins(acct) {
+        const credits = await this.getCredits(acct);
+        const coins = [];
+        for (const credit of credits) {
+            if (credit.spent)
+                continue;
+            coins.push(credit.coin);
+        }
+        return coins;
+    }
     /**
      * Get coins by account.
      * @param {Number} acct
      * @returns {Promise} - Returns {@link Coin}[].
      */
-    TXDB.prototype.getAccountCoins = function (acct) {
-        return __awaiter(this, void 0, void 0, function () {
-            var credits, coins, _i, credits_2, credit;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.getAccountCredits(acct)];
-                    case 1:
-                        credits = _a.sent();
-                        coins = [];
-                        for (_i = 0, credits_2 = credits; _i < credits_2.length; _i++) {
-                            credit = credits_2[_i];
-                            if (credit.spent)
-                                continue;
-                            coins.push(credit.coin);
-                        }
-                        return [2 /*return*/, coins];
-                }
-            });
-        });
-    };
+    async getAccountCoins(acct) {
+        const credits = await this.getAccountCredits(acct);
+        const coins = [];
+        for (const credit of credits) {
+            if (credit.spent)
+                continue;
+            coins.push(credit.coin);
+        }
+        return coins;
+    }
     /**
      * Get historical coins for a transaction.
      * @param {TX} tx
      * @returns {Promise} - Returns {@link TX}.
      */
-    TXDB.prototype.getSpentCoins = function (tx) {
-        return __awaiter(this, void 0, void 0, function () {
-            var credits, coins, _i, credits_3, credit;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (tx.isCoinbase())
-                            return [2 /*return*/, []];
-                        return [4 /*yield*/, this.getSpentCredits(tx)];
-                    case 1:
-                        credits = _a.sent();
-                        coins = [];
-                        for (_i = 0, credits_3 = credits; _i < credits_3.length; _i++) {
-                            credit = credits_3[_i];
-                            if (!credit) {
-                                coins.push(null);
-                                continue;
-                            }
-                            coins.push(credit.coin);
-                        }
-                        return [2 /*return*/, coins];
-                }
-            });
-        });
-    };
+    async getSpentCoins(tx) {
+        if (tx.isCoinbase())
+            return [];
+        const credits = await this.getSpentCredits(tx);
+        const coins = [];
+        for (const credit of credits) {
+            if (!credit) {
+                coins.push(null);
+                continue;
+            }
+            coins.push(credit.coin);
+        }
+        return coins;
+    }
     /**
      * Get a coin viewpoint.
      * @param {TX} tx
      * @returns {Promise} - Returns {@link CoinView}.
      */
-    TXDB.prototype.getCoinView = function (tx) {
-        return __awaiter(this, void 0, void 0, function () {
-            var view, _i, _a, prevout, hash, index, coin;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        view = new CoinView();
-                        if (tx.isCoinbase())
-                            return [2 /*return*/, view];
-                        _i = 0, _a = tx.inputs;
-                        _b.label = 1;
-                    case 1:
-                        if (!(_i < _a.length)) return [3 /*break*/, 4];
-                        prevout = _a[_i].prevout;
-                        hash = prevout.hash, index = prevout.index;
-                        return [4 /*yield*/, this.getCoin(hash, index)];
-                    case 2:
-                        coin = _b.sent();
-                        if (!coin)
-                            return [3 /*break*/, 3];
-                        view.addCoin(coin);
-                        _b.label = 3;
-                    case 3:
-                        _i++;
-                        return [3 /*break*/, 1];
-                    case 4: return [2 /*return*/, view];
-                }
-            });
-        });
-    };
+    async getCoinView(tx) {
+        const view = new CoinView();
+        if (tx.isCoinbase())
+            return view;
+        for (const { prevout } of tx.inputs) {
+            const { hash, index } = prevout;
+            const coin = await this.getCoin(hash, index);
+            if (!coin)
+                continue;
+            view.addCoin(coin);
+        }
+        return view;
+    }
     /**
      * Get historical coin viewpoint.
      * @param {TX} tx
      * @returns {Promise} - Returns {@link CoinView}.
      */
-    TXDB.prototype.getSpentView = function (tx) {
-        return __awaiter(this, void 0, void 0, function () {
-            var view, coins, _i, coins_2, coin;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        view = new CoinView();
-                        if (tx.isCoinbase())
-                            return [2 /*return*/, view];
-                        return [4 /*yield*/, this.getSpentCoins(tx)];
-                    case 1:
-                        coins = _a.sent();
-                        for (_i = 0, coins_2 = coins; _i < coins_2.length; _i++) {
-                            coin = coins_2[_i];
-                            if (!coin)
-                                continue;
-                            view.addCoin(coin);
-                        }
-                        return [2 /*return*/, view];
-                }
-            });
-        });
-    };
+    async getSpentView(tx) {
+        const view = new CoinView();
+        if (tx.isCoinbase())
+            return view;
+        const coins = await this.getSpentCoins(tx);
+        for (const coin of coins) {
+            if (!coin)
+                continue;
+            view.addCoin(coin);
+        }
+        return view;
+    }
     /**
      * Get transaction.
      * @param {Hash} hash
      * @returns {Promise} - Returns {@link TX}.
      */
-    TXDB.prototype.getTX = function (hash) {
-        return __awaiter(this, void 0, void 0, function () {
-            var raw;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.bucket.get(layout.t.encode(hash))];
-                    case 1:
-                        raw = _a.sent();
-                        if (!raw)
-                            return [2 /*return*/, null];
-                        return [2 /*return*/, TXRecord.fromRaw(raw)];
-                }
-            });
-        });
-    };
+    async getTX(hash) {
+        const raw = await this.bucket.get(layout.t.encode(hash));
+        if (!raw)
+            return null;
+        return TXRecord.fromRaw(raw);
+    }
     /**
      * Get transaction details.
      * @param {Hash} hash
      * @returns {Promise} - Returns {@link TXDetails}.
      */
-    TXDB.prototype.getDetails = function (hash) {
-        return __awaiter(this, void 0, void 0, function () {
-            var wtx;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.getTX(hash)];
-                    case 1:
-                        wtx = _a.sent();
-                        if (!wtx)
-                            return [2 /*return*/, null];
-                        return [2 /*return*/, this.toDetails(wtx)];
-                }
-            });
-        });
-    };
+    async getDetails(hash) {
+        const wtx = await this.getTX(hash);
+        if (!wtx)
+            return null;
+        return this.toDetails(wtx);
+    }
     /**
      * Convert transaction to transaction details.
      * @param {TXRecord[]} wtxs
      * @returns {Promise}
      */
-    TXDB.prototype.toDetails = function (wtxs) {
-        return __awaiter(this, void 0, void 0, function () {
-            var out, _i, wtxs_1, wtx, details;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        out = [];
-                        if (!Array.isArray(wtxs))
-                            return [2 /*return*/, this._toDetails(wtxs)];
-                        _i = 0, wtxs_1 = wtxs;
-                        _a.label = 1;
-                    case 1:
-                        if (!(_i < wtxs_1.length)) return [3 /*break*/, 4];
-                        wtx = wtxs_1[_i];
-                        return [4 /*yield*/, this._toDetails(wtx)];
-                    case 2:
-                        details = _a.sent();
-                        if (!details)
-                            return [3 /*break*/, 3];
-                        out.push(details);
-                        _a.label = 3;
-                    case 3:
-                        _i++;
-                        return [3 /*break*/, 1];
-                    case 4: return [2 /*return*/, out];
-                }
-            });
-        });
-    };
+    async toDetails(wtxs) {
+        const out = [];
+        if (!Array.isArray(wtxs))
+            return this._toDetails(wtxs);
+        for (const wtx of wtxs) {
+            const details = await this._toDetails(wtx);
+            if (!details)
+                continue;
+            out.push(details);
+        }
+        return out;
+    }
     /**
      * Convert transaction to transaction details.
      * @private
      * @param {TXRecord} wtx
      * @returns {Promise}
      */
-    TXDB.prototype._toDetails = function (wtx) {
-        return __awaiter(this, void 0, void 0, function () {
-            var tx, block, details, coins, i, coin, path, i, output, path;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        tx = wtx.tx;
-                        block = wtx.getBlock();
-                        details = new Details(wtx, block);
-                        return [4 /*yield*/, this.getSpentCoins(tx)];
-                    case 1:
-                        coins = _a.sent();
-                        i = 0;
-                        _a.label = 2;
-                    case 2:
-                        if (!(i < tx.inputs.length)) return [3 /*break*/, 6];
-                        coin = coins[i];
-                        path = null;
-                        if (!coin) return [3 /*break*/, 4];
-                        return [4 /*yield*/, this.getPath(coin)];
-                    case 3:
-                        path = _a.sent();
-                        _a.label = 4;
-                    case 4:
-                        details.setInput(i, path, coin);
-                        _a.label = 5;
-                    case 5:
-                        i++;
-                        return [3 /*break*/, 2];
-                    case 6:
-                        i = 0;
-                        _a.label = 7;
-                    case 7:
-                        if (!(i < tx.outputs.length)) return [3 /*break*/, 10];
-                        output = tx.outputs[i];
-                        return [4 /*yield*/, this.getPath(output)];
-                    case 8:
-                        path = _a.sent();
-                        details.setOutput(i, path);
-                        _a.label = 9;
-                    case 9:
-                        i++;
-                        return [3 /*break*/, 7];
-                    case 10: return [2 /*return*/, details];
-                }
-            });
-        });
-    };
+    async _toDetails(wtx) {
+        const tx = wtx.tx;
+        const block = wtx.getBlock();
+        const details = new Details(wtx, block);
+        const coins = await this.getSpentCoins(tx);
+        for (let i = 0; i < tx.inputs.length; i++) {
+            const coin = coins[i];
+            let path = null;
+            if (coin)
+                path = await this.getPath(coin);
+            details.setInput(i, path, coin);
+        }
+        for (let i = 0; i < tx.outputs.length; i++) {
+            const output = tx.outputs[i];
+            const path = await this.getPath(output);
+            details.setOutput(i, path);
+        }
+        return details;
+    }
     /**
      * Test whether the database has a transaction.
      * @param {Hash} hash
      * @returns {Promise} - Returns Boolean.
      */
-    TXDB.prototype.hasTX = function (hash) {
+    hasTX(hash) {
         return this.bucket.has(layout.t.encode(hash));
-    };
+    }
     /**
      * Get coin.
      * @param {Hash} hash
      * @param {Number} index
      * @returns {Promise} - Returns {@link Coin}.
      */
-    TXDB.prototype.getCoin = function (hash, index) {
-        return __awaiter(this, void 0, void 0, function () {
-            var credit;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.getCredit(hash, index)];
-                    case 1:
-                        credit = _a.sent();
-                        if (!credit)
-                            return [2 /*return*/, null];
-                        return [2 /*return*/, credit.coin];
-                }
-            });
-        });
-    };
+    async getCoin(hash, index) {
+        const credit = await this.getCredit(hash, index);
+        if (!credit)
+            return null;
+        return credit.coin;
+    }
     /**
      * Get coin.
      * @param {Hash} hash
      * @param {Number} index
      * @returns {Promise} - Returns {@link Coin}.
      */
-    TXDB.prototype.getCredit = function (hash, index) {
-        return __awaiter(this, void 0, void 0, function () {
-            var data, credit;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.bucket.get(layout.c.encode(hash, index))];
-                    case 1:
-                        data = _a.sent();
-                        if (!data)
-                            return [2 /*return*/, null];
-                        credit = Credit.fromRaw(data);
-                        credit.coin.hash = hash;
-                        credit.coin.index = index;
-                        return [2 /*return*/, credit];
-                }
-            });
-        });
-    };
+    async getCredit(hash, index) {
+        const data = await this.bucket.get(layout.c.encode(hash, index));
+        if (!data)
+            return null;
+        const credit = Credit.fromRaw(data);
+        credit.coin.hash = hash;
+        credit.coin.index = index;
+        return credit;
+    }
     /**
      * Get spender coin.
      * @param {Outpoint} spent
      * @param {Outpoint} prevout
      * @returns {Promise} - Returns {@link Coin}.
      */
-    TXDB.prototype.getSpentCoin = function (spent, prevout) {
-        return __awaiter(this, void 0, void 0, function () {
-            var data, coin;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.bucket.get(layout.d.encode(spent.hash, spent.index))];
-                    case 1:
-                        data = _a.sent();
-                        if (!data)
-                            return [2 /*return*/, null];
-                        coin = Coin.fromRaw(data);
-                        coin.hash = prevout.hash;
-                        coin.index = prevout.index;
-                        return [2 /*return*/, coin];
-                }
-            });
-        });
-    };
+    async getSpentCoin(spent, prevout) {
+        const data = await this.bucket.get(layout.d.encode(spent.hash, spent.index));
+        if (!data)
+            return null;
+        const coin = Coin.fromRaw(data);
+        coin.hash = prevout.hash;
+        coin.index = prevout.index;
+        return coin;
+    }
     /**
      * Test whether the database has a spent coin.
      * @param {Outpoint} spent
      * @returns {Promise} - Returns {@link Coin}.
      */
-    TXDB.prototype.hasSpentCoin = function (spent) {
+    hasSpentCoin(spent) {
         return this.bucket.has(layout.d.encode(spent.hash, spent.index));
-    };
+    }
     /**
      * Update spent coin height in storage.
      * @param {TX} tx - Sending transaction.
@@ -2220,173 +1548,104 @@ var TXDB = /** @class */ (function () {
      * @param {Number} height
      * @returns {Promise}
      */
-    TXDB.prototype.updateSpentCoin = function (b, tx, index, height) {
-        return __awaiter(this, void 0, void 0, function () {
-            var prevout, spent, coin;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        prevout = Outpoint.fromTX(tx, index);
-                        return [4 /*yield*/, this.getSpent(prevout.hash, prevout.index)];
-                    case 1:
-                        spent = _a.sent();
-                        if (!spent)
-                            return [2 /*return*/];
-                        return [4 /*yield*/, this.getSpentCoin(spent, prevout)];
-                    case 2:
-                        coin = _a.sent();
-                        if (!coin)
-                            return [2 /*return*/];
-                        coin.height = height;
-                        b.put(layout.d.encode(spent.hash, spent.index), coin.toRaw());
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
+    async updateSpentCoin(b, tx, index, height) {
+        const prevout = Outpoint.fromTX(tx, index);
+        const spent = await this.getSpent(prevout.hash, prevout.index);
+        if (!spent)
+            return;
+        const coin = await this.getSpentCoin(spent, prevout);
+        if (!coin)
+            return;
+        coin.height = height;
+        b.put(layout.d.encode(spent.hash, spent.index), coin.toRaw());
+    }
     /**
      * Test whether the database has a transaction.
      * @param {Hash} hash
      * @returns {Promise} - Returns Boolean.
      */
-    TXDB.prototype.hasCoin = function (hash, index) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                return [2 /*return*/, this.bucket.has(layout.c.encode(hash, index))];
-            });
-        });
-    };
+    async hasCoin(hash, index) {
+        return this.bucket.has(layout.c.encode(hash, index));
+    }
     /**
      * Calculate balance.
      * @param {Number?} account
      * @returns {Promise} - Returns {@link Balance}.
      */
-    TXDB.prototype.getBalance = function (acct) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                assert(typeof acct === 'number');
-                if (acct !== -1)
-                    return [2 /*return*/, this.getAccountBalance(acct)];
-                return [2 /*return*/, this.getWalletBalance()];
-            });
-        });
-    };
+    async getBalance(acct) {
+        assert(typeof acct === 'number');
+        if (acct !== -1)
+            return this.getAccountBalance(acct);
+        return this.getWalletBalance();
+    }
     /**
      * Calculate balance.
      * @returns {Promise} - Returns {@link Balance}.
      */
-    TXDB.prototype.getWalletBalance = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var data;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.bucket.get(layout.R.encode())];
-                    case 1:
-                        data = _a.sent();
-                        if (!data)
-                            return [2 /*return*/, new Balance()];
-                        return [2 /*return*/, Balance.fromRaw(-1, data)];
-                }
-            });
-        });
-    };
+    async getWalletBalance() {
+        const data = await this.bucket.get(layout.R.encode());
+        if (!data)
+            return new Balance();
+        return Balance.fromRaw(-1, data);
+    }
     /**
      * Calculate balance by account.
      * @param {Number} acct
      * @returns {Promise} - Returns {@link Balance}.
      */
-    TXDB.prototype.getAccountBalance = function (acct) {
-        return __awaiter(this, void 0, void 0, function () {
-            var data;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.bucket.get(layout.r.encode(acct))];
-                    case 1:
-                        data = _a.sent();
-                        if (!data)
-                            return [2 /*return*/, new Balance(acct)];
-                        return [2 /*return*/, Balance.fromRaw(acct, data)];
-                }
-            });
-        });
-    };
+    async getAccountBalance(acct) {
+        const data = await this.bucket.get(layout.r.encode(acct));
+        if (!data)
+            return new Balance(acct);
+        return Balance.fromRaw(acct, data);
+    }
     /**
      * Zap pending transactions older than `age`.
      * @param {Number} acct
      * @param {Number} age - Age delta.
      * @returns {Promise}
      */
-    TXDB.prototype.zap = function (acct, age) {
-        return __awaiter(this, void 0, void 0, function () {
-            var now, txs, hashes, _i, txs_1, wtx;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        assert((age >>> 0) === age);
-                        now = util.now();
-                        return [4 /*yield*/, this.getRange(acct, {
-                                start: 0,
-                                end: now - age
-                            })];
-                    case 1:
-                        txs = _a.sent();
-                        hashes = [];
-                        _i = 0, txs_1 = txs;
-                        _a.label = 2;
-                    case 2:
-                        if (!(_i < txs_1.length)) return [3 /*break*/, 5];
-                        wtx = txs_1[_i];
-                        if (wtx.height !== -1)
-                            return [3 /*break*/, 4];
-                        assert(now - wtx.mtime >= age);
-                        this.logger.debug('Zapping TX: %h (%d)', wtx.tx.hash(), this.wid);
-                        return [4 /*yield*/, this.remove(wtx.hash)];
-                    case 3:
-                        _a.sent();
-                        hashes.push(wtx.hash);
-                        _a.label = 4;
-                    case 4:
-                        _i++;
-                        return [3 /*break*/, 2];
-                    case 5: return [2 /*return*/, hashes];
-                }
-            });
+    async zap(acct, age) {
+        assert((age >>> 0) === age);
+        const now = util.now();
+        const txs = await this.getRange(acct, {
+            start: 0,
+            end: now - age
         });
-    };
+        const hashes = [];
+        for (const wtx of txs) {
+            if (wtx.height !== -1)
+                continue;
+            assert(now - wtx.mtime >= age);
+            this.logger.debug('Zapping TX: %h (%d)', wtx.tx.hash(), this.wid);
+            await this.remove(wtx.hash);
+            hashes.push(wtx.hash);
+        }
+        return hashes;
+    }
     /**
      * Abandon transaction.
      * @param {Hash} hash
      * @returns {Promise}
      */
-    TXDB.prototype.abandon = function (hash) {
-        return __awaiter(this, void 0, void 0, function () {
-            var result;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.bucket.has(layout.p.encode(hash))];
-                    case 1:
-                        result = _a.sent();
-                        if (!result)
-                            throw new Error('TX not eligible.');
-                        return [2 /*return*/, this.remove(hash)];
-                }
-            });
-        });
-    };
-    return TXDB;
-}());
+    async abandon(hash) {
+        const result = await this.bucket.has(layout.p.encode(hash));
+        if (!result)
+            throw new Error('TX not eligible.');
+        return this.remove(hash);
+    }
+}
 /**
  * Balance
  * @alias module:wallet.Balance
  */
-var Balance = /** @class */ (function () {
+class Balance {
     /**
      * Create a balance.
      * @constructor
      * @param {Number} account
      */
-    function Balance(acct) {
-        if (acct === void 0) { acct = -1; }
+    constructor(acct = -1) {
         assert(typeof acct === 'number');
         this.account = acct;
         this.tx = 0;
@@ -2398,7 +1657,7 @@ var Balance = /** @class */ (function () {
      * Apply delta.
      * @param {Balance} balance
      */
-    Balance.prototype.applyTo = function (balance) {
+    applyTo(balance) {
         balance.tx += this.tx;
         balance.coin += this.coin;
         balance.unconfirmed += this.unconfirmed;
@@ -2407,48 +1666,48 @@ var Balance = /** @class */ (function () {
         assert(balance.coin >= 0);
         assert(balance.unconfirmed >= 0);
         assert(balance.confirmed >= 0);
-    };
+    }
     /**
      * Serialize balance.
      * @returns {Buffer}
      */
-    Balance.prototype.toRaw = function () {
-        var bw = bio.write(32);
+    toRaw() {
+        const bw = bio.write(32);
         bw.writeU64(this.tx);
         bw.writeU64(this.coin);
         bw.writeU64(this.unconfirmed);
         bw.writeU64(this.confirmed);
         return bw.render();
-    };
+    }
     /**
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
      * @returns {TXDBState}
      */
-    Balance.prototype.fromRaw = function (data) {
-        var br = bio.read(data);
+    fromRaw(data) {
+        const br = bio.read(data);
         this.tx = br.readU64();
         this.coin = br.readU64();
         this.unconfirmed = br.readU64();
         this.confirmed = br.readU64();
         return this;
-    };
+    }
     /**
      * Instantiate balance from serialized data.
      * @param {Number} acct
      * @param {Buffer} data
      * @returns {TXDBState}
      */
-    Balance.fromRaw = function (acct, data) {
+    static fromRaw(acct, data) {
         return new this(acct).fromRaw(data);
-    };
+    }
     /**
      * Convert balance to a more json-friendly object.
      * @param {Boolean?} minimal
      * @returns {Object}
      */
-    Balance.prototype.toJSON = function (minimal) {
+    toJSON(minimal) {
         return {
             account: !minimal ? this.account : undefined,
             tx: this.tx,
@@ -2456,81 +1715,79 @@ var Balance = /** @class */ (function () {
             unconfirmed: this.unconfirmed,
             confirmed: this.confirmed
         };
-    };
+    }
     /**
      * Inspect balance.
      * @param {String}
      */
-    Balance.prototype[inspectSymbol] = function () {
+    [inspectSymbol]() {
         return '<Balance'
-            + " tx=".concat(this.tx)
-            + " coin=".concat(this.coin)
-            + " unconfirmed=".concat(Amount.btc(this.unconfirmed))
-            + " confirmed=".concat(Amount.btc(this.confirmed))
+            + ` tx=${this.tx}`
+            + ` coin=${this.coin}`
+            + ` unconfirmed=${Amount.btc(this.unconfirmed)}`
+            + ` confirmed=${Amount.btc(this.confirmed)}`
             + '>';
-    };
-    return Balance;
-}());
+    }
+}
 /**
  * Balance Delta
  * @ignore
  */
-var BalanceDelta = /** @class */ (function () {
+class BalanceDelta {
     /**
      * Create a balance delta.
      * @constructor
      */
-    function BalanceDelta() {
+    constructor() {
         this.wallet = new Balance();
         this.accounts = new Map();
     }
-    BalanceDelta.prototype.updated = function () {
+    updated() {
         return this.wallet.tx !== 0;
-    };
-    BalanceDelta.prototype.applyTo = function (balance) {
+    }
+    applyTo(balance) {
         this.wallet.applyTo(balance);
-    };
-    BalanceDelta.prototype.get = function (path) {
+    }
+    get(path) {
         if (!this.accounts.has(path.account))
             this.accounts.set(path.account, new Balance());
         return this.accounts.get(path.account);
-    };
-    BalanceDelta.prototype.tx = function (path, value) {
-        var account = this.get(path);
+    }
+    tx(path, value) {
+        const account = this.get(path);
         account.tx = value;
         this.wallet.tx = value;
-    };
-    BalanceDelta.prototype.coin = function (path, value) {
-        var account = this.get(path);
+    }
+    coin(path, value) {
+        const account = this.get(path);
         account.coin += value;
         this.wallet.coin += value;
-    };
-    BalanceDelta.prototype.unconfirmed = function (path, value) {
-        var account = this.get(path);
+    }
+    unconfirmed(path, value) {
+        const account = this.get(path);
         account.unconfirmed += value;
         this.wallet.unconfirmed += value;
-    };
-    BalanceDelta.prototype.confirmed = function (path, value) {
-        var account = this.get(path);
+    }
+    confirmed(path, value) {
+        const account = this.get(path);
         account.confirmed += value;
         this.wallet.confirmed += value;
-    };
-    return BalanceDelta;
-}());
+    }
+}
 /**
  * Credit (wrapped coin)
  * @alias module:wallet.Credit
  * @property {Coin} coin
  * @property {Boolean} spent
  */
-var Credit = /** @class */ (function () {
+class Credit {
     /**
      * Create a credit.
      * @constructor
      * @param {Coin} coin
      * @param {Boolean?} spent
      */
-    function Credit(coin, spent) {
+    constructor(coin, spent) {
         this.coin = coin || new Coin();
         this.spent = spent || false;
         this.own = false;
@@ -2540,40 +1797,40 @@ var Credit = /** @class */ (function () {
      * @private
      * @param {Buffer} data
      */
-    Credit.prototype.fromRaw = function (data) {
-        var br = bio.read(data);
+    fromRaw(data) {
+        const br = bio.read(data);
         this.coin.fromReader(br);
         this.spent = br.readU8() === 1;
         this.own = br.readU8() === 1;
         return this;
-    };
+    }
     /**
      * Instantiate credit from serialized data.
      * @param {Buffer} data
      * @returns {Credit}
      */
-    Credit.fromRaw = function (data) {
+    static fromRaw(data) {
         return new this().fromRaw(data);
-    };
+    }
     /**
      * Get serialization size.
      * @returns {Number}
      */
-    Credit.prototype.getSize = function () {
+    getSize() {
         return this.coin.getSize() + 2;
-    };
+    }
     /**
      * Serialize credit.
      * @returns {Buffer}
      */
-    Credit.prototype.toRaw = function () {
-        var size = this.getSize();
-        var bw = bio.write(size);
+    toRaw() {
+        const size = this.getSize();
+        const bw = bio.write(size);
         this.coin.toWriter(bw);
         bw.writeU8(this.spent ? 1 : 0);
         bw.writeU8(this.own ? 1 : 0);
         return bw.render();
-    };
+    }
     /**
      * Inject properties from tx object.
      * @private
@@ -2581,35 +1838,34 @@ var Credit = /** @class */ (function () {
      * @param {Number} index
      * @returns {Credit}
      */
-    Credit.prototype.fromTX = function (tx, index, height) {
+    fromTX(tx, index, height) {
         this.coin.fromTX(tx, index, height);
         this.spent = false;
         this.own = false;
         return this;
-    };
+    }
     /**
      * Instantiate credit from transaction.
      * @param {TX} tx
      * @param {Number} index
      * @returns {Credit}
      */
-    Credit.fromTX = function (tx, index, height) {
+    static fromTX(tx, index, height) {
         return new this().fromTX(tx, index, height);
-    };
-    return Credit;
-}());
+    }
+}
 /**
  * Transaction Details
  * @alias module:wallet.Details
  */
-var Details = /** @class */ (function () {
+class Details {
     /**
      * Create transaction details.
      * @constructor
      * @param {TXRecord} wtx
      * @param {BlockMeta} block
      */
-    function Details(wtx, block) {
+    constructor(wtx, block) {
         this.hash = wtx.hash;
         this.tx = wtx.tx;
         this.mtime = wtx.mtime;
@@ -2631,96 +1887,91 @@ var Details = /** @class */ (function () {
      * Initialize transaction details.
      * @private
      */
-    Details.prototype.init = function () {
-        for (var _i = 0, _a = this.tx.inputs; _i < _a.length; _i++) {
-            var input = _a[_i];
-            var member = new DetailsMember();
+    init() {
+        for (const input of this.tx.inputs) {
+            const member = new DetailsMember();
             member.address = input.getAddress();
             this.inputs.push(member);
         }
-        for (var _b = 0, _c = this.tx.outputs; _b < _c.length; _b++) {
-            var output = _c[_b];
-            var member = new DetailsMember();
+        for (const output of this.tx.outputs) {
+            const member = new DetailsMember();
             member.value = output.value;
             member.address = output.getAddress();
             this.outputs.push(member);
         }
-    };
+    }
     /**
      * Add necessary info to input member.
      * @param {Number} i
      * @param {Path} path
      * @param {Coin} coin
      */
-    Details.prototype.setInput = function (i, path, coin) {
-        var member = this.inputs[i];
+    setInput(i, path, coin) {
+        const member = this.inputs[i];
         if (coin) {
             member.value = coin.value;
             member.address = coin.getAddress();
         }
         if (path)
             member.path = path;
-    };
+    }
     /**
      * Add necessary info to output member.
      * @param {Number} i
      * @param {Path} path
      */
-    Details.prototype.setOutput = function (i, path) {
-        var member = this.outputs[i];
+    setOutput(i, path) {
+        const member = this.outputs[i];
         if (path)
             member.path = path;
-    };
+    }
     /**
      * Calculate confirmations.
      * @returns {Number}
      */
-    Details.prototype.getDepth = function (height) {
+    getDepth(height) {
         if (this.height === -1)
             return 0;
         if (height == null)
             return 0;
-        var depth = height - this.height;
+        const depth = height - this.height;
         if (depth < 0)
             return 0;
         return depth + 1;
-    };
+    }
     /**
      * Calculate fee. Only works if wallet
      * owns all inputs. Returns 0 otherwise.
      * @returns  {SatoshiAmount}
      */
-    Details.prototype.getFee = function () {
-        var inputValue = 0;
-        var outputValue = 0;
-        for (var _i = 0, _a = this.inputs; _i < _a.length; _i++) {
-            var input = _a[_i];
+    getFee() {
+        let inputValue = 0;
+        let outputValue = 0;
+        for (const input of this.inputs) {
             if (!input.path)
                 return 0;
             inputValue += input.value;
         }
-        for (var _b = 0, _c = this.outputs; _b < _c.length; _b++) {
-            var output = _c[_b];
+        for (const output of this.outputs)
             outputValue += output.value;
-        }
         return inputValue - outputValue;
-    };
+    }
     /**
      * Calculate fee rate. Only works if wallet
      * owns all inputs. Returns 0 otherwise.
      * @param  {SatoshiAmount} fee
      * @returns {Rate}
      */
-    Details.prototype.getRate = function (fee) {
+    getRate(fee) {
         return policy.getRate(this.vsize, fee);
-    };
+    }
     /**
      * Convert details to a more json-friendly object.
      * @returns {Object}
      */
-    Details.prototype.toJSON = function (network, height) {
-        var fee = this.getFee();
-        var rate = this.getRate(fee);
+    toJSON(network, height) {
+        const fee = this.getFee();
+        const rate = this.getRate(fee);
         return {
             hash: util.revHex(this.hash),
             height: this.height,
@@ -2734,29 +1985,28 @@ var Details = /** @class */ (function () {
             fee: fee,
             rate: rate,
             confirmations: this.getDepth(height),
-            inputs: this.inputs.map(function (input) {
+            inputs: this.inputs.map((input) => {
                 return input.getJSON(network);
             }),
-            outputs: this.outputs.map(function (output) {
+            outputs: this.outputs.map((output) => {
                 return output.getJSON(network);
             }),
             tx: this.tx.toRaw().toString('hex')
         };
-    };
-    return Details;
-}());
+    }
+}
 /**
  * Transaction Details Member
  * @property {Number} value
  * @property {Address} address
  * @property {Path} path
  */
-var DetailsMember = /** @class */ (function () {
+class DetailsMember {
     /**
      * Create details member.
      * @constructor
      */
-    function DetailsMember() {
+    constructor() {
         this.value = 0;
         this.address = null;
         this.path = null;
@@ -2765,15 +2015,15 @@ var DetailsMember = /** @class */ (function () {
      * Convert the member to a more json-friendly object.
      * @returns {Object}
      */
-    DetailsMember.prototype.toJSON = function () {
+    toJSON() {
         return this.getJSON();
-    };
+    }
     /**
      * Convert the member to a more json-friendly object.
      * @param {Network} network
      * @returns {Object}
      */
-    DetailsMember.prototype.getJSON = function (network) {
+    getJSON(network) {
         return {
             value: this.value,
             address: this.address
@@ -2783,14 +2033,13 @@ var DetailsMember = /** @class */ (function () {
                 ? this.path.toJSON()
                 : null
         };
-    };
-    return DetailsMember;
-}());
+    }
+}
 /**
  * Block Record
  * @alias module:wallet.BlockRecord
  */
-var BlockRecord = /** @class */ (function () {
+class BlockRecord {
     /**
      * Create a block record.
      * @constructor
@@ -2798,7 +2047,7 @@ var BlockRecord = /** @class */ (function () {
      * @param {Number} height
      * @param {Number} time
      */
-    function BlockRecord(hash, height, time) {
+    constructor(hash, height, time) {
         this.hash = hash || consensus.ZERO_HASH;
         this.height = height != null ? height : -1;
         this.time = time || 0;
@@ -2809,115 +2058,111 @@ var BlockRecord = /** @class */ (function () {
      * @param {Hash} hash
      * @returns {Boolean}
      */
-    BlockRecord.prototype.add = function (hash) {
+    add(hash) {
         if (this.hashes.has(hash))
             return false;
         this.hashes.add(hash);
         return true;
-    };
+    }
     /**
      * Remove transaction from block record.
      * @param {Hash} hash
      * @returns {Boolean}
      */
-    BlockRecord.prototype.remove = function (hash) {
-        return this.hashes["delete"](hash);
-    };
+    remove(hash) {
+        return this.hashes.delete(hash);
+    }
     /**
      * Instantiate wallet block from serialized tip data.
      * @private
      * @param {Buffer} data
      */
-    BlockRecord.prototype.fromRaw = function (data) {
-        var br = bio.read(data);
+    fromRaw(data) {
+        const br = bio.read(data);
         this.hash = br.readHash();
         this.height = br.readU32();
         this.time = br.readU32();
-        var count = br.readU32();
-        for (var i = 0; i < count; i++) {
-            var hash = br.readHash();
+        const count = br.readU32();
+        for (let i = 0; i < count; i++) {
+            const hash = br.readHash();
             this.hashes.add(hash);
         }
         return this;
-    };
+    }
     /**
      * Instantiate wallet block from serialized data.
      * @param {Buffer} data
      * @returns {BlockRecord}
      */
-    BlockRecord.fromRaw = function (data) {
+    static fromRaw(data) {
         return new this().fromRaw(data);
-    };
+    }
     /**
      * Get serialization size.
      * @returns {Number}
      */
-    BlockRecord.prototype.getSize = function () {
+    getSize() {
         return 44 + this.hashes.size * 32;
-    };
+    }
     /**
      * Serialize the wallet block as a tip (hash and height).
      * @returns {Buffer}
      */
-    BlockRecord.prototype.toRaw = function () {
-        var size = this.getSize();
-        var bw = bio.write(size);
+    toRaw() {
+        const size = this.getSize();
+        const bw = bio.write(size);
         bw.writeHash(this.hash);
         bw.writeU32(this.height);
         bw.writeU32(this.time);
         bw.writeU32(this.hashes.size);
-        for (var _i = 0, _a = this.hashes; _i < _a.length; _i++) {
-            var hash = _a[_i];
+        for (const hash of this.hashes)
             bw.writeHash(hash);
-        }
         return bw.render();
-    };
+    }
     /**
      * Convert hashes set to an array.
      * @returns {Hash[]}
      */
-    BlockRecord.prototype.toArray = function () {
-        var hashes = [];
-        for (var _i = 0, _a = this.hashes; _i < _a.length; _i++) {
-            var hash = _a[_i];
+    toArray() {
+        const hashes = [];
+        for (const hash of this.hashes)
             hashes.push(hash);
-        }
         return hashes;
-    };
+    }
     /**
      * Convert the block to a more json-friendly object.
      * @returns {Object}
      */
-    BlockRecord.prototype.toJSON = function () {
+    toJSON() {
         return {
             hash: util.revHex(this.hash),
             height: this.height,
             time: this.time,
             hashes: this.toArray().map(util.revHex)
         };
-    };
+    }
     /**
      * Instantiate wallet block from block meta.
      * @private
      * @param {BlockMeta} block
      */
-    BlockRecord.prototype.fromMeta = function (block) {
+    fromMeta(block) {
         this.hash = block.hash;
         this.height = block.height;
         this.time = block.time;
         return this;
-    };
+    }
     /**
      * Instantiate wallet block from block meta.
      * @param {BlockMeta} block
      * @returns {BlockRecord}
      */
-    BlockRecord.fromMeta = function (block) {
+    static fromMeta(block) {
         return new this().fromMeta(block);
-    };
-    return BlockRecord;
-}());
+    }
+}
 /*
  * Expose
  */
 module.exports = TXDB;
+//# sourceMappingURL=txdb.js.map

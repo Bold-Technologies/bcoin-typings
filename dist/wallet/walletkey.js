@@ -5,51 +5,34 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-var Address = require('../primitives/address');
-var KeyRing = require('../primitives/keyring');
-var Path = require('./path');
+const Address = require('../primitives/address');
+const KeyRing = require('../primitives/keyring');
+const Path = require('./path');
 /**
  * Wallet Key
  * Represents a key ring which amounts to an address.
  * @alias module:wallet.WalletKey
  * @extends KeyRing
  */
-var WalletKey = /** @class */ (function (_super) {
-    __extends(WalletKey, _super);
+class WalletKey extends KeyRing {
     /**
      * Create a wallet key.
      * @constructor
      * @param {Object?} options
      */
-    function WalletKey(options) {
-        var _this = _super.call(this, options) || this;
-        _this.keyType = Path.types.HD;
-        _this.name = null;
-        _this.account = -1;
-        _this.branch = -1;
-        _this.index = -1;
-        return _this;
+    constructor(options) {
+        super(options);
+        this.keyType = Path.types.HD;
+        this.name = null;
+        this.account = -1;
+        this.branch = -1;
+        this.index = -1;
     }
     /**
      * Convert an WalletKey to a more json-friendly object.
      * @returns {Object}
      */
-    WalletKey.prototype.toJSON = function (network) {
+    toJSON(network) {
         return {
             name: this.name,
             account: this.account,
@@ -63,7 +46,7 @@ var WalletKey = /** @class */ (function (_super) {
             type: Address.typesByVal[this.getType()].toLowerCase(),
             address: this.getAddress('string', network)
         };
-    };
+    }
     /**
      * Inject properties from hd key.
      * @private
@@ -73,7 +56,7 @@ var WalletKey = /** @class */ (function (_super) {
      * @param {Number} index
      * @returns {WalletKey}
      */
-    WalletKey.prototype.fromHD = function (account, key, branch, index) {
+    fromHD(account, key, branch, index) {
         this.keyType = Path.types.HD;
         this.name = account.name;
         this.account = account.accountIndex;
@@ -84,7 +67,7 @@ var WalletKey = /** @class */ (function (_super) {
         if (key.privateKey)
             return this.fromPrivate(key.privateKey);
         return this.fromPublic(key.publicKey);
-    };
+    }
     /**
      * Instantiate a wallet key from hd key.
      * @param {Account} account
@@ -93,9 +76,9 @@ var WalletKey = /** @class */ (function (_super) {
      * @param {Number} index
      * @returns {WalletKey}
      */
-    WalletKey.fromHD = function (account, key, branch, index) {
+    static fromHD(account, key, branch, index) {
         return new this().fromHD(account, key, branch, index);
-    };
+    }
     /**
      * Inject properties from imported data.
      * @private
@@ -103,22 +86,22 @@ var WalletKey = /** @class */ (function (_super) {
      * @param {Buffer} data
      * @returns {WalletKey}
      */
-    WalletKey.prototype.fromImport = function (account, data) {
+    fromImport(account, data) {
         this.keyType = Path.types.KEY;
         this.name = account.name;
         this.account = account.accountIndex;
         this.witness = account.witness;
         return this.fromRaw(data);
-    };
+    }
     /**
      * Instantiate a wallet key from imported data.
      * @param {Account} account
      * @param {Buffer} data
      * @returns {WalletKey}
      */
-    WalletKey.fromImport = function (account, data) {
+    static fromImport(account, data) {
         return new this().fromImport(account, data);
-    };
+    }
     /**
      * Inject properties from key.
      * @private
@@ -126,28 +109,28 @@ var WalletKey = /** @class */ (function (_super) {
      * @param {KeyRing} ring
      * @returns {WalletKey}
      */
-    WalletKey.prototype.fromRing = function (account, ring) {
+    fromRing(account, ring) {
         this.keyType = Path.types.KEY;
         this.name = account.name;
         this.account = account.accountIndex;
         this.witness = account.witness;
         return this.fromOptions(ring);
-    };
+    }
     /**
      * Instantiate a wallet key from regular key.
      * @param {Account} account
      * @param {KeyRing} ring
      * @returns {WalletKey}
      */
-    WalletKey.fromRing = function (account, ring) {
+    static fromRing(account, ring) {
         return new this().fromRing(account, ring);
-    };
+    }
     /**
      * Convert wallet key to a path.
      * @returns {Path}
      */
-    WalletKey.prototype.toPath = function () {
-        var path = new Path();
+    toPath() {
+        const path = new Path();
         path.name = this.name;
         path.account = this.account;
         switch (this.keyType) {
@@ -164,18 +147,18 @@ var WalletKey = /** @class */ (function (_super) {
         path.type = this.getType();
         path.hash = this.getHash();
         return path;
-    };
+    }
     /**
      * Test whether an object is a WalletKey.
      * @param {Object} obj
      * @returns {Boolean}
      */
-    WalletKey.isWalletKey = function (obj) {
+    static isWalletKey(obj) {
         return obj instanceof WalletKey;
-    };
-    return WalletKey;
-}(KeyRing));
+    }
+}
 /*
  * Expose
  */
 module.exports = WalletKey;
+//# sourceMappingURL=walletkey.js.map

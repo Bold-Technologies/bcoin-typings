@@ -5,33 +5,32 @@
  * https://github.com/bcoin-org/bcoin
  */
 'use strict';
-var bio = require('bufio');
+const bio = require('bufio');
 /**
  * Framer
  * @alias module:workers.Framer
  */
-var Framer = /** @class */ (function () {
+class Framer {
     /**
      * Create a framer.
      * @constructor
      */
-    function Framer() {
-    }
-    Framer.prototype.packet = function (payload) {
-        var size = 10 + payload.getSize();
-        var bw = bio.write(size);
+    constructor() { }
+    packet(payload) {
+        const size = 10 + payload.getSize();
+        const bw = bio.write(size);
         bw.writeU32(payload.id);
         bw.writeU8(payload.cmd);
         bw.seek(4);
         payload.toWriter(bw);
         bw.writeU8(0x0a);
-        var msg = bw.render();
+        const msg = bw.render();
         msg.writeUInt32LE(msg.length - 10, 5, true);
         return msg;
-    };
-    return Framer;
-}());
+    }
+}
 /*
  * Expose
  */
 module.exports = Framer;
+//# sourceMappingURL=framer.js.map
