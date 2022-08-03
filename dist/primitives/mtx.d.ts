@@ -266,9 +266,9 @@ export class MTX extends TX {
      * @param {Stack} vector
      * @param {Buffer} sig
      * @param {KeyRing} ring
-     * @return {Boolean}
+     * @return {Stack|null}
      */
-    signVector(prev: Script, vector: Stack, sig: Buffer, ring: KeyRing): boolean;
+    signVector(prev: Script, vector: Stack, sig: Buffer, ring: KeyRing): Stack | null;
     /**
      * Test whether the transaction is fully-signed.
      * @returns {Boolean}

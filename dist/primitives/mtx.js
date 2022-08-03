@@ -578,7 +578,7 @@ class MTX extends TX {
      * @param {Stack} vector
      * @param {Buffer} sig
      * @param {KeyRing} ring
-     * @return {Boolean}
+     * @return {Stack|null}
      */
     signVector(prev, vector, sig, ring) {
         // P2PK
