@@ -902,7 +902,7 @@ class MTX extends TX {
      * Select necessary coins based on total output value.
      * @param {Coin[]} coins
      * @param {Object?} options
-     * @returns {CoinSelection}
+     * @returns {CoinSelector}
      * @throws on not enough funds available.
      */
     selectCoins(coins, options) {
@@ -966,7 +966,7 @@ class MTX extends TX {
      * Select coins and fill the inputs.
      * @param {Coin[]} coins
      * @param {Object} options - See {@link MTX#selectCoins} options.
-     * @returns {CoinSelector}
+     * @returns {Promise}
      */
     async fund(coins, options) {
         assert(options, 'Options are required.');

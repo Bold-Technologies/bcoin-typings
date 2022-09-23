@@ -323,10 +323,10 @@ export class MTX extends TX {
      * Select necessary coins based on total output value.
      * @param {Coin[]} coins
      * @param {Object?} options
-     * @returns {CoinSelection}
+     * @returns {CoinSelector}
      * @throws on not enough funds available.
      */
-    selectCoins(coins: Coin[], options: any | null): CoinSelection;
+    selectCoins(coins: Coin[], options: any | null): CoinSelector;
     /**
      * Attempt to subtract a fee from a single output.
      * @param {Number} index
@@ -342,9 +342,9 @@ export class MTX extends TX {
      * Select coins and fill the inputs.
      * @param {Coin[]} coins
      * @param {Object} options - See {@link MTX#selectCoins} options.
-     * @returns {CoinSelector}
+     * @returns {Promise}
      */
-    fund(coins: Coin[], options: any): CoinSelector;
+    fund(coins: Coin[], options: any): Promise<any>;
     /**
      * Sort inputs and outputs according to BIP69.
      * @see https://github.com/bitcoin/bips/blob/master/bip-0069.mediawiki
