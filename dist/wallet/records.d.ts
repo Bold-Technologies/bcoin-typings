@@ -4,7 +4,6 @@
 export class ChainState {
     /**
      * Instantiate chain state from serialized data.
-     * @param {Hash} hash
      * @param {Buffer} data
      * @returns {ChainState}
      */
@@ -48,7 +47,6 @@ export class BlockMeta {
     static fromJSON(json: any): BlockMeta;
     /**
      * Instantiate block meta from serialized data.
-     * @param {Hash} hash
      * @param {Buffer} data
      * @returns {BlockMeta}
      */

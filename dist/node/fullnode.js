@@ -84,6 +84,41 @@ class FullNode extends Node {
             replaceByFee: this.config.bool('replace-by-fee'),
             indexAddress: this.config.bool('index-address')
         });
+        // Indexers
+        if (this.config.bool('index-tx')) {
+            this.txindex = new TXIndexer({
+                network: this.network,
+                logger: this.logger,
+                blocks: this.blocks,
+                chain: this.chain,
+                prune: this.config.bool('prune'),
+                memory: this.memory,
+                prefix: this.config.str('index-prefix', this.config.prefix)
+            });
+        }
+        if (this.config.bool('index-address')) {
+            this.addrindex = new AddrIndexer({
+                network: this.network,
+                logger: this.logger,
+                blocks: this.blocks,
+                chain: this.chain,
+                prune: this.config.bool('prune'),
+                memory: this.memory,
+                prefix: this.config.str('index-prefix', this.config.prefix),
+                maxTxs: this.config.uint('max-txs')
+            });
+        }
+        if (this.config.bool('index-filter')) {
+            this.filterIndexers.set('BASIC', new FilterIndexer({
+                network: this.network,
+                logger: this.logger,
+                blocks: this.blocks,
+                chain: this.chain,
+                memory: this.config.bool('memory'),
+                prefix: this.config.str('index-prefix', this.config.prefix),
+                filterType: 'BASIC'
+            }));
+        }
         // Pool needs access to the chain and mempool.
         this.pool = new Pool({
             network: this.network,
@@ -91,6 +126,7 @@ class FullNode extends Node {
             chain: this.chain,
             mempool: this.mempool,
             prefix: this.config.prefix,
+            filterIndexers: this.filterIndexers,
             selfish: this.config.bool('selfish'),
             compact: this.config.bool('compact'),
             bip37: this.config.bool('bip37'),
@@ -108,7 +144,8 @@ class FullNode extends Node {
             host: this.config.str('host'),
             port: this.config.uint('port'),
             listen: this.config.bool('listen'),
-            memory: this.memory
+            memory: this.memory,
+            bip157: this.config.bool('bip157')
         });
         // Miner needs access to the chain and mempool.
         this.miner = new Miner({
@@ -142,40 +179,6 @@ class FullNode extends Node {
             cors: this.config.bool('cors'),
             maxTxs: this.config.uint('max-txs')
         });
-        // Indexers
-        if (this.config.bool('index-tx')) {
-            this.txindex = new TXIndexer({
-                network: this.network,
-                logger: this.logger,
-                blocks: this.blocks,
-                chain: this.chain,
-                prune: this.config.bool('prune'),
-                memory: this.memory,
-                prefix: this.config.str('index-prefix', this.config.prefix)
-            });
-        }
-        if (this.config.bool('index-address')) {
-            this.addrindex = new AddrIndexer({
-                network: this.network,
-                logger: this.logger,
-                blocks: this.blocks,
-                chain: this.chain,
-                prune: this.config.bool('prune'),
-                memory: this.memory,
-                prefix: this.config.str('index-prefix', this.config.prefix),
-                maxTxs: this.config.uint('max-txs')
-            });
-        }
-        if (this.config.bool('index-filter')) {
-            this.filterindex = new FilterIndexer({
-                network: this.network,
-                logger: this.logger,
-                blocks: this.blocks,
-                chain: this.chain,
-                memory: this.config.bool('memory'),
-                prefix: this.config.str('index-prefix', this.config.prefix)
-            });
-        }
         this.init();
     }
     /**
@@ -192,8 +195,11 @@ class FullNode extends Node {
             this.txindex.on('error', err => this.error(err));
         if (this.addrindex)
             this.addrindex.on('error', err => this.error(err));
-        if (this.filterindex)
-            this.filterindex.on('error', err => this.error(err));
+        if (this.filterIndexers) {
+            for (const filterindex of this.filterIndexers.values()) {
+                filterindex.on('error', err => this.error(err));
+            }
+        }
         if (this.http)
             this.http.on('error', err => this.error(err));
         this.mempool.on('tx', (tx) => {
@@ -258,8 +264,11 @@ class FullNode extends Node {
             await this.txindex.open();
         if (this.addrindex)
             await this.addrindex.open();
-        if (this.filterindex)
-            await this.filterindex.open();
+        if (this.filterIndexers) {
+            for (const filterindex of this.filterIndexers.values()) {
+                await filterindex.open();
+            }
+        }
         await this.openPlugins();
         await this.http.open();
         await this.handleOpen();
@@ -279,8 +288,11 @@ class FullNode extends Node {
             await this.txindex.close();
         if (this.addrindex)
             await this.addrindex.close();
-        if (this.filterindex)
-            await this.filterindex.close();
+        if (this.filterIndexers) {
+            for (const filterindex of this.filterIndexers.values()) {
+                await filterindex.close();
+            }
+        }
         await this.closePlugins();
         await this.pool.close();
         await this.miner.close();
@@ -292,7 +304,7 @@ class FullNode extends Node {
     /**
      * Rescan for any missed transactions.
      * @param {Number|Hash} start - Start block.
-     * @param {Bloom} filter
+     * @param {BloomFilter} filter
      * @param {Function} iter - Iterator.
      * @returns {Promise}
      */
@@ -380,8 +392,11 @@ class FullNode extends Node {
             this.txindex.sync();
         if (this.addrindex)
             this.addrindex.sync();
-        if (this.filterindex)
-            this.filterindex.sync();
+        if (this.filterIndexers) {
+            for (const filterindex of this.filterIndexers.values()) {
+                filterindex.sync();
+            }
+        }
         return this.pool.startSync();
     }
     /**
@@ -523,16 +538,18 @@ class FullNode extends Node {
     /**
      * Retrieve compact filter by hash.
      * @param {Hash | Number} hash
+     * @param {Number} filterType
      * @returns {Promise} - Returns {@link Buffer}.
      */
-    async getBlockFilter(hash) {
-        if (!this.filterindex)
+    async getBlockFilter(hash, filterType) {
+        const Indexer = this.filterIndexers.get(filterType);
+        if (!Indexer)
             return null;
         if (typeof hash === 'number')
             hash = await this.chain.getHash(hash);
         if (!hash)
             return null;
-        return this.filterindex.getFilter(hash);
+        return Indexer.getFilter(hash);
     }
 }
 /*

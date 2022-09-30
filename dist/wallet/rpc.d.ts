@@ -7,9 +7,9 @@ export = RPC;
 declare class RPC {
     /**
      * Create an RPC.
-     * @param {WalletDB} wdb
+     * @param {Node|Plugin} node
      */
-    constructor(node: any);
+    constructor(node: Node | Plugin);
     wdb: any;
     network: any;
     logger: any;
@@ -32,6 +32,8 @@ declare class RPC {
     backupWallet(args: any, help: any): Promise<any>;
     dumpPrivKey(args: any, help: any): Promise<any>;
     dumpWallet(args: any, help: any): Promise<string>;
+    rescan(args: any, help: any): Promise<void>;
+    abortrescan(args: any, help: any): boolean;
     encryptWallet(args: any, help: any): Promise<string>;
     getAccountAddress(args: any, help: any): Promise<any>;
     getAccount(args: any, help: any): Promise<any>;

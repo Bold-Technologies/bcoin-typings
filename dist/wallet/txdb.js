@@ -28,6 +28,7 @@ class TXDB {
      * Create a TXDB.
      * @constructor
      * @param {WalletDB} wdb
+     * @param {Number} wid
      */
     constructor(wdb, wid) {
         this.wdb = wdb;
@@ -83,6 +84,7 @@ class TXDB {
     }
     /**
      * Save credit.
+     * @param {Batch} b
      * @param {Credit} credit
      * @param {Path} path
      */
@@ -90,10 +92,28 @@ class TXDB {
         const { coin } = credit;
         b.put(layout.c.encode(coin.hash, coin.index), credit.toRaw());
         b.put(layout.C.encode(path.account, coin.hash, coin.index), null);
+        // if the credit is 'spent', we will remove it
+        // else we will add it to the 'unspent' bucket
+        if (credit.spent) {
+            this.removeUnspentCredit(b, credit, path);
+        }
+        else {
+            this.saveUnspentCredit(b, credit, path);
+        }
         return this.addOutpointMap(b, coin.hash, coin.index);
     }
     /**
+     * Save unspent credit.
+     * @param {Credit} credit
+     * @param {Path} path
+     */
+    saveUnspentCredit(b, credit, path) {
+        const { coin } = credit;
+        b.put(layout.u.encode(path.account, coin.value, coin.hash, coin.index), credit.toRaw());
+    }
+    /**
      * Remove credit.
+     * @param {Batch} b
      * @param {Credit} credit
      * @param {Path} path
      */
@@ -101,10 +121,23 @@ class TXDB {
         const { coin } = credit;
         b.del(layout.c.encode(coin.hash, coin.index));
         b.del(layout.C.encode(path.account, coin.hash, coin.index));
+        // we are sure that the credit is spent
+        // so we can remove it from the 'unspent' bucket
+        this.removeUnspentCredit(b, credit, path);
         return this.removeOutpointMap(b, coin.hash, coin.index);
     }
     /**
+     * Remove spent credit.
+     * @param {Credit} credit
+     * @param {Path} path
+     */
+    removeUnspentCredit(b, credit, path) {
+        const { coin } = credit;
+        b.del(layout.u.encode(path.account, coin.value, coin.hash, coin.index));
+    }
+    /**
      * Spend credit.
+     * @param {Batch} b
      * @param {Credit} credit
      * @param {TX} tx
      * @param {Number} index
@@ -117,6 +150,7 @@ class TXDB {
     }
     /**
      * Unspend credit.
+     * @param {Batch} b
      * @param {TX} tx
      * @param {Number} index
      */
@@ -128,6 +162,7 @@ class TXDB {
     }
     /**
      * Write input record.
+     * @param {Batch} b
      * @param {TX} tx
      * @param {Number} index
      */
@@ -139,6 +174,7 @@ class TXDB {
     }
     /**
      * Remove input record.
+     * @param {Batch} b
      * @param {TX} tx
      * @param {Number} index
      */
@@ -149,6 +185,7 @@ class TXDB {
     }
     /**
      * Update wallet balance.
+     * @param {Batch} b
      * @param {BalanceDelta} state
      */
     async updateBalance(b, state) {
@@ -159,6 +196,7 @@ class TXDB {
     }
     /**
      * Update account balance.
+     * @param {Batch} b
      * @param {Number} acct
      * @param {Balance} delta
      */
@@ -191,6 +229,7 @@ class TXDB {
     }
     /**
      * Append to global map.
+     * @param {Batch} b
      * @param {Number} height
      * @returns {Promise}
      */
@@ -199,6 +238,7 @@ class TXDB {
     }
     /**
      * Remove from global map.
+     * @param {Batch} b
      * @param {Number} height
      * @returns {Promise}
      */
@@ -207,6 +247,7 @@ class TXDB {
     }
     /**
      * Append to global map.
+     * @param {Batch} b
      * @param {Hash} hash
      * @returns {Promise}
      */
@@ -215,6 +256,7 @@ class TXDB {
     }
     /**
      * Remove from global map.
+     * @param {Batch} b
      * @param {Hash} hash
      * @returns {Promise}
      */
@@ -223,6 +265,7 @@ class TXDB {
     }
     /**
      * Append to global map.
+     * @param {Batch} b
      * @param {Hash} hash
      * @param {Number} index
      * @returns {Promise}
@@ -232,6 +275,7 @@ class TXDB {
     }
     /**
      * Remove from global map.
+     * @param {Batch} b
      * @param {Hash} hash
      * @param {Number} index
      * @returns {Promise}
@@ -263,6 +307,7 @@ class TXDB {
     }
     /**
      * Append to the global block record.
+     * @param {Batch} b
      * @param {Hash} hash
      * @param {BlockMeta} block
      * @returns {Promise}
@@ -285,6 +330,7 @@ class TXDB {
     }
     /**
      * Remove from the global block record.
+     * @param {Batch} b
      * @param {Hash} hash
      * @param {Number} height
      * @returns {Promise}
@@ -307,6 +353,7 @@ class TXDB {
     }
     /**
      * Remove from the global block record.
+     * @param {Batch} b
      * @param {Hash} hash
      * @param {Number} height
      * @returns {Promise}
@@ -327,6 +374,7 @@ class TXDB {
      * Add transaction without a batch.
      * @private
      * @param {TX} tx
+     * @param {BlockMeta} block
      * @returns {Promise}
      */
     async add(tx, block) {
@@ -616,6 +664,7 @@ class TXDB {
      * database. Disconnect inputs.
      * @private
      * @param {TXRecord} wtx
+     * @param {BlockMeta} block
      * @returns {Promise}
      */
     async erase(wtx, block) {
@@ -761,6 +810,7 @@ class TXDB {
     /**
      * Unconfirm a transaction. Necessary after a reorg.
      * @param {TXRecord} wtx
+     * @param {BlockMeta} block
      * @returns {Promise}
      */
     async disconnect(wtx, block) {
@@ -845,8 +895,7 @@ class TXDB {
      * of that coin that are _not_ confirmed will be removed from
      * the database.
      * @private
-     * @param {Hash} hash
-     * @param {TX} ref - Reference tx, the tx that double-spent.
+     * @param {TXRecord} wtx - Reference tx, the tx that double-spent.
      * @returns {Promise} - Returns Boolean.
      */
     async removeConflict(wtx) {
@@ -865,6 +914,7 @@ class TXDB {
      * double spenders, and verify inputs.
      * @private
      * @param {TX} tx
+     * @param {Boolean} conf
      * @returns {Promise}
      */
     async removeConflicts(tx, conf) {
@@ -951,7 +1001,7 @@ class TXDB {
     /**
      * Filter array of coins or outpoints
      * for only unlocked ones.
-     * @param {Coin[]|Outpoint[]}
+     * @param {Coin[]|Outpoint[]} coins
      * @returns {Array}
      */
     filterLocked(coins) {
@@ -1366,6 +1416,64 @@ class TXDB {
         return coins;
     }
     /**
+     * Get unspent coins.
+     * @param {Number} acct
+     * @returns {Promise} - Returns {@link Coin}[].
+     */
+    async getUnspentCoins(acct) {
+        const credits = await this.getUnspentCredits(acct);
+        const coins = [];
+        for (const credit of credits) {
+            coins.push(credit.coin);
+        }
+        return coins;
+    }
+    /**
+     * Get unspent credits.
+     * @param {Number} acct
+     * @returns {Promise} - Returns {@link Credit}[].
+     */
+    async getUnspentCredits(acct) {
+        assert(typeof acct === 'number');
+        if (acct !== -1)
+            return this.getUnspentAccountCredits(acct);
+        const credits = [];
+        const iter = await this.bucket.iterator({
+            gte: layout.u.min(),
+            lte: layout.u.max(),
+            values: true
+        });
+        await iter.each((key, value) => {
+            const credit = Credit.fromRaw(value);
+            const [, , hash, index] = layout.u.decode(key);
+            credit.coin.hash = hash;
+            credit.coin.index = index;
+            credits.push(credit);
+        });
+        return credits;
+    }
+    /**
+     * Get unspent credits by account.
+     * @param {Number} acct
+     * @returns {Promise} - Returns {@link Credit}[].
+     */
+    async getUnspentAccountCredits(acct) {
+        const credits = [];
+        const iter = await this.bucket.iterator({
+            gte: layout.u.min(acct),
+            lte: layout.u.max(acct),
+            values: true
+        });
+        await iter.each((key, value) => {
+            const credit = Credit.fromRaw(value);
+            const [, , hash, index] = layout.u.decode(key);
+            credit.coin.hash = hash;
+            credit.coin.index = index;
+            credits.push(credit);
+        });
+        return credits;
+    }
+    /**
      * Get historical coins for a transaction.
      * @param {TX} tx
      * @returns {Promise} - Returns {@link TX}.
@@ -1543,6 +1651,7 @@ class TXDB {
     }
     /**
      * Update spent coin height in storage.
+     * @param {Batch} b
      * @param {TX} tx - Sending transaction.
      * @param {Number} index
      * @param {Number} height
@@ -1562,6 +1671,7 @@ class TXDB {
     /**
      * Test whether the database has a transaction.
      * @param {Hash} hash
+     * @param {Number} index
      * @returns {Promise} - Returns Boolean.
      */
     async hasCoin(hash, index) {
@@ -1569,7 +1679,7 @@ class TXDB {
     }
     /**
      * Calculate balance.
-     * @param {Number?} account
+     * @param {Number?} acct
      * @returns {Promise} - Returns {@link Balance}.
      */
     async getBalance(acct) {
@@ -1643,7 +1753,7 @@ class Balance {
     /**
      * Create a balance.
      * @constructor
-     * @param {Number} account
+     * @param {Number} acct
      */
     constructor(acct = -1) {
         assert(typeof acct === 'number');
@@ -1683,7 +1793,7 @@ class Balance {
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
-     * @returns {TXDBState}
+     * @returns {Balance}
      */
     fromRaw(data) {
         const br = bio.read(data);
@@ -1697,7 +1807,7 @@ class Balance {
      * Instantiate balance from serialized data.
      * @param {Number} acct
      * @param {Buffer} data
-     * @returns {TXDBState}
+     * @returns {Balance}
      */
     static fromRaw(acct, data) {
         return new this(acct).fromRaw(data);
@@ -1718,7 +1828,7 @@ class Balance {
     }
     /**
      * Inspect balance.
-     * @param {String}
+     * @returns {String}
      */
     [inspectSymbol]() {
         return '<Balance'
@@ -1836,6 +1946,7 @@ class Credit {
      * @private
      * @param {TX} tx
      * @param {Number} index
+     * @param {Number} height
      * @returns {Credit}
      */
     fromTX(tx, index, height) {
@@ -1848,6 +1959,7 @@ class Credit {
      * Instantiate credit from transaction.
      * @param {TX} tx
      * @param {Number} index
+     * @param {Number} height
      * @returns {Credit}
      */
     static fromTX(tx, index, height) {

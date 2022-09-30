@@ -194,6 +194,7 @@ class Peer extends EventEmitter {
      * Frame a payload with a header.
      * @param {String} cmd - Packet type.
      * @param {Buffer} payload
+     * @param {Buffer?} checksum
      * @returns {Buffer} Payload with header prepended.
      */
     framePacket(cmd, payload, checksum) {
@@ -729,7 +730,9 @@ class Peer extends EventEmitter {
     }
     /**
      * Send a packet.
-     * @param {Packet} packet
+     * @param {String} cmd - Packet type.
+     * @param {Buffer} body
+     * @param {Buffer?} checksum
      */
     sendRaw(cmd, body, checksum) {
         const payload = this.framePacket(cmd, body, checksum);
@@ -937,6 +940,7 @@ class Peer extends EventEmitter {
      * Wait for a packet to be received from peer.
      * @private
      * @param {Number} type - Packet type.
+     * @param {Number} timeout
      * @returns {Promise} - Returns Object(payload).
      * Executed on timeout or once packet is received.
      */
@@ -980,9 +984,7 @@ class Peer extends EventEmitter {
     blockType() {
         if (this.options.spv)
             return invTypes.FILTERED_BLOCK;
-        if (this.options.compact
-            && this.hasCompactSupport()
-            && this.hasCompact()) {
+        if (this.options.compact && this.hasCompactSupport() && this.hasCompact()) {
             return invTypes.CMPCT_BLOCK;
         }
         if (this.hasWitness())
@@ -1308,7 +1310,7 @@ class Peer extends EventEmitter {
      * Handle `sendcmpct` packet.
      * @method
      * @private
-     * @param {SendCmpctPacket}
+     * @param {SendCmpctPacket} packet
      */
     async handleSendCmpct(packet) {
         // Only support compact block relay with witnesses
@@ -1358,6 +1360,40 @@ class Peer extends EventEmitter {
             end = stop;
         this.logger.debug('Requesting inv packet from peer with getblocks (%s).', this.hostname());
         this.logger.debug('Sending getblocks (hash=%h, stop=%h).', hash, end);
+        this.send(packet);
+    }
+    /**
+     * Send `cfilter` to peer.
+     * @param {Number} filterType
+     * @param {Hash} blockHash
+     * @param {Buffer} filter
+     */
+    sendCFilter(filterType, blockHash, filter) {
+        const packet = new packets.CFilterPacket(filterType, blockHash, filter);
+        this.logger.debug('Sending cfilter (type=%d, blockHash=%h).', filterType, blockHash);
+        this.send(packet);
+    }
+    /**
+     * Send `cfheaders` to peer.
+     * @param {Number} filterType
+     * @param {Hash} stopHash
+     * @param {Hash} previousFilterHeader
+     * @param {Hash[]} filterHashes
+     */
+    sendCFHeaders(filterType, stopHash, previousFilterHeader, filterHashes) {
+        const packet = new packets.CFHeadersPacket(filterType, stopHash, previousFilterHeader, filterHashes);
+        this.logger.debug('Sending cfheaders (type=%d, stop=%h, prev=%h).', filterType, stopHash, previousFilterHeader);
+        this.send(packet);
+    }
+    /**
+     * send `cfcheckpt` to peer.
+     * @param {Number} filterType
+     * @param {Hash} stopHash
+     * @param {Hash[]} filterHeaders
+     */
+    sendCFCheckpt(filterType, stopHash, filterHeaders) {
+        const packet = new packets.CFCheckptPacket(filterType, stopHash, filterHeaders);
+        this.logger.debug('Sending cfcheckpt (type=%d, stop=%h, len=%d).', filterType, stopHash, filterHeaders.length);
         this.send(packet);
     }
     /**

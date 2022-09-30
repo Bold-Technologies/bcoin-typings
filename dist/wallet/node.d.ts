@@ -13,7 +13,7 @@ declare class WalletNode extends Node {
     opened: boolean;
     client: Client;
     wdb: WalletDB;
-    rpc: RPC;
+    rpc: any;
     http: HTTP;
     /**
      * Initialize the node.
@@ -35,6 +35,5 @@ declare class WalletNode extends Node {
 import Node = require("../node/node");
 import Client = require("./client");
 import WalletDB = require("./walletdb");
-import RPC = require("./rpc");
 import HTTP = require("./http");
 //# sourceMappingURL=node.d.ts.map

@@ -11,6 +11,7 @@ declare class FilterIndexer extends Indexer {
      * @param {Object} options
      */
     constructor(options: any);
+    filterType: any;
     /**
      * Index compact filters.
      * @private
@@ -28,7 +29,6 @@ declare class FilterIndexer extends Indexer {
     /**
      * Retrieve compact filter by hash.
      * @param {Hash} hash
-     * @param {Number} type
      * @returns {Promise} - Returns {@link Filter}.
      */
     getFilter(hash: Hash): Promise<any>;
@@ -38,6 +38,12 @@ declare class FilterIndexer extends Indexer {
      * @returns {Promise} - Returns {@link Hash}.
      */
     getFilterHeader(hash: Hash): Promise<any>;
+    /**
+     * Retrieve compact filter hash by block hash.
+     * @param {Hash} hash
+     * @returns {Promise} - Returns {@link Hash}.
+     */
+    getFilterHash(hash: Hash): Promise<any>;
 }
 import Indexer = require("./indexer");
 //# sourceMappingURL=filterindexer.d.ts.map

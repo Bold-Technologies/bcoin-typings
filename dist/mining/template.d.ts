@@ -168,7 +168,7 @@ export class BlockTemplate {
  * @property {Rate} rate
  * @property {Number} priority
  * @property {Boolean} free
- * @property {Sigops} sigops
+ * @property {Number} sigops
  * @property {Number} depCount
  */
 export class BlockEntry {

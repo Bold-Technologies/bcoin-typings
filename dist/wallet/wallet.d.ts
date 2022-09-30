@@ -14,10 +14,11 @@ declare class Wallet {
     static fromOptions(wdb: WalletDB, options: any): Wallet;
     /**
      * Instantiate a wallet from serialized data.
+     * @param {WalletDB} wdb
      * @param {Buffer} data
      * @returns {Wallet}
      */
-    static fromRaw(wdb: any, data: Buffer): Wallet;
+    static fromRaw(wdb: WalletDB, data: Buffer): Wallet;
     /**
      * Test an object to see if it is a Wallet.
      * @param {Object} obj
@@ -27,10 +28,11 @@ declare class Wallet {
     /**
      * Create a wallet.
      * @constructor
+     * @param {WalletDB} wdb
      * @param {Object} options
      */
-    constructor(wdb: any, options: any);
-    wdb: any;
+    constructor(wdb: WalletDB, options: any);
+    wdb: WalletDB;
     db: any;
     network: any;
     logger: any;
@@ -190,7 +192,6 @@ declare class Wallet {
      * Generate the wallet api key if none was passed in.
      * It is represented as HASH256(m/44'->private|nonce).
      * @private
-     * @param {HDPrivateKey} master
      * @param {Number} nonce
      * @returns {Buffer}
      */
@@ -198,21 +199,24 @@ declare class Wallet {
     /**
      * Create an account. Requires passphrase if master key is encrypted.
      * @param {Object} options - See {@link Account} options.
+     * @param {Buffer|String} passphrase
      * @returns {Promise} - Returns {@link Account}.
      */
-    createAccount(options: any, passphrase: any): Promise<any>;
+    createAccount(options: any, passphrase: Buffer | string): Promise<any>;
     /**
      * Create an account without a lock.
      * @param {Object} options - See {@link Account} options.
+     * @param {Buffer|String} passphrase
      * @returns {Promise} - Returns {@link Account}.
      */
-    _createAccount(options: any, passphrase: any): Promise<any>;
+    _createAccount(options: any, passphrase: Buffer | string): Promise<any>;
     /**
      * Ensure an account. Requires passphrase if master key is encrypted.
      * @param {Object} options - See {@link Account} options.
+     * @param {Buffer|String} passphrase
      * @returns {Promise} - Returns {@link Account}.
      */
-    ensureAccount(options: any, passphrase: any): Promise<any>;
+    ensureAccount(options: any, passphrase: Buffer | string): Promise<any>;
     /**
      * List account names and indexes from the db.
      * @returns {Promise} - Returns Array.
@@ -297,9 +301,10 @@ declare class Wallet {
     /**
      * Save the wallet to the database. Necessary
      * when address depth and keys change.
+     * @param {Batch} b
      * @returns {Promise}
      */
-    save(b: any): Promise<any>;
+    save(b: Batch): Promise<any>;
     /**
      * Increment the wid depth.
      * @returns {Promise}
@@ -364,17 +369,15 @@ declare class Wallet {
      * Import a keyring (will not exist on derivation chain).
      * Rescanning must be invoked manually.
      * @param {(String|Number)?} acct
-     * @param {WalletKey} ring
-     * @param {(String|Buffer)?} passphrase
+     * @param {Address|Hash} address
      * @returns {Promise}
      */
-    importAddress(acct: (string | number) | null, address: any): Promise<any>;
+    importAddress(acct: (string | number) | null, address: Address | Hash): Promise<any>;
     /**
      * Import a keyring (will not exist on derivation chain) without a lock.
      * @private
      * @param {(String|Number)?} acct
-     * @param {WalletKey} ring
-     * @param {(String|Buffer)?} passphrase
+     * @param {Address|Hash} address
      * @returns {Promise}
      */
     private _importAddress;
@@ -399,9 +402,10 @@ declare class Wallet {
      * @param {SatoshiAmount?} options.hardFee - Use a hard fee rather than
      * calculating one.
      * @param {Number|Boolean} options.subtractFee - Whether to subtract the
+     * @param {Boolean?} force - Bypass the lock.
      * fee from existing outputs rather than adding more inputs.
      */
-    fund(mtx: typeof MTX, options: any | null, force: any): Promise<void>;
+    fund(mtx: typeof MTX, options: any | null, force: boolean | null): Promise<void>;
     /**
      * Fill a transaction with inputs without a lock.
      * @private
@@ -424,6 +428,7 @@ declare class Wallet {
      * @param {Boolean} options.sort - Sort inputs and outputs (BIP69).
      * @param {Boolean} options.template - Build scripts for inputs.
      * @param {Number} options.locktime - TX locktime
+     * @param {Boolean?} force - Bypass the lock.
      * @returns {Promise} - Returns {@link MTX}.
      */
     createTX(options: {
@@ -431,7 +436,7 @@ declare class Wallet {
         sort: boolean;
         template: boolean;
         locktime: number;
-    }, force: any): Promise<any>;
+    }, force: boolean | null): Promise<any>;
     /**
      * Build a transaction, fill it with outputs and inputs,
      * sort the members according to BIP69, set locktime,
@@ -439,16 +444,18 @@ declare class Wallet {
      * coins from being double spent.
      * @param {Object} options - See {@link Wallet#fund options}.
      * @param {Object[]} options.outputs - See {@link MTX#addOutput}.
+     * @param {(String|Buffer)?} passphrase
      * @returns {Promise} - Returns {@link TX}.
      */
     send(options: {
         outputs: any[];
-    }, passphrase: any): Promise<any>;
+    }, passphrase: (string | Buffer) | null): Promise<any>;
     /**
      * Build and send a transaction without a lock.
      * @private
      * @param {Object} options - See {@link Wallet#fund options}.
      * @param {Object[]} options.outputs - See {@link MTX#addOutput}.
+     * @param {(String|Buffer)?} passphrase
      * @returns {Promise} - Returns {@link TX}.
      */
     private _send;
@@ -469,24 +476,23 @@ declare class Wallet {
     /**
      * Derive necessary addresses for signing a transaction.
      * @param {MTX} mtx
-     * @param {Number?} index - Input index.
      * @returns {Promise} - Returns {@link WalletKey}[].
      */
     deriveInputs(mtx: typeof MTX): Promise<any>;
     /**
      * Retrieve a single keyring by address.
-     * @param {Address|Hash} hash
+     * @param {Address|Hash} address
      * @returns {Promise}
      */
-    getKey(address: any): Promise<any>;
+    getKey(address: Address | Hash): Promise<any>;
     /**
      * Retrieve a single keyring by address
      * (with the private key reference).
-     * @param {Address|Hash} hash
+     * @param {Address|Hash} address
      * @param {(Buffer|String)?} passphrase
      * @returns {Promise}
      */
-    getPrivateKey(address: any, passphrase: (Buffer | string) | null): Promise<any>;
+    getPrivateKey(address: Address | Hash, passphrase: (Buffer | string) | null): Promise<any>;
     /**
      * Map input addresses to paths.
      * @param {MTX} mtx
@@ -501,15 +507,15 @@ declare class Wallet {
     getOutputPaths(tx: TX): Promise<any>;
     /**
      * Increase lookahead for account.
-     * @param {(Number|String)?} account
+     * @param {(Number|String)?} acct
      * @param {Number} lookahead
      * @returns {Promise}
      */
-    setLookahead(acct: any, lookahead: number): Promise<any>;
+    setLookahead(acct: (number | string) | null, lookahead: number): Promise<any>;
     /**
      * Increase lookahead for account (without a lock).
      * @private
-     * @param {(Number|String)?} account
+     * @param {(Number|String)?} acct
      * @param {Number} lookahead
      * @returns {Promise}
      */
@@ -534,12 +540,12 @@ declare class Wallet {
     /**
      * Build input scripts and sign inputs for a transaction. Only attempts
      * to build/sign inputs that are redeemable by this wallet.
-     * @param {MTX} tx
-     * @param {Object|String|Buffer} options - Options or passphrase.
+     * @param {MTX} mtx
+     * @param {(String|Buffer)?} passphrase
      * @returns {Promise} - Returns Number (total number
      * of inputs scripts built and signed).
      */
-    sign(mtx: any, passphrase: any): Promise<any>;
+    sign(mtx: typeof MTX, passphrase: (string | Buffer) | null): Promise<any>;
     /**
      * Get pending ancestors up to the policy limit
      * @param {TX} tx
@@ -610,14 +616,16 @@ declare class Wallet {
     /**
      * Add a transaction to the wallets TX history.
      * @param {TX} tx
+     * @param {BlockMeta} block
      * @returns {Promise}
      */
-    add(tx: TX, block: any): Promise<any>;
+    add(tx: TX, block: BlockMeta): Promise<any>;
     /**
      * Add a transaction to the wallet without a lock.
      * Potentially resolves orphans.
      * @private
      * @param {TX} tx
+     * @param {BlockMeta} block
      * @returns {Promise}
      */
     private _add;
@@ -693,22 +701,34 @@ declare class Wallet {
     getHistory(acct: (string | number) | null): Promise<any>;
     /**
      * Get all available coins.
+     * @param {(String|Number)?} acct
+     * @returns {Promise} - Returns {@link Coin}[].
+     */
+    getCoins(acct: (string | number) | null): Promise<any>;
+    /**
+     * Get all available unspent coins.
      * @param {(String|Number)?} account
      * @returns {Promise} - Returns {@link Coin}[].
      */
-    getCoins(acct: any): Promise<any>;
+    getUnspentCoins(acct: any): Promise<any>;
     /**
      * Get all available credits.
+     * @param {(String|Number)?} acct
+     * @returns {Promise} - Returns {@link Credit}[].
+     */
+    getCredits(acct: (string | number) | null): Promise<any>;
+    /**
+     * Get all available unspent credits.
      * @param {(String|Number)?} account
      * @returns {Promise} - Returns {@link Credit}[].
      */
-    getCredits(acct: any): Promise<any>;
+    getUnspentCredits(acct: any): Promise<any>;
     /**
      * Get "smart" coins.
-     * @param {(String|Number)?} account
+     * @param {(String|Number)?} acct
      * @returns {Promise} - Returns {@link Coin}[].
      */
-    getSmartCoins(acct: any): Promise<any>;
+    getSmartCoins(acct: (string | number) | null): Promise<any>;
     /**
      * Get all pending/unconfirmed transactions.
      * @param {(String|Number)?} acct
@@ -805,9 +825,10 @@ declare class Wallet {
      * serialization.
      * @param {Boolean?} unsafe - Whether to include
      * the master key in the JSON.
+     * @param {Balance} balance
      * @returns {Object}
      */
-    toJSON(unsafe: boolean | null, balance: any): any;
+    toJSON(unsafe: boolean | null, balance: Balance): any;
     /**
      * Calculate serialization size.
      * @returns {Number}

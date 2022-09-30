@@ -26,7 +26,7 @@ class NullClient extends EventEmitter {
      * Open the client.
      * @returns {Promise}
      */
-    async open(options) {
+    async open() {
         assert(!this.opened, 'NullClient is already open.');
         this.opened = true;
         setImmediate(() => this.emit('connect'));
@@ -82,7 +82,7 @@ class NullClient extends EventEmitter {
     }
     /**
      * Set bloom filter.
-     * @param {Bloom} filter
+     * @param {BloomFilter} filter
      * @returns {Promise}
      */
     async setFilter(filter) {
@@ -123,11 +123,16 @@ class NullClient extends EventEmitter {
     /**
      * Rescan for any missed transactions.
      * @param {Number|Hash} start - Start block.
-     * @param {Bloom} filter
-     * @param {Function} iter - Iterator.
      * @returns {Promise}
      */
     async rescan(start) {
+        ;
+    }
+    /**
+     * Abort rescan
+     * @returns {Promise}
+     */
+    async abortRescan() {
         ;
     }
 }

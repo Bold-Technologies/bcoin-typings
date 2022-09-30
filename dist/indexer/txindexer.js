@@ -54,7 +54,6 @@ class BlockRecord {
     }
     /**
      * Instantiate block record from serialized data.
-     * @param {Hash} hash
      * @param {Buffer} data
      * @returns {BlockRecord}
      */
@@ -105,7 +104,6 @@ class TxRecord {
     }
     /**
      * Instantiate transaction record from serialized data.
-     * @param {Hash} hash
      * @param {Buffer} data
      * @returns {BlockRecord}
      */

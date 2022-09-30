@@ -115,6 +115,10 @@ declare class WalletDB {
      */
     private _rescan;
     /**
+     * Abort Rescanning.
+     */
+    abortRescan(): any;
+    /**
      * Broadcast a transaction via chain server.
      * @param {TX} tx
      * @returns {Promise}
@@ -165,7 +169,7 @@ declare class WalletDB {
     /**
      * Test the bloom filter against a tx or address hash.
      * @private
-     * @param {Hash} hash
+     * @param {Hash} data
      * @returns {Boolean}
      */
     private testFilter;
@@ -189,12 +193,12 @@ declare class WalletDB {
     dump(): Promise<any>;
     /**
      * Register an object with the walletdb.
-     * @param {Object} object
+     * @param {Object} wallet
      */
     register(wallet: any): void;
     /**
      * Unregister a object with the walletdb.
-     * @param {Object} object
+     * @param {Object} wallet
      * @returns {Boolean}
      */
     unregister(wallet: any): boolean;
@@ -231,9 +235,10 @@ declare class WalletDB {
     private _get;
     /**
      * Save a wallet to the database.
+     * @param {Batch} b
      * @param {Wallet} wallet
      */
-    save(b: any, wallet: Wallet): void;
+    save(b: Batch, wallet: Wallet): void;
     /**
      * Increment the wid depth.
      * @param {Batch} b
@@ -257,10 +262,11 @@ declare class WalletDB {
     private _rename;
     /**
      * Rename an account.
+     * @param {Batch} b
      * @param {Account} account
      * @param {String} name
      */
-    renameAccount(b: any, account: Account, name: string): void;
+    renameAccount(b: Batch, account: Account, name: string): void;
     /**
      * Remove a wallet.
      * @param {Number|String} id
@@ -336,24 +342,26 @@ declare class WalletDB {
     getAccountName(wid: number, index: number): Promise<any>;
     /**
      * Save an account to the database.
+     * @param {Batch} b
      * @param {Account} account
      * @returns {Promise}
      */
-    saveAccount(b: any, account: Account): Promise<any>;
+    saveAccount(b: Batch, account: Account): Promise<any>;
     /**
      * Test for the existence of an account.
      * @param {Number} wid
-     * @param {String|Number} acct
+     * @param {String|Number} index
      * @returns {Promise} - Returns Boolean.
      */
-    hasAccount(wid: number, index: any): Promise<any>;
+    hasAccount(wid: number, index: string | number): Promise<any>;
     /**
      * Save an address to the path map.
-     * @param {Wallet} wallet
+     * @param {Batch} b
+     * @param {Wallet} wid
      * @param {WalletKey} ring
      * @returns {Promise}
      */
-    saveKey(b: any, wid: any, ring: WalletKey): Promise<any>;
+    saveKey(b: Batch, wid: Wallet, ring: WalletKey): Promise<any>;
     /**
      * Save a path to the path map.
      *
@@ -362,11 +370,12 @@ declare class WalletDB {
      *   - `P[wid][address-hash] -> path data`
      *   - `r[wid][account-index][address-hash] -> dummy`
      *
-     * @param {Wallet} wallet
+     * @param {Batch} b
+     * @param {Wallet} wid
      * @param {Path} path
      * @returns {Promise}
      */
-    savePath(b: any, wid: any, path: Path): Promise<any>;
+    savePath(b: Batch, wid: Wallet, path: Path): Promise<any>;
     /**
      * Retrieve path by hash.
      * @param {Number} wid
@@ -424,18 +433,20 @@ declare class WalletDB {
     getWallets(): Promise<any>;
     /**
      * Encrypt all imported keys for a wallet.
+     * @param {Batch} b
      * @param {Number} wid
      * @param {Buffer} key
      * @returns {Promise}
      */
-    encryptKeys(b: any, wid: number, key: Buffer): Promise<any>;
+    encryptKeys(b: Batch, wid: number, key: Buffer): Promise<any>;
     /**
      * Decrypt all imported keys for a wallet.
+     * @param {Batch} b
      * @param {Number} wid
      * @param {Buffer} key
      * @returns {Promise}
      */
-    decryptKeys(b: any, wid: number, key: Buffer): Promise<any>;
+    decryptKeys(b: Batch, wid: number, key: Buffer): Promise<any>;
     /**
      * Resend all pending transactions.
      * @returns {Promise}
@@ -450,10 +461,10 @@ declare class WalletDB {
     private resendPending;
     /**
      * Get all wallet ids by output addresses and outpoints.
-     * @param {Hash[]} hashes
+     * @param {TX} tx
      * @returns {Promise}
      */
-    getWalletsByTX(tx: any): Promise<any>;
+    getWalletsByTX(tx: TX): Promise<any>;
     /**
      * Get the best block hash.
      * @returns {Promise}
@@ -486,107 +497,119 @@ declare class WalletDB {
     getMap(key: Buffer): Promise<any>;
     /**
      * Add wid to a wallet map.
-     * @param {Wallet} wallet
+     * @param {Batch} b
+     * @param {Wallet} wid
      * @param {Buffer} key
      * @param {Number} wid
      */
-    addMap(b: any, key: Buffer, wid: number): Promise<void>;
+    addMap(b: Batch, key: Buffer, wid: Wallet): Promise<void>;
     /**
      * Remove wid from a wallet map.
-     * @param {Wallet} wallet
+     * @param {Batch} b
+     * @param {Wallet} wid
      * @param {Buffer} key
      * @param {Number} wid
      */
-    removeMap(b: any, key: Buffer, wid: number): Promise<void>;
+    removeMap(b: Batch, key: Buffer, wid: Wallet): Promise<void>;
     /**
      * Get a wallet map.
-     * @param {Buffer} key
+     * @param {Buffer} hash
      * @returns {Promise}
      */
-    getPathMap(hash: any): Promise<any>;
+    getPathMap(hash: Buffer): Promise<any>;
     /**
      * Add wid to a wallet map.
-     * @param {Wallet} wallet
-     * @param {Buffer} key
+     * @param {Batch} b
+     * @param {Wallet} wid
+     * @param {Buffer} hash
      * @param {Number} wid
      */
-    addPathMap(b: any, hash: any, wid: number): Promise<void>;
+    addPathMap(b: Batch, hash: Buffer, wid: Wallet): Promise<void>;
     /**
      * Remove wid from a wallet map.
-     * @param {Wallet} wallet
-     * @param {Buffer} key
+     * @param {Batch} b
+     * @param {Wallet} wid
+     * @param {Buffer} hash
      * @param {Number} wid
      */
-    removePathMap(b: any, hash: any, wid: number): Promise<void>;
+    removePathMap(b: Batch, hash: Buffer, wid: Wallet): Promise<void>;
     /**
      * Get a wallet map.
-     * @param {Buffer} key
+     * @param {Buffer} height
      * @returns {Promise}
      */
-    getBlockMap(height: any): Promise<any>;
+    getBlockMap(height: Buffer): Promise<any>;
     /**
      * Add wid to a wallet map.
-     * @param {Wallet} wallet
-     * @param {Buffer} key
+     * @param {Batch} b
+     * @param {Wallet} wid
+     * @param {Buffer} height
      * @param {Number} wid
      */
-    addBlockMap(b: any, height: any, wid: number): Promise<void>;
+    addBlockMap(b: Batch, height: Buffer, wid: Wallet): Promise<void>;
     /**
      * Remove wid from a wallet map.
-     * @param {Wallet} wallet
-     * @param {Buffer} key
+     * @param {Batch} b
+     * @param {Wallet} wid
+     * @param {Buffer} height
      * @param {Number} wid
      */
-    removeBlockMap(b: any, height: any, wid: number): Promise<void>;
+    removeBlockMap(b: Batch, height: Buffer, wid: Wallet): Promise<void>;
     /**
      * Get a wallet map.
-     * @param {Buffer} key
+     * @param {Buffer} hash
      * @returns {Promise}
      */
-    getTXMap(hash: any): Promise<any>;
+    getTXMap(hash: Buffer): Promise<any>;
     /**
      * Add wid to a wallet map.
-     * @param {Wallet} wallet
-     * @param {Buffer} key
+     * @param {Batch} b
+     * @param {Wallet} wid
+     * @param {Buffer} hash
      * @param {Number} wid
      */
-    addTXMap(b: any, hash: any, wid: number): Promise<void>;
+    addTXMap(b: Batch, hash: Buffer, wid: Wallet): Promise<void>;
     /**
      * Remove wid from a wallet map.
-     * @param {Wallet} wallet
-     * @param {Buffer} key
+     * @param {Batch} b
+     * @param {Wallet} wid
+     * @param {Buffer} hash
      * @param {Number} wid
      */
-    removeTXMap(b: any, hash: any, wid: number): Promise<void>;
+    removeTXMap(b: Batch, hash: Buffer, wid: Wallet): Promise<void>;
     /**
      * Get a wallet map.
-     * @param {Buffer} key
+     * @param {Buffer} hash
+     * @param {Number} index
      * @returns {Promise}
      */
-    getOutpointMap(hash: any, index: any): Promise<any>;
+    getOutpointMap(hash: Buffer, index: number): Promise<any>;
     /**
      * Add wid to a wallet map.
-     * @param {Wallet} wallet
-     * @param {Buffer} key
+     * @param {Batch} b
+     * @param {Wallet} wid
+     * @param {Buffer} hash
+     * @param {Number} index
      * @param {Number} wid
      */
-    addOutpointMap(b: any, hash: any, index: any, wid: number): Promise<void>;
+    addOutpointMap(b: Batch, hash: Buffer, index: number, wid: Wallet): Promise<void>;
     /**
      * Remove wid from a wallet map.
-     * @param {Wallet} wallet
-     * @param {Buffer} key
+     * @param {Batch} b
+     * @param {Wallet} wid
+     * @param {Buffer} hash
+     * @param {Number} index
      * @param {Number} wid
      */
-    removeOutpointMap(b: any, hash: any, index: any, wid: number): Promise<void>;
+    removeOutpointMap(b: Batch, hash: Buffer, index: number, wid: Wallet): Promise<void>;
     /**
      * Get a wallet block meta.
-     * @param {Hash} hash
+     * @param {Hash|Number} height
      * @returns {Promise}
      */
-    getBlock(height: any): Promise<any>;
+    getBlock(height: Hash | number): Promise<any>;
     /**
      * Get wallet tip.
-     * @param {Hash} hash
      * @returns {Promise}
      */
     getTip(): Promise<any>;
@@ -605,9 +628,10 @@ declare class WalletDB {
     /**
      * Add a block's transactions and write the new best hash.
      * @param {ChainEntry} entry
+     * @param {TX[]} txs
      * @returns {Promise}
      */
-    addBlock(entry: ChainEntry, txs: any): Promise<any>;
+    addBlock(entry: ChainEntry, txs: TX[]): Promise<any>;
     /**
      * Add a block's transactions without a lock.
      * @private

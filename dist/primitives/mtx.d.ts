@@ -352,10 +352,10 @@ export class MTX extends TX {
     sortMembers(): void;
     /**
      * Avoid fee sniping.
-     * @param {Number} - Current chain height.
+     * @param {Number} height - Current chain height.
      * @see bitcoin/src/wallet/wallet.cpp
      */
-    avoidFeeSniping(height: any): void;
+    avoidFeeSniping(height: number): void;
     /**
      * Set locktime and sequences appropriately.
      * @param {Number} locktime
@@ -395,133 +395,15 @@ export class MTX extends TX {
      */
     commit(): any[];
 }
-/**
- * Coin Selector
- * @alias module:primitives.CoinSelector
- */
-declare class CoinSelector {
-    /**
-     * Create a coin selector.
-     * @constructor
-     * @param {MTX} tx
-     * @param {Object?} options
-     */
-    constructor(tx: MTX, options: any | null);
-    tx: MTX;
-    coins: any[];
-    outputValue: number;
-    index: number;
-    chosen: any[];
-    change: number;
-    fee: number;
-    selection: string;
-    subtractFee: boolean;
-    subtractIndex: number;
-    height: number;
-    depth: number;
-    hardFee: number;
-    rate: number;
-    maxFee: number;
-    round: boolean;
-    changeAddress: any;
-    inputs: any;
-    getAccount: any;
-    /**
-     * Initialize selector options.
-     * @param {Object} options
-     * @private
-     */
-    private fromOptions;
-    /**
-     * Attempt to inject existing inputs.
-     * @private
-     */
-    private injectInputs;
-    /**
-     * Initialize the selector with coins to select from.
-     * @param {Coin[]} coins
-     */
-    init(coins: Coin[]): void;
-    /**
-     * Calculate total value required.
-     * @returns  {SatoshiAmount}
-     */
-    total(): SatoshiAmount;
-    /**
-     * Test whether the selector has
-     * completely funded the transaction.
-     * @returns {Boolean}
-     */
-    isFull(): boolean;
-    /**
-     * Test whether a coin is spendable
-     * with regards to the options.
-     * @param {Coin} coin
-     * @returns {Boolean}
-     */
-    isSpendable(coin: Coin): boolean;
-    /**
-     * Get the current fee based on a size.
-     * @param {Number} size
-     * @returns  {SatoshiAmount}
-     */
-    getFee(size: number): SatoshiAmount;
-    /**
-     * Fund the transaction with more
-     * coins if the `output value + fee`
-     * total was updated.
-     */
-    fund(): void;
-    /**
-     * Initiate selection from `coins`.
-     * @param {Coin[]} coins
-     * @returns {CoinSelector}
-     */
-    select(coins: Coin[]): CoinSelector;
-    /**
-     * Initialize selection based on size estimate.
-     */
-    selectEstimate(): Promise<void>;
-    /**
-     * Initiate selection based on a hard fee.
-     */
-    selectHard(): void;
-}
-declare namespace CoinSelector {
-    const FEE_RATE: number;
-    const MIN_FEE: number;
-    const MAX_FEE: number;
-}
-/**
- * Funding Error
- * An error thrown from the coin selector.
- * @ignore
- * @extends Error
- * @property {String} message - Error message.
- * @property  {SatoshiAmount} availableFunds
- * @property  {SatoshiAmount} requiredFunds
- */
-export class FundingError extends Error {
-    /**
-     * Create a funding error.
-     * @constructor
-     * @param {String} msg
-     * @param  {SatoshiAmount} available
-     * @param  {SatoshiAmount} required
-     */
-    constructor(msg: string, available: SatoshiAmount, required: SatoshiAmount);
-    type: string;
-    availableFunds: number;
-    requiredFunds: number;
-}
+import { FundingError } from "../wallet/coinselector";
 import TX = require("./tx");
 import CoinView = require("../coins/coinview");
 import Input = require("./input");
 import Outpoint = require("./outpoint");
 import Coin = require("./coin");
-import Address = require("./address");
 import Script = require("../script/script");
 import Output = require("./output");
 import Stack = require("../script/stack");
-export { CoinSelector as Selector };
+import { CoinSelector } from "../wallet/coinselector";
+export { FundingError };
 //# sourceMappingURL=mtx.d.ts.map

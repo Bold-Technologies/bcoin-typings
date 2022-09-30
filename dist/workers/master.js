@@ -89,8 +89,7 @@ class Master extends EventEmitter {
     }
     /**
      * Emit an event on the worker side.
-     * @param {String} event
-     * @param {...Object} arg
+     * @param {...Object} items
      * @returns {Boolean}
      */
     sendEvent(...items) {
@@ -104,8 +103,6 @@ class Master extends EventEmitter {
     }
     /**
      * Write a message to stdout in the master process.
-     * @param {Object|String} obj
-     * @param {...String} args
      */
     log() {
         const text = format.apply(null, arguments);
@@ -132,7 +129,7 @@ class Master extends EventEmitter {
     /**
      * Handle packet.
      * @private
-     * @param {Packet}
+     * @param {Packet} packet
      */
     handlePacket(packet) {
         let result;

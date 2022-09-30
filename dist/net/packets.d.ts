@@ -25,6 +25,12 @@ export namespace types {
     const CMPCTBLOCK: number;
     const GETBLOCKTXN: number;
     const BLOCKTXN: number;
+    const GETCFILTERS: number;
+    const CFILTER: number;
+    const GETCFHEADERS: number;
+    const CFHEADERS: number;
+    const GETCFCHECKPT: number;
+    const CFCHECKPT: number;
     const UNKNOWN: number;
     const INTERNAL: number;
     const DATA: number;
@@ -1013,6 +1019,273 @@ export class BlockTxnPacket extends Packet {
     private fromRaw;
 }
 /**
+ * GetCFilters Packet
+ * @extends Packet
+ * @property {Number} startHeight
+ * @property {Hash} stopHash
+ * @property {Number} filterType
+ */
+export class GetCFiltersPacket extends Packet {
+    /**
+     * Instantiate getcfilters packet from buffer reader.
+     * @param {BufferReader} br Serialization buffer.
+     * @returns {GetCFiltersPacket}
+     */
+    static fromReader(br: BufferReader): GetCFiltersPacket;
+    /**
+     * Instantiate getcfilters packet from serialized data.
+     * @param {Buffer} data Serialized data.
+     * @returns {GetCFiltersPacket}
+     */
+    static fromRaw(data: Buffer): GetCFiltersPacket;
+    /**
+     * Create a `getcfilters` packet.
+     * @param {Number} filterType - Filter type.
+     * @param {Number} startHeight - Start block height.
+     * @param {Hash} stopHash - Stop block hash.
+     */
+    constructor(filterType: number, startHeight: number, stopHash: Hash);
+    startHeight: number;
+    stopHash: any;
+    filterType: number;
+    /**
+     * Inject properties from buffer reader.
+     * @param {BufferReader} br Serialization buffer.
+     * @returns {GetCFiltersPacket}
+     */
+    fromReader(br: BufferReader): GetCFiltersPacket;
+    /**
+     * Inject properties from serialized data.
+     * @param {Buffer} data Serialized data.
+     * @returns {GetCFiltersPacket}
+     */
+    fromRaw(data: Buffer): GetCFiltersPacket;
+}
+/**
+ * GetCFilter Packet
+ * @extends Packet
+ * @property {Number?} filterType
+ * @property {Hash?} blockHash
+ * @property {Buffer?} filterBytes
+ */
+export class CFilterPacket extends Packet {
+    /**
+     * Instantiate cfilter packet from buffer reader.
+     * @param {BufferReader} br
+     * @returns {CFilterPacket}
+     */
+    static fromReader(br: BufferReader): CFilterPacket;
+    /**
+     * Instantiate cfilter packet from serialized data.
+     * @param {Buffer} data
+     * @returns {CFilterPacket}
+     */
+    static fromRaw(data: Buffer): CFilterPacket;
+    /**
+     * Create a `cfilter` packet.
+     * @constructor
+     * @param filterType
+     * @param blockHash
+     * @param filterBytes
+     */
+    constructor(filterType: any, blockHash: any, filterBytes: any);
+    filterType: any;
+    blockHash: any;
+    filterBytes: any;
+    /**
+     * Instantiate cfilter packet from buffer reader.
+     * @param {BufferReader} br
+     * @returns {CFilterPacket}
+     */
+    fromReader(br: BufferReader): CFilterPacket;
+    /**
+     * Instantiate cfilter packet from serialized data.
+     * @param {Buffer} data
+     * @returns {CFilterPacket}
+     */
+    fromRaw(data: Buffer): CFilterPacket;
+}
+/**
+ * GetCFHeaders Packet
+ * @extends Packet
+ * @property {Number} filterType
+ * @property {Number} startHeight
+ * @property {Hash} stopHash
+ */
+export class GetCFHeadersPacket extends Packet {
+    /**
+     * Instantiate getcfheaders packet from buffer reader.
+     * @param {BufferReader} br
+     * @returns {GetCFHeadersPacket}
+     */
+    static fromReader(br: BufferReader): GetCFHeadersPacket;
+    /**
+     * Instantiate getcfheaders packet from serialized data.
+     * @param {Buffer} data
+     * @returns {GetCFHeadersPacket}
+     */
+    static fromRaw(data: Buffer): GetCFHeadersPacket;
+    /**
+     * Create a `getcfheaders` packet.
+     * @constructor
+     * @param {Number} filterType - Filter type.
+     * @param {Number} startHeight - Start block height.
+     * @param {Hash} stopHash - Stop block hash.
+     */
+    constructor(filterType: number, startHeight: number, stopHash: Hash);
+    filterType: number;
+    startHeight: number;
+    stopHash: any;
+    /**
+     * Inject properties from buffer reader.
+     * @private
+     * @param {BufferReader} br
+     * @returns {GetCFHeadersPacket}
+     */
+    private fromReader;
+    /**
+     * Inject properties from serialized data.
+     * @private
+     * @param {Buffer} data
+     * @returns {GetCFHeadersPacket}
+     */
+    private fromRaw;
+}
+/**
+ * CFHeaders Packet
+ * @extends Packet
+ * @property {Number} filterType
+ * @property {Hash?} stopHash
+ * @property {Hash} previousFilterHeader
+ * @property {(Hash[])?} filterHashes
+ */
+export class CFHeadersPacket extends Packet {
+    /**
+     * Instantiate cfheaders packet from buffer reader.
+     * @param {BufferReader} br
+     * @returns {CFHeadersPacket}
+     */
+    static fromReader(br: BufferReader): CFHeadersPacket;
+    /**
+     * Instantiate cfheaders packet from serialized data.
+     * @param {Buffer} data
+     * @returns {CFHeadersPacket}
+     */
+    static fromRaw(data: Buffer): CFHeadersPacket;
+    /**
+     * Create a `cfheaders` packet.
+     * @constructor
+     * @param {Number} filterType
+     * @param {Hash?} stopHash
+     * @param {Hash} previousFilterHeader
+     * @param {(Hash[])?} filterHashes
+     */
+    constructor(filterType: number, stopHash: Hash | null, previousFilterHeader: Hash, filterHashes: (Hash[]) | null);
+    filterType: number;
+    stopHash: any;
+    previousFilterHeader: any;
+    filterHashes: any[];
+    /**
+     * Inject properties from buffer reader.
+     * @private
+     * @param {BufferReader} br
+     * @returns {CFHeadersPacket}
+     */
+    private fromReader;
+    /**
+     * Inject properties from serialized data.
+     * @private
+     * @param {Buffer} data
+     * @returns {CFHeadersPacket}
+     */
+    private fromRaw;
+}
+/**
+ * create a getcfcheckpt packet.
+ * @extends Packet
+ * @property {Number} filterType
+ * @property {Hash} stopHash
+ */
+export class GetCFCheckptPacket extends Packet {
+    /**
+     * Instantiate getcfcheckpt packet from buffer reader.
+     * @param {BufferReader} br
+     * @returns {GetCFCheckptPacket}
+     */
+    static fromReader(br: BufferReader): GetCFCheckptPacket;
+    /**
+     * Instantiate getcfcheckpt packet from serialized data.
+     * @param {Buffer} data
+     * @returns {GetCFCheckptPacket}
+     */
+    static fromRaw(data: Buffer): GetCFCheckptPacket;
+    /**
+     * Create a `getCFCheckptPacket` packet.
+     * @constructor
+     * @param {Number} filterType - Filter type.
+     * @param {Hash?} stopHash - Stop block hash.
+     */
+    constructor(filterType: number, stopHash: Hash | null);
+    filterType: number;
+    stopHash: any;
+    /**
+     * Inject properties from buffer reader.
+     * @param {BufferReader} br
+     * @returns {GetCFCheckptPacket}
+     */
+    fromReader(br: BufferReader): GetCFCheckptPacket;
+    /**
+     * Inject properties from serialized data.
+     * @param {Buffer} data
+     * @returns {GetCFCheckptPacket}
+     */
+    fromRaw(data: Buffer): GetCFCheckptPacket;
+}
+/**
+ * create a cfcheckpt packet.
+ * @extends Packet
+ * @property {Number} filterType
+ * @property {Hash} stopHash
+ * @property {Hash[]} filterHeaders
+ */
+export class CFCheckptPacket extends Packet {
+    /**
+     * Instantiate cfcheckpt packet from buffer reader.
+     * @param {BufferReader} br
+     * @returns {CFCheckptPacket}
+     */
+    static fromReader(br: BufferReader): CFCheckptPacket;
+    /**
+     * Instantiate cfcheckpt packet from serialized data.
+     * @param {Buffer} data
+     * @returns {CFCheckptPacket}
+     */
+    static fromRaw(data: Buffer): CFCheckptPacket;
+    /**
+     * Create a `cfcheckpt` packet.
+     * @constructor
+     * @param {Number} filterType - Filter type.
+     * @param {Hash?} stopHash - Stop block hash.
+     * @param {Hash[]} filterHeaders - Filter headers.
+     */
+    constructor(filterType: number, stopHash: Hash | null, filterHeaders: Hash[]);
+    filterType: number;
+    stopHash: any;
+    filterHeaders: any[];
+    /**
+     * Inject properties from buffer reader.
+     * @param {BufferReader} br
+     * @returns {CFCheckptPacket}
+     */
+    fromReader(br: BufferReader): CFCheckptPacket;
+    /**
+     * Inject properties from serialized data.
+     * @param {Buffer} data
+     * @returns {CFCheckptPacket}
+     */
+    fromRaw(data: Buffer): CFCheckptPacket;
+}
+/**
  * Unknown Packet
  * @extends Packet
  * @property {String} cmd
@@ -1021,11 +1294,12 @@ export class BlockTxnPacket extends Packet {
 export class UnknownPacket extends Packet {
     /**
      * Instantiate unknown packet from serialized data.
+     * @param {String} cmd
      * @param {Buffer} data
      * @param {String?} enc
      * @returns {UnknownPacket}
      */
-    static fromRaw(cmd: any, data: Buffer, enc: string | null): UnknownPacket;
+    static fromRaw(cmd: string, data: Buffer, enc: string | null): UnknownPacket;
     /**
      * Create an unknown packet.
      * @constructor
@@ -1037,6 +1311,7 @@ export class UnknownPacket extends Packet {
     /**
      * Inject properties from serialized data.
      * @private
+     * @param {String} cmd
      * @param {Buffer} data
      */
     private fromRaw;

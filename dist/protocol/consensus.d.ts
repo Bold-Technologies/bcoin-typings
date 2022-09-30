@@ -29,4 +29,5 @@ export function toCompact(num: BN): number;
 export function verifyPOW(hash: Hash, bits: number): boolean;
 export function getReward(height: number, interval: any): SatoshiAmount;
 export function hasBit(version: number, bit: number): boolean;
+import BN = require("bcrypto/lib/bn.js");
 //# sourceMappingURL=consensus.d.ts.map

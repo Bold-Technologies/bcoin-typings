@@ -194,7 +194,7 @@ declare class HDPrivateKey {
     equals(obj: any): boolean;
     /**
      * Compare a key against an object.
-     * @param {Object} obj
+     * @param {Object} key
      * @returns {Boolean}
      */
     compare(key: any): boolean;
@@ -214,7 +214,7 @@ declare class HDPrivateKey {
     /**
      * Inject properties from a mnemonic.
      * @private
-     * @param {String} mnemonic
+     * @param {String} phrase
      */
     private fromPhrase;
     /**

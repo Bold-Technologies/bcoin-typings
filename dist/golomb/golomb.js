@@ -38,6 +38,8 @@ class Golomb {
         this.P = P;
         this.m = null;
         this.M = M;
+        this._hash = null;
+        this._hhash = null;
         this.data = DUMMY;
     }
     /**
@@ -46,8 +48,20 @@ class Golomb {
      * @returns {Hash|Buffer} hash
      */
     hash(enc) {
-        const h = hash256.digest(this.toNBytes());
-        return enc === 'hex' ? h.toString('hex') : h;
+        let h = this._hash;
+        if (!h) {
+            h = hash256.digest(this.toNBytes());
+            this._hash = h;
+        }
+        if (enc === 'hex') {
+            let hex = this._hhash;
+            if (!hex) {
+                hex = h.toString('hex');
+                this._hhash = hex;
+            }
+            h = hex;
+        }
+        return h;
     }
     /**
      * Get the block filter header.

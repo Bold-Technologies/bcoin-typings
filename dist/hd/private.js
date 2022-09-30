@@ -310,7 +310,7 @@ class HDPrivateKey {
     }
     /**
      * Compare a key against an object.
-     * @param {Object} obj
+     * @param {Object} key
      * @returns {Boolean}
      */
     compare(key) {
@@ -387,7 +387,7 @@ class HDPrivateKey {
     /**
      * Inject properties from a mnemonic.
      * @private
-     * @param {String} mnemonic
+     * @param {String} phrase
      */
     fromPhrase(phrase) {
         const mnemonic = Mnemonic.fromPhrase(phrase);

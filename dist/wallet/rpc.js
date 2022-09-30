@@ -70,7 +70,7 @@ const errs = {
 class RPC extends RPCBase {
     /**
      * Create an RPC.
-     * @param {WalletDB} wdb
+     * @param {Node|Plugin} node
      */
     constructor(node) {
         super();
@@ -112,6 +112,8 @@ class RPC extends RPCBase {
         this.add('dumpprivkey', this.dumpPrivKey);
         this.add('dumpwallet', this.dumpWallet);
         this.add('encryptwallet', this.encryptWallet);
+        this.add('rescan', this.rescan);
+        this.add('abortrescan', this.abortrescan);
         this.add('getaddressinfo', this.getAddressInfo);
         this.add('getaccountaddress', this.getAccountAddress);
         this.add('getaccount', this.getAccount);
@@ -280,6 +282,21 @@ class RPC extends RPCBase {
             return dump;
         await fs.writeFile(file, dump, 'utf8');
         return null;
+    }
+    async rescan(args, help) {
+        if (help || args.length > 1)
+            throw new RPCError(errs.MISC_ERROR, 'rescan ( "height" )');
+        const valid = new Validator(args);
+        const height = valid.u32(0, 0);
+        await this.wdb.rescan(height);
+    }
+    abortrescan(args, help) {
+        if (help || args.length > 0)
+            throw new RPCError(errs.MISC_ERROR, 'abortrescan');
+        if (!this.wdb.rescanning)
+            throw new RPCError(errs.WALLET_ERROR, 'WalletDB is not rescanning.');
+        this.wdb.abortRescan();
+        return true;
     }
     async encryptWallet(args, help) {
         const wallet = this.wallet;
@@ -885,8 +902,7 @@ class RPC extends RPCBase {
             sendMember = member;
             sendIndex = i;
         }
-        let member = null;
-        let index = -1;
+        let member, index;
         if (receive) {
             assert(recMember);
             member = recMember;
@@ -1071,9 +1087,9 @@ class RPC extends RPCBase {
         return tx.txid();
     }
     async sendMany(args, help) {
-        if (help || args.length < 2 || args.length > 5) {
+        if (help || args.length < 2 || args.length > 6) {
             throw new RPCError(errs.MISC_ERROR, 'sendmany "fromaccount" {"address":amount,...}'
-                + ' ( minconf "comment" subtractfee )');
+                + ' ( minconf "comment" subtractfee useSelectEstimate )');
         }
         const wallet = this.wallet;
         const valid = new Validator(args);
@@ -1081,6 +1097,7 @@ class RPC extends RPCBase {
         const sendTo = valid.obj(1);
         const minconf = valid.u32(2, 1);
         const subtract = valid.bool(4, false);
+        const useSelectEstimate = valid.bool(5, false);
         if (name === '')
             name = 'default';
         if (!sendTo)
@@ -1106,21 +1123,24 @@ class RPC extends RPCBase {
             outputs: outputs,
             subtractFee: subtract,
             account: name,
-            depth: minconf
+            depth: minconf,
+            useSelectEstimate
         };
         const tx = await wallet.send(options);
         return tx.txid();
     }
     async sendToAddress(args, help) {
-        if (help || args.length < 2 || args.length > 5) {
+        if (help || args.length < 2 || args.length > 6) {
             throw new RPCError(errs.MISC_ERROR, 'sendtoaddress "bitcoinaddress" amount'
-                + ' ( "comment" "comment-to" subtractfeefromamount )');
+                + ' ( "comment" "comment-to" subtractfeefromamount'
+                + ' useSelectEstimate )');
         }
         const wallet = this.wallet;
         const valid = new Validator(args);
         const str = valid.str(0);
         const value = valid.ufixed(1, 8);
         const subtract = valid.bool(4, false);
+        const useSelectEstimate = valid.bool(5, false);
         const addr = parseAddress(str, this.network);
         if (!addr || value == null)
             throw new RPCError(errs.TYPE_ERROR, 'Invalid parameter.');
@@ -1129,7 +1149,8 @@ class RPC extends RPCBase {
             outputs: [{
                     address: addr,
                     value: value
-                }]
+                }],
+            useSelectEstimate
         };
         const tx = await wallet.send(options);
         return tx.txid();

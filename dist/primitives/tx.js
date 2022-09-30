@@ -928,6 +928,7 @@ class TX {
     /**
      * Get all input address hashes.
      * @param {CoinView|null} view
+     * @param {String?} enc - Encoding, can be `'hex'` or null.
      * @returns {Hash[]} hashes
      */
     getInputHashes(view, enc) {
@@ -949,6 +950,7 @@ class TX {
     /**
      * Get all address hashes.
      * @param {CoinView|null} view
+     * @param {String?} enc - Encoding, can be `'hex'` or null.
      * @returns {Hash[]} hashes
      */
     getHashes(view, enc) {
@@ -1239,7 +1241,6 @@ class TX {
      * script standardness (including the redeem script).
      * @see AreInputsStandard()
      * @param {CoinView} view
-     * @param {VerifyFlags?} flags
      * @returns {Boolean}
      */
     hasStandardInputs(view) {

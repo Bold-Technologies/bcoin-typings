@@ -18,6 +18,8 @@ declare class Golomb {
     P: any;
     m: any;
     M: any;
+    _hash: any;
+    _hhash: any;
     data: any;
     /**
      * Hash the block filter.

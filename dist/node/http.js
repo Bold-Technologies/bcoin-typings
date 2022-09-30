@@ -395,6 +395,9 @@ class HTTP extends Server {
                 throw new Error('Invalid parameter.');
             return this.scan(socket, start);
         });
+        socket.hook('abortrescan', () => {
+            return this.chain.abortRescan();
+        });
     }
     /**
      * Bind to chain events.

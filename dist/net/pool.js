@@ -18,6 +18,7 @@ const { BloomFilter, RollingFilter } = require('bfilter');
 const { BufferMap, BufferSet } = require('buffer-map');
 const util = require('../utils/util');
 const common = require('./common');
+const { filtersByVal } = common;
 const chainCommon = require('../blockchain/common');
 const Address = require('../primitives/address');
 const BIP152 = require('./bip152');
@@ -31,6 +32,7 @@ const invTypes = InvItem.types;
 const packetTypes = packets.types;
 const scores = HostList.scores;
 const { inspectSymbol } = require('../utils');
+const { consensus } = require('../protocol');
 /**
  * Pool
  * A pool of peers for handling all network activity.
@@ -53,6 +55,7 @@ class Pool extends EventEmitter {
         this.mempool = this.options.mempool;
         this.server = this.options.createServer();
         this.nonces = this.options.nonces;
+        this.filterIndexers = this.options.filterIndexers;
         this.locker = new Lock(true, BufferMap);
         this.connected = false;
         this.disconnecting = false;
@@ -518,7 +521,7 @@ class Pool extends EventEmitter {
     /**
      * Send a sync to each peer.
      */
-    sync(force) {
+    sync() {
         this.resync(false);
     }
     /**
@@ -778,6 +781,7 @@ class Pool extends EventEmitter {
      * @private
      * @param {Peer} peer
      * @param {InvItem} item
+     * @param {Boolean?} witness
      * @returns {Boolean}
      */
     async sendBlock(peer, item, witness) {
@@ -921,6 +925,15 @@ class Pool extends EventEmitter {
             case packetTypes.NOTFOUND:
                 await this.handleNotFound(peer, packet);
                 break;
+            case packetTypes.GETCFILTERS:
+                await this.handleGetCFilters(peer, packet);
+                break;
+            case packetTypes.GETCFHEADERS:
+                await this.handleGetCFHeaders(peer, packet);
+                break;
+            case packetTypes.GETCFCHECKPT:
+                await this.handleGetCFCheckpt(peer, packet);
+                break;
             case packetTypes.GETBLOCKS:
                 await this.handleGetBlocks(peer, packet);
                 break;
@@ -972,6 +985,9 @@ class Pool extends EventEmitter {
             case packetTypes.BLOCKTXN:
                 await this.handleBlockTxn(peer, packet);
                 break;
+            case packetTypes.CFILTER:
+            case packetTypes.CFHEADERS:
+            case packetTypes.CFCHECKPT:
             case packetTypes.UNKNOWN:
                 await this.handleUnknown(peer, packet);
                 break;
@@ -1456,6 +1472,92 @@ class Pool extends EventEmitter {
         }
     }
     /**
+     * Handle peer `getcfilters` packet.
+     * @method
+     * @private
+     * @param {Peer} peer
+     * @param {GetCFiltersPacket} packet
+     */
+    async handleGetCFilters(peer, packet) {
+        if (!this.options.bip157)
+            return;
+        const stopHeight = await this.chain.getHeight(packet.stopHash);
+        // The stop hash doesn't exist
+        if (!stopHeight)
+            return;
+        if (stopHeight - packet.startHeight >= common.MAX_CFILTERS)
+            return;
+        const indexer = this.getFilterIndexer(filtersByVal[packet.filterType]);
+        if (!indexer)
+            return;
+        for (let i = packet.startHeight; i <= stopHeight; i++) {
+            const blockHash = await this.chain.getHash(i);
+            const filter = await indexer.getFilter(blockHash);
+            peer.sendCFilter(packet.filterType, blockHash, filter.filter);
+        }
+    }
+    /**
+     * Handle peer `getcfheaders` packet.
+     * @method
+     * @private
+     * @param {Peer} peer
+     * @param {GetCFHeadersPacket} packet
+     */
+    async handleGetCFHeaders(peer, packet) {
+        if (!this.options.bip157)
+            return;
+        const stopHeight = await this.chain.getHeight(packet.stopHash);
+        // The stop hash doesn't exist
+        if (stopHeight < 0)
+            return;
+        if (stopHeight - packet.startHeight >= common.MAX_CFHEADERS)
+            return;
+        const indexer = this.getFilterIndexer(filtersByVal[packet.filterType]);
+        if (!indexer)
+            return;
+        const startHash = await this.chain.getHash(packet.startHeight - 1);
+        let previousFilterHeader = consensus.ZERO_HASH;
+        if (startHash)
+            previousFilterHeader = await indexer.getFilterHeader(startHash);
+        const filterHashes = [];
+        for (let i = packet.startHeight; i <= stopHeight; i++) {
+            const blockHash = await this.chain.getHash(i);
+            const filterHash = await indexer.getFilterHash(blockHash);
+            if (!filterHash) {
+                return;
+            }
+            filterHashes.push(filterHash);
+        }
+        peer.sendCFHeaders(packet.filterType, packet.stopHash, previousFilterHeader, filterHashes);
+    }
+    /**
+     * Handle peer `getcfcheckpt` packet.
+     * @method
+     * @private
+     * @param {Peer} peer
+     * @param {GetCFCheckptPacket} packet
+     */
+    async handleGetCFCheckpt(peer, packet) {
+        if (!this.options.bip157)
+            return;
+        const stopHeight = await this.chain.getHeight(packet.stopHash);
+        // The stop hash doesn't exist
+        if (stopHeight == null)
+            return;
+        const filterHeaders = [];
+        const indexer = this.getFilterIndexer(filtersByVal[packet.filterType]);
+        if (!indexer)
+            return;
+        for (let height = 1000; height <= stopHeight; height += 1000) {
+            const blockHash = await this.chain.getHash(height);
+            if (!blockHash)
+                break;
+            const filterHeader = await indexer.getFilterHeader(blockHash);
+            filterHeaders.push(filterHeader);
+        }
+        peer.sendCFCheckpt(packet.filterType, packet.stopHash, filterHeaders);
+    }
+    /**
      * Handle `getblocks` packet.
      * @method
      * @private
@@ -1643,6 +1745,7 @@ class Pool extends EventEmitter {
      * @private
      * @param {Peer} peer
      * @param {Block} block
+     * @param {Number?} flags
      * @returns {Promise}
      */
     async addBlock(peer, block, flags) {
@@ -1661,6 +1764,7 @@ class Pool extends EventEmitter {
      * @private
      * @param {Peer} peer
      * @param {Block} block
+     * @param {Number?} flags
      * @returns {Promise}
      */
     async _addBlock(peer, block, flags) {
@@ -1952,7 +2056,7 @@ class Pool extends EventEmitter {
      * @method
      * @private
      * @param {Peer} peer
-     * @param {MerkleBlockPacket} block
+     * @param {MerkleBlockPacket} packet
      */
     async handleMerkleBlock(peer, packet) {
         const hash = packet.block.hash();
@@ -1969,7 +2073,7 @@ class Pool extends EventEmitter {
      * @method
      * @private
      * @param {Peer} peer
-     * @param {MerkleBlockPacket} block
+     * @param {MerkleBlockPacket} packet
      */
     async _handleMerkleBlock(peer, packet) {
         if (!this.syncing)
@@ -2033,7 +2137,7 @@ class Pool extends EventEmitter {
      * @method
      * @private
      * @param {Peer} peer
-     * @param {CompactBlockPacket} packet
+     * @param {CmpctBlockPacket} packet
      */
     async handleCmpctBlock(peer, packet) {
         const block = packet.block;
@@ -2315,7 +2419,6 @@ class Pool extends EventEmitter {
     /**
      * Set the spv filter.
      * @param {BloomFilter} filter
-     * @param {String?} enc
      */
     setFilter(filter) {
         if (!this.options.spv)
@@ -2607,7 +2710,7 @@ class Pool extends EventEmitter {
     }
     /**
      * Announce a block to all peers.
-     * @param {Block|Blocks[]} blocks
+     * @param {Block|Block[]} blocks
      */
     announceBlock(blocks) {
         for (let peer = this.peers.head(); peer; peer = peer.next)
@@ -2634,6 +2737,20 @@ class Pool extends EventEmitter {
         }
         return enabled;
     }
+    /**
+     * Returns the indexer for the required filterType
+     * that are available.
+     * @param {Number} filterType - filter type
+     * @returns {Indexer} - indexer
+     */
+    getFilterIndexer(filterType) {
+        if (!this.filterIndexers)
+            return null;
+        const Indexer = this.filterIndexers.get(filterType);
+        if (!Indexer)
+            return null;
+        return Indexer;
+    }
 }
 /**
  * Discovery interval for UPNP and DNS seeds.
@@ -2655,11 +2772,13 @@ class PoolOptions {
         this.logger = null;
         this.chain = null;
         this.mempool = null;
+        this.filterIndexers = null;
         this.nonces = new NonceList();
         this.prefix = null;
         this.checkpoints = true;
         this.spv = false;
         this.bip37 = false;
+        this.bip157 = false;
         this.listen = false;
         this.compact = true;
         this.noRelay = false;
@@ -2703,6 +2822,7 @@ class PoolOptions {
         this.chain = options.chain;
         this.network = options.chain.network;
         this.logger = options.chain.logger;
+        this.filterIndexers = options.filterIndexers;
         this.port = this.network.port;
         this.seeds = this.network.seeds;
         this.port = this.network.port;
@@ -2738,6 +2858,12 @@ class PoolOptions {
         if (options.bip37 != null) {
             assert(typeof options.bip37 === 'boolean');
             this.bip37 = options.bip37;
+        }
+        if (options.bip157 != null) {
+            assert(typeof options.bip157 === 'boolean');
+            this.bip157 = options.bip157;
+            if (this.bip157)
+                assert(this.filterIndexers && this.filterIndexers.size > 0, 'Filter indexer is required for BIP 157');
         }
         if (options.listen != null) {
             assert(typeof options.listen === 'boolean');
@@ -2868,6 +2994,7 @@ class PoolOptions {
             this.checkpoints = true;
             this.compact = false;
             this.bip37 = false;
+            this.bip157 = false;
             this.listen = false;
         }
         if (this.selfish) {
@@ -2876,6 +3003,8 @@ class PoolOptions {
         }
         if (this.bip37)
             this.services |= common.services.BLOOM;
+        if (this.bip157)
+            this.services |= common.services.NODE_COMPACT_FILTERS;
         if (this.proxy)
             this.listen = false;
         if (options.services != null) {
@@ -3003,7 +3132,6 @@ class PeerList {
     /**
      * Create peer list.
      * @constructor
-     * @param {Object} options
      */
     constructor() {
         this.map = new Map();

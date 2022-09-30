@@ -121,8 +121,6 @@ class WorkerPool extends EventEmitter {
     }
     /**
      * Emit an event on the worker side (all workers).
-     * @param {String} event
-     * @param {...Object} arg
      * @returns {Boolean}
      */
     sendEvent() {
@@ -406,8 +404,7 @@ class Worker extends EventEmitter {
     }
     /**
      * Emit an event on the worker side.
-     * @param {String} event
-     * @param {...Object} arg
+     * @param {...Object} items
      * @returns {Boolean}
      */
     sendEvent(...items) {

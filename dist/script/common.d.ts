@@ -289,6 +289,6 @@ export function isKeyEncoding(key: Buffer): boolean;
 export function isCompressedEncoding(key: Buffer): boolean;
 export function isSignatureEncoding(sig: Buffer): boolean;
 export function toASM(item: Buffer, decode: boolean | null): string;
-declare namespace ___Users_vijay_Documents_bcoin_typings_lib_script_common_ { }
+declare namespace ___Users_anmolsharma_Desktop_Projects_bcoin_typings_lib_script_common_ { }
 export {};
 //# sourceMappingURL=common.d.ts.map

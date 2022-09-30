@@ -29,7 +29,7 @@ class Witness extends Stack {
      * Create a witness.
      * @alias module:script.Witness
      * @constructor
-     * @param {Buffer[]|Object} items - Array of
+     * @param {Buffer[]|Object} options - Array of
      * stack items.
      * @property {Buffer[]} items
      * @property {Script?} redeem
@@ -264,7 +264,7 @@ class Witness extends Stack {
     }
     /**
      * Test the witness against a bloom filter.
-     * @param {Bloom} filter
+     * @param {BloomFilter} filter
      * @returns {Boolean}
      */
     test(filter) {
@@ -332,7 +332,6 @@ class Witness extends Stack {
     }
     /**
      * Encode the witness to a Buffer.
-     * @param {String} enc - Encoding, either `'hex'` or `null`.
      * @returns {Buffer|String} Serialized script.
      */
     toRaw() {

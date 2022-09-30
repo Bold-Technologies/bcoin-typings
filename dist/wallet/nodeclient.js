@@ -52,7 +52,7 @@ class NodeClient extends AsyncEmitter {
      * Open the client.
      * @returns {Promise}
      */
-    async open(options) {
+    async open() {
         assert(!this.opened, 'NodeClient is already open.');
         this.opened = true;
         setImmediate(() => this.emit('connect'));
@@ -112,7 +112,7 @@ class NodeClient extends AsyncEmitter {
     }
     /**
      * Set bloom filter.
-     * @param {Bloom} filter
+     * @param {BloomFilter} filter
      * @returns {Promise}
      */
     async setFilter(filter) {
@@ -157,8 +157,6 @@ class NodeClient extends AsyncEmitter {
     /**
      * Rescan for any missed transactions.
      * @param {Number|Hash} start - Start block.
-     * @param {Bloom} filter
-     * @param {Function} iter - Iterator.
      * @returns {Promise}
      */
     async rescan(start) {
@@ -167,6 +165,13 @@ class NodeClient extends AsyncEmitter {
         return this.node.chain.scan(start, this.filter, (entry, txs) => {
             return this.emitAsync('block rescan', entry, txs);
         });
+    }
+    /**
+     * stop rescanning the blockchain
+     * @returns {Promise}
+     */
+    abortRescan() {
+        return this.node.chain.abortRescan();
     }
 }
 /*

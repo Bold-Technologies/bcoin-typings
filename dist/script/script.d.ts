@@ -100,11 +100,11 @@ declare class Script {
     /**
      * Parse a bitcoind test script
      * string into a script object.
-     * @param {String} items - Script string.
+     * @param {String} code - Script string.
      * @returns {Script}
      * @throws Parse error.
      */
-    static fromString(code: any): Script;
+    static fromString(code: string): Script;
     /**
      * Verify an input and output script, and a witness if present.
      * @param {Script} input
@@ -133,7 +133,6 @@ declare class Script {
     /**
      * Create a script from buffer reader.
      * @param {BufferReader} br
-     * @param {String?} enc - Either `"hex"` or `null`.
      * @returns {Script}
      */
     static fromReader(br: BufferReader): Script;
@@ -153,9 +152,9 @@ declare class Script {
     /**
      * Create a script.
      * @constructor
-     * @param {Buffer|Array|Object} code
+     * @param {Buffer|Array|Object} options
      */
-    constructor(options: any);
+    constructor(options: Buffer | any[] | any);
     raw: any;
     code: any[];
     /**
@@ -277,7 +276,6 @@ declare class Script {
     toWriter(bw: BufferWriter): BufferWriter;
     /**
      * Encode the script to a Buffer. See {@link Script#encode}.
-     * @param {String} enc - Encoding, either `'hex'` or `null`.
      * @returns {Buffer|String} Serialized script.
      */
     toRaw(): Buffer | string;
@@ -633,10 +631,10 @@ declare class Script {
     getCoinbaseHeight(): number;
     /**
      * Test the script against a bloom filter.
-     * @param {Bloom} filter
+     * @param {BloomFilter} filter
      * @returns {Boolean}
      */
-    test(filter: Bloom): boolean;
+    test(filter: BloomFilter): boolean;
     /**
      * Test the script to see if it contains only push ops.
      * Push ops are: OP_1NEGATE, OP_0-OP_16 and all PUSHDATAs.
@@ -747,7 +745,7 @@ declare class Script {
     /**
      * Inject properties from bitcoind test string.
      * @private
-     * @param {String} items - Script string.
+     * @param {String} code - Script string.
      * @throws Parse error.
      */
     private fromString;
@@ -760,7 +758,7 @@ declare class Script {
     /**
      * Inject properties from serialized data.
      * @private
-     * @param {Buffer}
+     * @param {Buffer} data
      */
     private fromRaw;
     /**
@@ -843,7 +841,10 @@ declare namespace Script {
         OP_1SUB: number;
         OP_2MUL: number;
         OP_2DIV: number;
-        OP_NEGATE: number;
+        OP_NEGATE: number; /**
+         * Set length.
+         * @param {Number} value
+         */
         OP_ABS: number;
         OP_NOT: number;
         OP_0NOTEQUAL: number;
@@ -889,7 +890,10 @@ declare namespace Script {
         OP_INVALIDOPCODE: number;
     };
     const opcodesByVal: {
-        0: string;
+        0: string; /**
+         * Instantiate a value-only iterator.
+         * @returns {ScriptIterator}
+         */
         76: string;
         77: string;
         78: string;
@@ -904,10 +908,6 @@ declare namespace Script {
         87: string;
         88: string;
         89: string;
-        /**
-         * Instantiate a value-only iterator.
-         * @returns {ScriptIterator}
-         */
         90: string;
         91: string;
         92: string;
@@ -925,13 +925,6 @@ declare namespace Script {
         104: string;
         105: string;
         106: string;
-        /**
-         * Inject properties from an array of
-         * of buffers and numbers.
-         * @private
-         * @param {Array} code
-         * @returns {Script}
-         */
         107: string;
         108: string;
         109: string;
@@ -969,7 +962,8 @@ declare namespace Script {
         141: string;
         142: string;
         143: string;
-        144: string; /**
+        144: string;
+        /**
          * Inject data from stack items.
          * @private
          * @param {Buffer[]} items
@@ -1000,7 +994,12 @@ declare namespace Script {
         167: string;
         168: string;
         169: string;
-        170: string;
+        170: string; /**
+         * Inject data from stack.
+         * @private
+         * @param {Stack} stack
+         * @returns {Script}
+         */
         171: string;
         172: string;
         173: string;
@@ -1013,7 +1012,10 @@ declare namespace Script {
         180: string;
         181: string;
         182: string;
-        183: string;
+        183: string; /**
+         * Clone the script.
+         * @returns {Script} Cloned script.
+         */
         184: string;
         185: string;
         255: string;
@@ -1032,10 +1034,6 @@ declare namespace Script {
         VERIFY_SIGPUSHONLY: number;
         VERIFY_MINIMALDATA: number;
         VERIFY_DISCOURAGE_UPGRADABLE_NOPS: number;
-        /**
-         * Inspect the script.
-         * @returns {String} Human-readable script code.
-         */
         VERIFY_CLEANSTACK: number;
         VERIFY_CHECKLOCKTIMEVERIFY: number;
         VERIFY_CHECKSEQUENCEVERIFY: number;

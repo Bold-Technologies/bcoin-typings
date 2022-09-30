@@ -217,7 +217,6 @@ declare class Chain {
      * (necessary because we cannot validate the inputs
      * in alternate chains when they come in).
      * @param {ChainEntry} entry
-     * @param {Number} flags
      * @returns {Promise}
      */
     reconnect(entry: ChainEntry): Promise<any>;
@@ -256,6 +255,7 @@ declare class Chain {
      * Reset the chain to the desired block without a lock.
      * @private
      * @param {Hash|Number} block
+     * @param {Boolean} silent
      * @returns {Promise}
      */
     private _reset;
@@ -294,11 +294,16 @@ declare class Chain {
     /**
      * Scan the blockchain for transactions containing specified address hashes.
      * @param {Hash} start - Block hash to start at.
-     * @param {Bloom} filter - Bloom filter containing tx and address hashes.
+     * @param {BloomFilter} filter - Bloom filter containing tx
+     * and address hashes.
      * @param {Function} iter - Iterator.
      * @returns {Promise}
      */
-    scan(start: Hash, filter: Bloom, iter: Function): Promise<any>;
+    scan(start: Hash, filter: BloomFilter, iter: Function): Promise<any>;
+    /**
+     * Stop rescanning Blockchain if the rescanning already triggered.
+     */
+    abortRescan(): Promise<void>;
     /**
      * Add a block to the chain, perform all necessary verification.
      * @param {Block} block
@@ -510,16 +515,16 @@ declare class Chain {
     getBlock(hash: Hash): Promise<any>;
     /**
      * Retrieve a block from the database (not filled with coins).
-     * @param {Hash} hash
+     * @param {Hash} block
      * @returns {Promise} - Returns {@link Block}.
      */
-    getRawBlock(block: any): Promise<any>;
+    getRawBlock(block: Hash): Promise<any>;
     /**
      * Get a historical block coin viewpoint.
-     * @param {Block} hash
+     * @param {Block} block
      * @returns {Promise} - Returns {@link CoinView}.
      */
-    getBlockView(block: any): Promise<any>;
+    getBlockView(block: Block): Promise<any>;
     /**
      * Get an orphan block.
      * @param {Hash} hash
@@ -630,20 +635,20 @@ declare class Chain {
      * await chain.isActive(tip, deployments.segwit);
      * @see https://github.com/bitcoin/bips/blob/master/bip-0009.mediawiki
      * @param {ChainEntry} prev - Previous chain entry.
-     * @param {String} id - Deployment id.
+     * @param {String} deployment - Deployment id.
      * @returns {Promise} - Returns Number.
      */
-    isActive(prev: ChainEntry, deployment: any): Promise<any>;
+    isActive(prev: ChainEntry, deployment: string): Promise<any>;
     /**
      * Get chain entry state for a deployment (BIP9: versionbits).
      * @example
      * await chain.getState(tip, deployments.segwit);
      * @see https://github.com/bitcoin/bips/blob/master/bip-0009.mediawiki
      * @param {ChainEntry} prev - Previous chain entry.
-     * @param {String} id - Deployment id.
+     * @param {String} deployment - Deployment id.
      * @returns {Promise} - Returns Number.
      */
-    getState(prev: ChainEntry, deployment: any): Promise<any>;
+    getState(prev: ChainEntry, deployment: string): Promise<any>;
     /**
      * Compute the version for a new block (BIP9: versionbits).
      * @see https://github.com/bitcoin/bips/blob/master/bip-0009.mediawiki

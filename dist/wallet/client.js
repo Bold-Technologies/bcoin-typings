@@ -60,6 +60,9 @@ class WalletClient extends NodeClient {
             start = util.revHex(start);
         return super.rescan(start);
     }
+    abortRescan() {
+        return super.abortRescan();
+    }
 }
 /*
  * Helpers

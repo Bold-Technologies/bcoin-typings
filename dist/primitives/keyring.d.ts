@@ -26,17 +26,17 @@ declare class KeyRing {
     static generate(compress: boolean | null): KeyRing;
     /**
      * Instantiate keyring from a public key.
-     * @param {Buffer} publicKey
+     * @param {Buffer} key
      * @returns {KeyRing}
      */
-    static fromPublic(key: any): KeyRing;
+    static fromPublic(key: Buffer): KeyRing;
     /**
      * Instantiate keyring from a public key.
-     * @param {Buffer} publicKey
+     * @param {Buffer} key
      * @param {Boolean?} compress
      * @returns {KeyRing}
      */
-    static fromKey(key: any, compress: boolean | null): KeyRing;
+    static fromKey(key: Buffer, compress: boolean | null): KeyRing;
     /**
      * Instantiate keyring from script.
      * @param {Buffer} key
@@ -54,11 +54,11 @@ declare class KeyRing {
     static fromMultisigScript(script: Script, i: number): KeyRing;
     /**
      * Instantiate a keyring from a serialized CBitcoinSecret.
-     * @param {Base58String} secret
+     * @param {Base58String} data
      * @param {(Network|NetworkType)?} network
      * @returns {KeyRing}
      */
-    static fromSecret(data: any, network: (Network | NetworkType) | null): KeyRing;
+    static fromSecret(data: Base58String, network: (Network | NetworkType) | null): KeyRing;
     /**
      * Instantiate an KeyRing from a jsonified transaction object.
      * @param {Object} json - The jsonified transaction object.
@@ -135,7 +135,7 @@ declare class KeyRing {
     /**
      * Inject data from public key.
      * @private
-     * @param {Buffer} privateKey
+     * @param {Buffer} key
      * @param {Boolean?} compress
      */
     private fromKey;
@@ -169,16 +169,17 @@ declare class KeyRing {
     /**
      * Inject properties from serialized CBitcoinSecret.
      * @private
-     * @param {Base58String} secret
+     * @param {Base58String} data
      * @param {(Network|NetworkType)?} network
      */
     private fromSecret;
     /**
      * Get private key.
      * @param {String?} enc - Can be `"hex"`, `"base58"`, or `null`.
+     * @param {(Network|NetworkType)?} network
      * @returns {Buffer} Private key.
      */
-    getPrivateKey(enc: string | null, network: any): Buffer;
+    getPrivateKey(enc: string | null, network: (Network | NetworkType) | null): Buffer;
     /**
      * Get public key.
      * @param {String?} enc - `"hex"` or `null`.
@@ -205,9 +206,10 @@ declare class KeyRing {
     /**
      * Get address' scripthash address for witness program.
      * @param {String?} enc - `"base58"` or `null`.
+     * @param {(Network|NetworkType)?} network
      * @returns {Address|AddressString}
      */
-    getNestedAddress(enc: string | null, network: any): Address | AddressString;
+    getNestedAddress(enc: string | null, network: (Network | NetworkType) | null): Address | AddressString;
     /**
      * Get scripthash.
      * @param {String?} enc - `"hex"` or `null`.
@@ -229,9 +231,10 @@ declare class KeyRing {
     /**
      * Get scripthash address.
      * @param {String?} enc - `"base58"` or `null`.
+     * @param {(Network|NetworkType)?} network
      * @returns {Address|AddressString}
      */
-    getScriptAddress(enc: string | null, network: any): Address | AddressString;
+    getScriptAddress(enc: string | null, network: (Network | NetworkType) | null): Address | AddressString;
     /**
      * Get public key hash.
      * @param {String?} enc - `"hex"` or `null`.
@@ -241,9 +244,10 @@ declare class KeyRing {
     /**
      * Get pubkeyhash address.
      * @param {String?} enc - `"base58"` or `null`.
+     * @param {(Network|NetworkType)?} network
      * @returns {Address|AddressString}
      */
-    getKeyAddress(enc: string | null, network: any): Address | AddressString;
+    getKeyAddress(enc: string | null, network: (Network | NetworkType) | null): Address | AddressString;
     /**
      * Get hash.
      * @param {String?} enc - `"hex"` or `null`.
@@ -253,9 +257,10 @@ declare class KeyRing {
     /**
      * Get base58 address.
      * @param {String?} enc - `"base58"` or `null`.
+     * @param {(Network|NetworkType)?} network
      * @returns {Address|AddressString}
      */
-    getAddress(enc: string | null, network: any): Address | AddressString;
+    getAddress(enc: string | null, network: (Network | NetworkType) | null): Address | AddressString;
     /**
      * Test an address hash against hash and program hash.
      * @param {Buffer} hash

@@ -151,7 +151,7 @@ class KeyRing {
     }
     /**
      * Instantiate keyring from a public key.
-     * @param {Buffer} publicKey
+     * @param {Buffer} key
      * @returns {KeyRing}
      */
     static fromPublic(key) {
@@ -160,7 +160,7 @@ class KeyRing {
     /**
      * Inject data from public key.
      * @private
-     * @param {Buffer} privateKey
+     * @param {Buffer} key
      * @param {Boolean?} compress
      */
     fromKey(key, compress) {
@@ -171,7 +171,7 @@ class KeyRing {
     }
     /**
      * Instantiate keyring from a public key.
-     * @param {Buffer} publicKey
+     * @param {Buffer} key
      * @param {Boolean?} compress
      * @returns {KeyRing}
      */
@@ -258,7 +258,7 @@ class KeyRing {
     /**
      * Inject properties from serialized CBitcoinSecret.
      * @private
-     * @param {Base58String} secret
+     * @param {Base58String} data
      * @param {(Network|NetworkType)?} network
      */
     fromSecret(data, network) {
@@ -276,7 +276,7 @@ class KeyRing {
     }
     /**
      * Instantiate a keyring from a serialized CBitcoinSecret.
-     * @param {Base58String} secret
+     * @param {Base58String} data
      * @param {(Network|NetworkType)?} network
      * @returns {KeyRing}
      */
@@ -286,6 +286,7 @@ class KeyRing {
     /**
      * Get private key.
      * @param {String?} enc - Can be `"hex"`, `"base58"`, or `null`.
+     * @param {(Network|NetworkType)?} network
      * @returns {Buffer} Private key.
      */
     getPrivateKey(enc, network) {
@@ -355,6 +356,7 @@ class KeyRing {
     /**
      * Get address' scripthash address for witness program.
      * @param {String?} enc - `"base58"` or `null`.
+     * @param {(Network|NetworkType)?} network
      * @returns {Address|AddressString}
      */
     getNestedAddress(enc, network) {
@@ -412,6 +414,7 @@ class KeyRing {
     /**
      * Get scripthash address.
      * @param {String?} enc - `"base58"` or `null`.
+     * @param {(Network|NetworkType)?} network
      * @returns {Address|AddressString}
      */
     getScriptAddress(enc, network) {
@@ -450,6 +453,7 @@ class KeyRing {
     /**
      * Get pubkeyhash address.
      * @param {String?} enc - `"base58"` or `null`.
+     * @param {(Network|NetworkType)?} network
      * @returns {Address|AddressString}
      */
     getKeyAddress(enc, network) {
@@ -483,6 +487,7 @@ class KeyRing {
     /**
      * Get base58 address.
      * @param {String?} enc - `"base58"` or `null`.
+     * @param {(Network|NetworkType)?} network
      * @returns {Address|AddressString}
      */
     getAddress(enc, network) {

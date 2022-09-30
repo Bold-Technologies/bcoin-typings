@@ -9,7 +9,7 @@ const EventEmitter = require('events');
 const { Client } = require('bcurl');
 /**
  * Wallet Client
- * @extends {bcurl.Client}
+ * @extends {Client}
  */
 class WalletClient extends Client {
     /**
@@ -52,6 +52,7 @@ class WalletClient extends Client {
      * Dispatch event.
      * @param {Number} id
      * @param {String} event
+     * @param {...Object} args
      * @private
      */
     dispatch(id, event, ...args) {
@@ -360,7 +361,7 @@ class WalletClient extends Client {
     /**
      * Create address.
      * @param {Number} id
-     * @param {Object} options
+     * @param {String} account
      * @returns {Promise}
      */
     createAddress(id, account) {
@@ -369,7 +370,7 @@ class WalletClient extends Client {
     /**
      * Create change address.
      * @param {Number} id
-     * @param {Object} options
+     * @param {String} account
      * @returns {Promise}
      */
     createChange(id, account) {
@@ -409,7 +410,8 @@ class WalletClient extends Client {
      * Import private key.
      * @param {Number} id
      * @param {String} account
-     * @param {String} key
+     * @param {String} privateKey
+     * @param {String} passphrase
      * @returns {Promise}
      */
     importPrivate(id, account, privateKey, passphrase) {
@@ -444,6 +446,7 @@ class WalletClient extends Client {
     }
     /**
      * Lock a coin.
+     * @param {Number} id
      * @param {String} hash
      * @param {Number} index
      * @returns {Promise}
@@ -510,7 +513,7 @@ class WalletClient extends Client {
      * Add a public account key to the wallet for multisig.
      * @param {Number} id
      * @param {String} account
-     * @param {String} key - Account (bip44) key (base58).
+     * @param {String} accountKey - Account (bip44) key (base58).
      * @returns {Promise}
      */
     addSharedKey(id, account, accountKey) {
@@ -542,7 +545,9 @@ class WalletClient extends Client {
 class Wallet extends EventEmitter {
     /**
      * Create a wallet client.
-     * @param {Object?} options
+     * @param {Wallet} parent
+     * @param {Number} id
+     * @param {String} token
      */
     constructor(parent, id, token) {
         super();
@@ -633,7 +638,6 @@ class Wallet extends EventEmitter {
     }
     /**
      * Get wallet blocks.
-     * @param {Number} height
      * @returns {Promise}
      */
     getBlocks() {

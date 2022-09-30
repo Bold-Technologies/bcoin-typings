@@ -18,7 +18,6 @@ declare class HDPublicKey {
     /**
      * Test whether a string is a valid path.
      * @param {String} path
-     * @param {Boolean?} hardened
      * @returns {Boolean}
      */
     static isValidPath(path: string): boolean;
@@ -168,7 +167,6 @@ declare class HDPublicKey {
     equals(obj: any): boolean;
     /**
      * Compare a key against an object.
-     * @param {Object} obj
      * @returns {Boolean}
      */
     compare(key: any): boolean;

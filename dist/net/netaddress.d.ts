@@ -3,7 +3,7 @@ export = NetAddress;
  * Net Address
  * Represents a network address.
  * @alias module:net.NetAddress
- * @property {Host} host
+ * @property {String} host
  * @property {Number} port
  * @property {Number} services
  * @property {Number} time
@@ -35,10 +35,11 @@ declare class NetAddress {
     /**
      * Instantiate a network address
      * from a socket.
-     * @param {net.Socket} socket
+     * @param {net.Socket} hostname
+     * @param {Network} network
      * @returns {NetAddress}
      */
-    static fromSocket(hostname: any, network: any): NetAddress;
+    static fromSocket(hostname: net.Socket, network: Network): NetAddress;
     /**
      * Insantiate a network address from buffer reader.
      * @param {BufferReader} br
@@ -176,6 +177,7 @@ declare class NetAddress {
      * Inject properties from socket.
      * @private
      * @param {net.Socket} socket
+     * @param {Network} network
      */
     private fromSocket;
     /**

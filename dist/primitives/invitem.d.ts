@@ -30,8 +30,8 @@ declare class InvItem {
     type: number;
     hash: any;
     /**
-     * Write inv item to buffer writer.
-     * @param {BufferWriter} bw
+     * get size of inv item
+     * @return {Number}
      */
     getSize(): number;
     /**

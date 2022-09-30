@@ -65,8 +65,7 @@ class CoinEntry {
     }
     /**
      * Inject properties from TX.
-     * @param {TX} tx
-     * @param {Number} index
+     * @param {Output} output
      */
     fromOutput(output) {
         this.output = output;
@@ -74,8 +73,7 @@ class CoinEntry {
     }
     /**
      * Instantiate a coin from a TX
-     * @param {TX} tx
-     * @param {Number} index - Output index.
+     * @param {Output} output
      * @returns {CoinEntry}
      */
     static fromOutput(output) {
@@ -83,8 +81,7 @@ class CoinEntry {
     }
     /**
      * Inject properties from TX.
-     * @param {TX} tx
-     * @param {Number} index
+     * @param {Coin} coin
      */
     fromCoin(coin) {
         this.version = coin.version;
@@ -96,8 +93,7 @@ class CoinEntry {
     }
     /**
      * Instantiate a coin from a TX
-     * @param {TX} tx
-     * @param {Number} index - Output index.
+     * @param {Coin} coin
      * @returns {CoinEntry}
      */
     static fromCoin(coin) {
@@ -107,6 +103,7 @@ class CoinEntry {
      * Inject properties from TX.
      * @param {TX} tx
      * @param {Number} index
+     * @param {Number} height
      */
     fromTX(tx, index, height) {
         assert(typeof index === 'number');
@@ -122,6 +119,7 @@ class CoinEntry {
      * Instantiate a coin from a TX
      * @param {TX} tx
      * @param {Number} index - Output index.
+     * @param {Number} height
      * @returns {CoinEntry}
      */
     static fromTX(tx, index, height) {

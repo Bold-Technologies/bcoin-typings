@@ -14,8 +14,15 @@
 exports.types = {
     BLOCK: 1,
     UNDO: 2,
-    FILTER: 3,
+    FILTER_BASIC: 3,
     MERKLE: 4
+};
+/**
+ * Filter types
+ * @enum {Number}
+ */
+exports.filters = {
+    BASIC: exports.types.FILTER_BASIC
 };
 /**
  * File prefixes for block data types.

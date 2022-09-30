@@ -65,7 +65,7 @@ declare class ChainEntry {
     bits: number;
     nonce: number;
     height: number;
-    chainwork: any;
+    chainwork: import("../../../bcrypto/lib/native/bn") | import("../../../bcrypto/lib/js/bn");
     /**
      * Inject properties from options.
      * @private
@@ -141,8 +141,9 @@ declare class ChainEntry {
     toInv(): InvItem;
 }
 declare namespace ChainEntry {
-    const MAX_CHAINWORK: any;
+    const MAX_CHAINWORK: import("../../../bcrypto/lib/native/bn") | import("../../../bcrypto/lib/js/bn");
 }
+import BN_2 = require("bcrypto/lib/bn.js");
 import Headers = require("../primitives/headers");
 import InvItem = require("../primitives/invitem");
 //# sourceMappingURL=chainentry.d.ts.map

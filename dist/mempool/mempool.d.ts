@@ -247,11 +247,11 @@ declare class Mempool {
     /**
      * Verify a transaction with mempool standards.
      * @method
-     * @param {TX} tx
+     * @param {MempoolEntry} entry
      * @param {CoinView} view
      * @returns {Promise}
      */
-    verify(entry: any, view: CoinView): Promise<any>;
+    verify(entry: MempoolEntry, view: CoinView): Promise<any>;
     /**
      * Verify inputs, return a boolean
      * instead of an error based on success.
@@ -434,10 +434,10 @@ declare class Mempool {
     resolveOrphans(parent: TX): Orphan[];
     /**
      * Remove a transaction from the mempool.
-     * @param {Hash} tx
+     * @param {Hash} hash
      * @returns {Boolean}
      */
-    removeOrphan(hash: any): boolean;
+    removeOrphan(hash: Hash): boolean;
     /**
      * Remove a random orphan transaction from the mempool.
      * @returns {Boolean}
@@ -557,7 +557,7 @@ declare class MempoolOptions {
     /**
      * Create mempool options.
      * @constructor
-     * @param {Object}
+     * @param {Object} options
      */
     constructor(options: any);
     network: Network;

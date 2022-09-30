@@ -37,9 +37,10 @@ declare class LevelBlockStore extends AbstractBlockStore {
      * This method stores serialized block filter data in LevelDB.
      * @param {Buffer} hash - The block hash
      * @param {Buffer} data - The serialized block filter data.
+     * @param {Number} filterType - The filter type
      * @returns {Promise}
      */
-    writeFilter(hash: Buffer, data: Buffer): Promise<any>;
+    writeFilter(hash: Buffer, data: Buffer, filterType: number): Promise<any>;
     /**
      * This method will retrieve merkle block data.
      * @param {Buffer} hash - The block hash
@@ -55,15 +56,17 @@ declare class LevelBlockStore extends AbstractBlockStore {
     /**
      * This method will retrieve serialized block filter data.
      * @param {Buffer} hash - The block hash
+     * @param {Number} filterType - The filter type
      * @returns {Promise}
      */
-    readFilter(hash: Buffer): Promise<any>;
+    readFilter(hash: Buffer, filterType: number): Promise<any>;
     /**
      * This method will retrieve block filter header only.
      * @param {Buffer} hash - The block hash
+     * @param {Number} filterType- The filter type
      * @returns {Promise}
      */
-    readFilterHeader(hash: Buffer): Promise<any>;
+    readFilterHeader(hash: Buffer, filterType: any): Promise<any>;
     /**
      * This method will retrieve block data. Smaller portions of the
      * block (e.g. transactions) can be returned using the offset and
@@ -94,9 +97,10 @@ declare class LevelBlockStore extends AbstractBlockStore {
     /**
      * This will free resources for storing the serialized block filter data.
      * @param {Buffer} hash - The block hash
+     * @param {Number} filterType - The filter type
      * @returns {Promise}
      */
-    pruneFilter(hash: Buffer): Promise<any>;
+    pruneFilter(hash: Buffer, filterType: number): Promise<any>;
     /**
      * This will free resources for storing the block data. The block
      * data may not be immediately removed from disk, and will be reclaimed
@@ -123,9 +127,10 @@ declare class LevelBlockStore extends AbstractBlockStore {
      * This will check if a block filter has been stored
      * and is available.
      * @param {Buffer} hash - The block hash
+     * @param {Number} filterType - The filter type
      * @returns {Promise}
      */
-    hasFilter(hash: Buffer): Promise<any>;
+    hasFilter(hash: Buffer, filterType: number): Promise<any>;
     /**
      * This will check if a block has been stored and is available.
      * @param {Buffer} hash - The block hash

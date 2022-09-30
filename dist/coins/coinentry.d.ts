@@ -14,25 +14,24 @@ export = CoinEntry;
 declare class CoinEntry {
     /**
      * Instantiate a coin from a TX
-     * @param {TX} tx
-     * @param {Number} index - Output index.
+     * @param {Output} output
      * @returns {CoinEntry}
      */
-    static fromOutput(output: any): CoinEntry;
+    static fromOutput(output: Output): CoinEntry;
+    /**
+     * Instantiate a coin from a TX
+     * @param {Coin} coin
+     * @returns {CoinEntry}
+     */
+    static fromCoin(coin: Coin): CoinEntry;
     /**
      * Instantiate a coin from a TX
      * @param {TX} tx
      * @param {Number} index - Output index.
+     * @param {Number} height
      * @returns {CoinEntry}
      */
-    static fromCoin(coin: any): CoinEntry;
-    /**
-     * Instantiate a coin from a TX
-     * @param {TX} tx
-     * @param {Number} index - Output index.
-     * @returns {CoinEntry}
-     */
-    static fromTX(tx: TX, index: number, height: any): CoinEntry;
+    static fromTX(tx: TX, index: number, height: number): CoinEntry;
     /**
      * Instantiate a coin from a serialized Buffer.
      * @param {Buffer} data
@@ -64,22 +63,21 @@ declare class CoinEntry {
     toCoin(prevout: Outpoint): Coin;
     /**
      * Inject properties from TX.
-     * @param {TX} tx
-     * @param {Number} index
+     * @param {Output} output
      */
-    fromOutput(output: any): CoinEntry;
+    fromOutput(output: Output): CoinEntry;
+    /**
+     * Inject properties from TX.
+     * @param {Coin} coin
+     */
+    fromCoin(coin: Coin): CoinEntry;
     /**
      * Inject properties from TX.
      * @param {TX} tx
      * @param {Number} index
+     * @param {Number} height
      */
-    fromCoin(coin: any): CoinEntry;
-    /**
-     * Inject properties from TX.
-     * @param {TX} tx
-     * @param {Number} index
-     */
-    fromTX(tx: TX, index: number, height: any): CoinEntry;
+    fromTX(tx: TX, index: number, height: number): CoinEntry;
     /**
      * Calculate size of coin.
      * @returns {Number}

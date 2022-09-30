@@ -73,7 +73,10 @@ class TXMeta {
     /**
      * Inject properties from options object.
      * @private
-     * @param {Object} options
+     * @param {TX} tx
+     * @param {ChainEntry} entry
+     * @param {Number} index
+     * @returns TXMeta
      */
     fromTX(tx, entry, index) {
         this.tx = tx;
@@ -87,7 +90,9 @@ class TXMeta {
     }
     /**
      * Instantiate TXMeta from options.
-     * @param {Object} options
+     * @param {TX} tx
+     * @param {ChainEntry} entry
+     * @param {Number} index
      * @returns {TXMeta}
      */
     static fromTX(tx, entry, index) {
@@ -124,6 +129,7 @@ class TXMeta {
      * for JSON serialization.
      * @param {Network} network
      * @param {CoinView} view
+     * @param {Number} chainHeight
      * @returns {Object}
      */
     getJSON(network, view, chainHeight) {

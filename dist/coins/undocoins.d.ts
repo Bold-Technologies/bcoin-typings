@@ -18,10 +18,10 @@ declare class UndoCoins {
     items: any[];
     /**
      * Push coin entry onto undo coin array.
-     * @param {CoinEntry}
+     * @param {CoinEntry} coin
      * @returns {Number}
      */
-    push(coin: any): number;
+    push(coin: CoinEntry): number;
     /**
      * Calculate undo coins size.
      * @returns {Number}
@@ -56,4 +56,5 @@ declare class UndoCoins {
      */
     apply(view: CoinView, prevout: Outpoint): void;
 }
+import CoinEntry = require("../coins/coinentry");
 //# sourceMappingURL=undocoins.d.ts.map

@@ -7,8 +7,22 @@
 const bdb = require('bdb');
 const assert = require('bsert');
 const Indexer = require('./indexer');
+const layout = require('./layout');
 const consensus = require('../protocol/consensus');
 const Filter = require('../primitives/filter');
+const path = require('path');
+const { filters } = require('../blockstore/common');
+/*
+ * FilterIndexer Database Layout:
+ *  f[hash] -> filter hash
+ *
+ *  The filter index db maps a filter hash to a block.
+ *  The filters and the filter headers are themselves stored
+ *  in the blockstore instead.
+ */
+Object.assign(layout, {
+    f: bdb.key('f', ['hash256'])
+});
 /**
  * FilterIndexer
  * @alias module:indexer.FilterIndexer
@@ -21,8 +35,9 @@ class FilterIndexer extends Indexer {
      * @param {Object} options
      */
     constructor(options) {
-        super('filter', options);
+        super(path.join('filter', options.filterType), options);
         this.db = bdb.create(this.options);
+        this.filterType = filters[options.filterType];
     }
     /**
      * Store genesis previous filter header.
@@ -34,7 +49,7 @@ class FilterIndexer extends Indexer {
         // Genesis prev filter headers are defined to be zero hashes
         const filter = new Filter();
         filter.header = consensus.ZERO_HASH;
-        await this.blocks.writeFilter(prevHash, filter.toRaw());
+        await this.blocks.writeFilter(prevHash, filter.toRaw(), this.filterType);
         await super.saveGenesis();
     }
     /**
@@ -47,11 +62,12 @@ class FilterIndexer extends Indexer {
     async indexBlock(meta, block, view) {
         const hash = block.hash();
         const prev = await this.getFilterHeader(block.prevBlock);
-        const basic = block.toFilter(view);
+        const gcsFilter = block.toFilter(view, this.filterType);
         const filter = new Filter();
-        filter.header = basic.header(prev);
-        filter.filter = basic.toRaw();
-        await this.blocks.writeFilter(hash, filter.toRaw());
+        filter.header = gcsFilter.header(prev);
+        filter.filter = gcsFilter.toRaw();
+        await this.blocks.writeFilter(hash, filter.toRaw(), this.filterType);
+        this.put(layout.f.encode(hash), gcsFilter.hash());
     }
     /**
      * Prune compact filters.
@@ -59,17 +75,17 @@ class FilterIndexer extends Indexer {
      * @param {BlockMeta} meta
      */
     async pruneBlock(meta) {
-        await this.blocks.pruneFilter(meta.hash);
+        this.del(layout.f.encode(meta.hash));
+        await this.blocks.pruneFilter(meta.hash, this.filterType);
     }
     /**
      * Retrieve compact filter by hash.
      * @param {Hash} hash
-     * @param {Number} type
      * @returns {Promise} - Returns {@link Filter}.
      */
     async getFilter(hash) {
         assert(hash);
-        const filter = await this.blocks.readFilter(hash);
+        const filter = await this.blocks.readFilter(hash, this.filterType);
         if (!filter)
             return null;
         return Filter.fromRaw(filter);
@@ -81,7 +97,16 @@ class FilterIndexer extends Indexer {
      */
     async getFilterHeader(hash) {
         assert(hash);
-        return this.blocks.readFilterHeader(hash);
+        return this.blocks.readFilterHeader(hash, this.filterType);
+    }
+    /**
+     * Retrieve compact filter hash by block hash.
+     * @param {Hash} hash
+     * @returns {Promise} - Returns {@link Hash}.
+     */
+    async getFilterHash(hash) {
+        assert(hash);
+        return this.db.get(layout.f.encode(hash));
     }
 }
 module.exports = FilterIndexer;

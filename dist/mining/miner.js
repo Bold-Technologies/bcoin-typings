@@ -282,7 +282,7 @@ class MinerOptions {
     /**
      * Create miner options.
      * @constructor
-     * @param {Object}
+     * @param {Object} options
      */
     constructor(options) {
         this.network = Network.primary;

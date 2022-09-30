@@ -72,13 +72,13 @@ declare class Witness extends Stack {
      * Create a witness.
      * @alias module:script.Witness
      * @constructor
-     * @param {Buffer[]|Object} items - Array of
+     * @param {Buffer[]|Object} options - Array of
      * stack items.
      * @property {Buffer[]} items
      * @property {Script?} redeem
      * @property {Number} length
      */
-    constructor(options: any);
+    constructor(options: Buffer[] | any);
     /**
      * Inject properties from options object.
      * @private
@@ -203,10 +203,10 @@ declare class Witness extends Stack {
     isUnknownInput(): boolean;
     /**
      * Test the witness against a bloom filter.
-     * @param {Bloom} filter
+     * @param {BloomFilter} filter
      * @returns {Boolean}
      */
-    test(filter: Bloom): boolean;
+    test(filter: BloomFilter): boolean;
     /**
      * Grab and deserialize the redeem script from the witness.
      * @returns {Script} Redeem script.
@@ -237,7 +237,6 @@ declare class Witness extends Stack {
     toWriter(bw: BufferWriter): BufferWriter;
     /**
      * Encode the witness to a Buffer.
-     * @param {String} enc - Encoding, either `'hex'` or `null`.
      * @returns {Buffer|String} Serialized script.
      */
     toRaw(): Buffer | string;

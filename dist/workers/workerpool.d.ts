@@ -55,8 +55,6 @@ declare class WorkerPool {
     alloc(): Worker;
     /**
      * Emit an event on the worker side (all workers).
-     * @param {String} event
-     * @param {...Object} arg
      * @returns {Boolean}
      */
     sendEvent(...args: any[]): boolean;
@@ -203,8 +201,7 @@ declare class Worker {
     sendEnv(env: any): boolean;
     /**
      * Emit an event on the worker side.
-     * @param {String} event
-     * @param {...Object} arg
+     * @param {...Object} items
      * @returns {Boolean}
      */
     sendEvent(...items: any[]): boolean;

@@ -26,7 +26,7 @@ class UndoCoins {
     }
     /**
      * Push coin entry onto undo coin array.
-     * @param {CoinEntry}
+     * @param {CoinEntry} coin
      * @returns {Number}
      */
     push(coin) {

@@ -27,6 +27,7 @@ export namespace txdb {
     const t_1: any;
     export { t_1 as t };
     export const c: any;
+    export const u: any;
     export const d: any;
     export const s: any;
     const p_1: any;

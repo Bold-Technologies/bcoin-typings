@@ -75,7 +75,7 @@ declare class Headers extends AbstractBlock {
     /**
      * Inject properties from buffer reader.
      * @private
-     * @param {Buffer} data
+     * @param {BufferReader} br
      */
     private fromReader;
     /**

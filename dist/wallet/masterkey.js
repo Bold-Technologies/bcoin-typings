@@ -181,7 +181,7 @@ class MasterKey {
     }
     /**
      * Derive an aes key based on params.
-     * @param {String|Buffer} passphrase
+     * @param {String|Buffer} passwd
      * @returns {Promise}
      */
     async derive(passwd) {
@@ -268,6 +268,7 @@ class MasterKey {
     /**
      * Decrypt the key permanently.
      * @param {Buffer|String} passphrase - Zero this yourself.
+     * @param {Boolean?} clean
      * @returns {Promise}
      */
     async decrypt(passphrase, clean) {
@@ -283,6 +284,7 @@ class MasterKey {
      * Decrypt the key permanently without a lock.
      * @private
      * @param {Buffer|String} passphrase - Zero this yourself.
+     * @param {Boolean?} clean
      * @returns {Promise}
      */
     async _decrypt(passphrase, clean) {
@@ -306,6 +308,7 @@ class MasterKey {
     /**
      * Encrypt the key permanently.
      * @param {Buffer|String} passphrase - Zero this yourself.
+     * @param {Boolean?} clean
      * @returns {Promise}
      */
     async encrypt(passphrase, clean) {
@@ -321,6 +324,7 @@ class MasterKey {
      * Encrypt the key permanently without a lock.
      * @private
      * @param {Buffer|String} passphrase - Zero this yourself.
+     * @param {Boolean?} clean
      * @returns {Promise}
      */
     async _encrypt(passphrase, clean) {
@@ -452,7 +456,7 @@ class MasterKey {
     /**
      * Inject properties from serialized data.
      * @private
-     * @param {Buffer} raw
+     * @param {BufferReader} br
      */
     fromReader(br) {
         this.encrypted = br.readU8() === 1;

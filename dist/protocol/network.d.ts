@@ -50,25 +50,25 @@ declare class Network {
     static fromMagic(value: number, network: Network | null): Network;
     /**
      * Get a network by its WIF prefix.
-     * @param {Number} value
+     * @param {Number} prefix
      * @param {Network?} network
      * @returns {Network}
      */
-    static fromWIF(prefix: any, network: Network | null): Network;
+    static fromWIF(prefix: number, network: Network | null): Network;
     /**
      * Get a network by its xpubkey prefix.
-     * @param {Number} value
+     * @param {Number} prefix
      * @param {Network?} network
      * @returns {Network}
      */
-    static fromPublic(prefix: any, network: Network | null): Network;
+    static fromPublic(prefix: number, network: Network | null): Network;
     /**
      * Get a network by its xprivkey prefix.
-     * @param {Number} value
+     * @param {Number} prefix
      * @param {Network?} network
      * @returns {Network}
      */
-    static fromPrivate(prefix: any, network: Network | null): Network;
+    static fromPrivate(prefix: number, network: Network | null): Network;
     /**
      * Get a network by its xpubkey base58 prefix.
      * @param {String} prefix
@@ -85,11 +85,11 @@ declare class Network {
     static fromPrivate58(prefix: string, network: Network | null): Network;
     /**
      * Get a network by its base58 address prefix.
-     * @param {Number} value
+     * @param {Number} prefix
      * @param {Network?} network
      * @returns {Network}
      */
-    static fromBase58(prefix: any, network: Network | null): Network;
+    static fromBase58(prefix: number, network: Network | null): Network;
     /**
      * Get a network by its bech32 address prefix.
      * @param {String} hrp
@@ -147,7 +147,6 @@ declare class Network {
     time: TimeData;
     /**
      * Get a deployment by bit index.
-     * @param {Number} bit
      * @returns {Object}
      */
     init(): any;

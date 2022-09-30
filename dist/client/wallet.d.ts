@@ -1,7 +1,7 @@
 export = WalletClient;
 /**
  * Wallet Client
- * @extends {bcurl.Client}
+ * @extends {Client}
  */
 declare class WalletClient {
     /**
@@ -20,6 +20,7 @@ declare class WalletClient {
      * Dispatch event.
      * @param {Number} id
      * @param {String} event
+     * @param {...Object} args
      * @private
      */
     private dispatch;
@@ -256,17 +257,17 @@ declare class WalletClient {
     /**
      * Create address.
      * @param {Number} id
-     * @param {Object} options
+     * @param {String} account
      * @returns {Promise}
      */
-    createAddress(id: number, account: any): Promise<any>;
+    createAddress(id: number, account: string): Promise<any>;
     /**
      * Create change address.
      * @param {Number} id
-     * @param {Object} options
+     * @param {String} account
      * @returns {Promise}
      */
-    createChange(id: number, account: any): Promise<any>;
+    createChange(id: number, account: string): Promise<any>;
     /**
      * Create nested address.
      * @param {Number} id
@@ -293,10 +294,11 @@ declare class WalletClient {
      * Import private key.
      * @param {Number} id
      * @param {String} account
-     * @param {String} key
+     * @param {String} privateKey
+     * @param {String} passphrase
      * @returns {Promise}
      */
-    importPrivate(id: number, account: string, privateKey: any, passphrase: any): Promise<any>;
+    importPrivate(id: number, account: string, privateKey: string, passphrase: string): Promise<any>;
     /**
      * Import public key.
      * @param {Number} id
@@ -315,11 +317,12 @@ declare class WalletClient {
     importAddress(id: number, account: string, address: string): Promise<any>;
     /**
      * Lock a coin.
+     * @param {Number} id
      * @param {String} hash
      * @param {Number} index
      * @returns {Promise}
      */
-    lockCoin(id: any, hash: string, index: number): Promise<any>;
+    lockCoin(id: number, hash: string, index: number): Promise<any>;
     /**
      * Unlock a coin.
      * @param {Number} id
@@ -367,10 +370,10 @@ declare class WalletClient {
      * Add a public account key to the wallet for multisig.
      * @param {Number} id
      * @param {String} account
-     * @param {String} key - Account (bip44) key (base58).
+     * @param {String} accountKey - Account (bip44) key (base58).
      * @returns {Promise}
      */
-    addSharedKey(id: number, account: string, accountKey: any): Promise<any>;
+    addSharedKey(id: number, account: string, accountKey: string): Promise<any>;
     /**
      * Remove a public account key to the wallet for multisig.
      * @param {Number} id
@@ -393,13 +396,15 @@ declare class WalletClient {
 declare class Wallet {
     /**
      * Create a wallet client.
-     * @param {Object?} options
+     * @param {Wallet} parent
+     * @param {Number} id
+     * @param {String} token
      */
-    constructor(parent: any, id: any, token: any);
-    parent: any;
+    constructor(parent: Wallet, id: number, token: string);
+    parent: Wallet;
     client: any;
-    id: any;
-    token: any;
+    id: number;
+    token: string;
     /**
      * Open wallet.
      * @returns {Promise}
@@ -466,7 +471,6 @@ declare class Wallet {
     getTX(hash: Hash): Promise<any>;
     /**
      * Get wallet blocks.
-     * @param {Number} height
      * @returns {Promise}
      */
     getBlocks(): Promise<any>;

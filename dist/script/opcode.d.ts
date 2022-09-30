@@ -44,10 +44,10 @@ declare class Opcode {
     static fromSmall(num: number): Opcode;
     /**
      * Instantiate an opcode from a ScriptNum.
-     * @param {ScriptNumber} num
+     * @param {ScriptNum} num
      * @returns {Opcode}
      */
-    static fromNum(num: ScriptNumber): Opcode;
+    static fromNum(num: ScriptNum): Opcode;
     /**
      * Instantiate an opcode from a Number.
      * @param {Number} num

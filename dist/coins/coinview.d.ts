@@ -45,10 +45,10 @@ declare class CoinView {
     ensure(hash: Hash): Coins;
     /**
      * Remove coins from the collection.
-     * @param {Coins} coins
+     * @param {Coins} hash
      * @returns {Coins|null}
      */
-    remove(hash: any): Coins | null;
+    remove(hash: Coins): Coins | null;
     /**
      * Add a tx to the collection.
      * @param {TX} tx

@@ -132,9 +132,10 @@ declare class Peer {
      * Frame a payload with a header.
      * @param {String} cmd - Packet type.
      * @param {Buffer} payload
+     * @param {Buffer?} checksum
      * @returns {Buffer} Payload with header prepended.
      */
-    framePacket(cmd: string, payload: Buffer, checksum: any): Buffer;
+    framePacket(cmd: string, payload: Buffer, checksum: Buffer): Buffer;
     /**
      * Feed data to the parser.
      * @param {Buffer} data
@@ -281,9 +282,11 @@ declare class Peer {
     send(packet: Packet): void;
     /**
      * Send a packet.
-     * @param {Packet} packet
+     * @param {String} cmd - Packet type.
+     * @param {Buffer} body
+     * @param {Buffer?} checksum
      */
-    sendRaw(cmd: any, body: any, checksum: any): void;
+    sendRaw(cmd: string, body: Buffer, checksum: Buffer): void;
     /**
      * Wait for a drain event.
      * @returns {Promise}
@@ -336,6 +339,7 @@ declare class Peer {
      * Wait for a packet to be received from peer.
      * @private
      * @param {Number} type - Packet type.
+     * @param {Number} timeout
      * @returns {Promise} - Returns Object(payload).
      * Executed on timeout or once packet is received.
      */
@@ -464,7 +468,7 @@ declare class Peer {
      * Handle `sendcmpct` packet.
      * @method
      * @private
-     * @param {SendCmpctPacket}
+     * @param {SendCmpctPacket} packet
      */
     private handleSendCmpct;
     /**
@@ -480,6 +484,28 @@ declare class Peer {
      * @param {Hash?} stop - Hash to stop at.
      */
     sendGetBlocks(locator: Hash[], stop: Hash | null): void;
+    /**
+     * Send `cfilter` to peer.
+     * @param {Number} filterType
+     * @param {Hash} blockHash
+     * @param {Buffer} filter
+     */
+    sendCFilter(filterType: number, blockHash: Hash, filter: Buffer): void;
+    /**
+     * Send `cfheaders` to peer.
+     * @param {Number} filterType
+     * @param {Hash} stopHash
+     * @param {Hash} previousFilterHeader
+     * @param {Hash[]} filterHashes
+     */
+    sendCFHeaders(filterType: number, stopHash: Hash, previousFilterHeader: Hash, filterHashes: Hash[]): void;
+    /**
+     * send `cfcheckpt` to peer.
+     * @param {Number} filterType
+     * @param {Hash} stopHash
+     * @param {Hash[]} filterHeaders
+     */
+    sendCFCheckpt(filterType: number, stopHash: Hash, filterHeaders: Hash[]): void;
     /**
      * Send `mempool` to peer.
      */

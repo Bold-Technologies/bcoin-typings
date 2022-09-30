@@ -91,10 +91,10 @@ declare class Indexer {
     private getEntry;
     /**
      * Get a index block meta.
-     * @param {Hash} hash
+     * @param {Number} height
      * @returns {Promise}
      */
-    getBlockMeta(height: any): Promise<any>;
+    getBlockMeta(height: number): Promise<any>;
     /**
      * Sync with the chain.
      * @param {BlockMeta} meta
@@ -177,10 +177,10 @@ declare class Indexer {
     private _removeBlock;
     /**
      * Update the current height to tip.
-     * @param {BlockMeta} tip
+     * @param {BlockMeta} meta
      * @returns {Promise}
      */
-    _setTip(meta: any): Promise<any>;
+    _setTip(meta: BlockMeta): Promise<any>;
     /**
      * Test whether the indexer has reached its slow height.
      * @private

@@ -20,6 +20,7 @@ declare class Pool {
     mempool: any;
     server: any;
     nonces: NonceList;
+    filterIndexers: any;
     locker: any;
     connected: boolean;
     disconnecting: boolean;
@@ -162,7 +163,7 @@ declare class Pool {
     /**
      * Send a sync to each peer.
      */
-    sync(force: any): void;
+    sync(): void;
     /**
      * Stop the sync.
      * @private
@@ -251,6 +252,7 @@ declare class Pool {
      * @private
      * @param {Peer} peer
      * @param {InvItem} item
+     * @param {Boolean?} witness
      * @returns {Boolean}
      */
     private sendBlock;
@@ -415,6 +417,30 @@ declare class Pool {
      */
     private handleNotFound;
     /**
+     * Handle peer `getcfilters` packet.
+     * @method
+     * @private
+     * @param {Peer} peer
+     * @param {GetCFiltersPacket} packet
+     */
+    private handleGetCFilters;
+    /**
+     * Handle peer `getcfheaders` packet.
+     * @method
+     * @private
+     * @param {Peer} peer
+     * @param {GetCFHeadersPacket} packet
+     */
+    private handleGetCFHeaders;
+    /**
+     * Handle peer `getcfcheckpt` packet.
+     * @method
+     * @private
+     * @param {Peer} peer
+     * @param {GetCFCheckptPacket} packet
+     */
+    private handleGetCFCheckpt;
+    /**
      * Handle `getblocks` packet.
      * @method
      * @private
@@ -473,6 +499,7 @@ declare class Pool {
      * @private
      * @param {Peer} peer
      * @param {Block} block
+     * @param {Number?} flags
      * @returns {Promise}
      */
     private addBlock;
@@ -482,6 +509,7 @@ declare class Pool {
      * @private
      * @param {Peer} peer
      * @param {Block} block
+     * @param {Number?} flags
      * @returns {Promise}
      */
     private _addBlock;
@@ -581,7 +609,7 @@ declare class Pool {
      * @method
      * @private
      * @param {Peer} peer
-     * @param {MerkleBlockPacket} block
+     * @param {MerkleBlockPacket} packet
      */
     private handleMerkleBlock;
     /**
@@ -589,7 +617,7 @@ declare class Pool {
      * @method
      * @private
      * @param {Peer} peer
-     * @param {MerkleBlockPacket} block
+     * @param {MerkleBlockPacket} packet
      */
     private _handleMerkleBlock;
     /**
@@ -613,7 +641,7 @@ declare class Pool {
      * @method
      * @private
      * @param {Peer} peer
-     * @param {CompactBlockPacket} packet
+     * @param {CmpctBlockPacket} packet
      */
     private handleCmpctBlock;
     /**
@@ -686,7 +714,6 @@ declare class Pool {
     /**
      * Set the spv filter.
      * @param {BloomFilter} filter
-     * @param {String?} enc
      */
     setFilter(filter: BloomFilter): void;
     /**
@@ -805,9 +832,9 @@ declare class Pool {
     broadcast(msg: TX | Block): Promise<any>;
     /**
      * Announce a block to all peers.
-     * @param {Block|Blocks[]} blocks
+     * @param {Block|Block[]} blocks
      */
-    announceBlock(blocks: Block | Blocks[]): void;
+    announceBlock(blocks: Block | Block[]): void;
     /**
      * Announce a transaction to all peers.
      * @param {TX|TX[]} txs
@@ -819,6 +846,13 @@ declare class Pool {
      * @returns {String[]}
      */
     getServiceNames(): string[];
+    /**
+     * Returns the indexer for the required filterType
+     * that are available.
+     * @param {Number} filterType - filter type
+     * @returns {Indexer} - indexer
+     */
+    getFilterIndexer(filterType: number): any;
 }
 declare namespace Pool {
     const DISCOVERY_INTERVAL: number;
@@ -843,11 +877,13 @@ declare class PoolOptions {
     logger: any;
     chain: any;
     mempool: any;
+    filterIndexers: any;
     nonces: NonceList;
     prefix: any;
     checkpoints: boolean;
     spv: boolean;
     bip37: boolean;
+    bip157: boolean;
     listen: boolean;
     compact: boolean;
     noRelay: boolean;

@@ -21,7 +21,7 @@ declare class NodeClient {
      * Open the client.
      * @returns {Promise}
      */
-    open(options: any): Promise<any>;
+    open(): Promise<any>;
     /**
      * Close the client.
      * @returns {Promise}
@@ -58,10 +58,10 @@ declare class NodeClient {
     send(tx: TX): Promise<any>;
     /**
      * Set bloom filter.
-     * @param {Bloom} filter
+     * @param {BloomFilter} filter
      * @returns {Promise}
      */
-    setFilter(filter: Bloom): Promise<any>;
+    setFilter(filter: BloomFilter): Promise<any>;
     /**
      * Add data to filter.
      * @param {Buffer} data
@@ -89,10 +89,13 @@ declare class NodeClient {
     /**
      * Rescan for any missed transactions.
      * @param {Number|Hash} start - Start block.
-     * @param {Bloom} filter
-     * @param {Function} iter - Iterator.
      * @returns {Promise}
      */
     rescan(start: number | Hash): Promise<any>;
+    /**
+     * stop rescanning the blockchain
+     * @returns {Promise}
+     */
+    abortRescan(): Promise<any>;
 }
 //# sourceMappingURL=nodeclient.d.ts.map

@@ -37,7 +37,6 @@ class Parser extends EventEmitter {
     /**
      * Emit an error.
      * @private
-     * @param {...String} msg
      */
     error() {
         const msg = format.apply(null, arguments);
@@ -68,7 +67,7 @@ class Parser extends EventEmitter {
     }
     /**
      * Parse a fully-buffered chunk.
-     * @param {Buffer} chunk
+     * @param {Buffer} data
      */
     parse(data) {
         assert(data.length <= common.MAX_MESSAGE);
@@ -109,15 +108,19 @@ class Parser extends EventEmitter {
             this.error('Invalid magic value: %s.', magic.toString(16));
             return null;
         }
-        // Count length of the cmd.
-        let i = 0;
-        for (; data[i + 4] !== 0 && i < 12; i++)
-            ;
-        if (i === 12) {
-            this.error('Non NULL-terminated command.');
-            return null;
+        // check for null padding and find length of the command
+        let end = 16;
+        for (let i = 4; i < 16; i++) {
+            if (data[i] === 0) {
+                if (end === 16)
+                    end = i;
+            }
+            else {
+                if (end < 16)
+                    throw new Error('Invalid null padding.');
+            }
         }
-        const cmd = data.toString('ascii', 4, 4 + i);
+        const cmd = data.toString('ascii', 4, end);
         const size = data.readUInt32LE(16, true);
         if (size > common.MAX_MESSAGE) {
             this.waiting = 24;

@@ -350,7 +350,6 @@ class CPUJob {
     }
     /**
      * Get the raw block header.
-     * @param {Number} nonce
      * @returns {Buffer}
      */
     getHeader() {

@@ -68,7 +68,7 @@ class MerkleBlock extends AbstractBlock {
     }
     /**
      * Instantiate merkle block from options object.
-     * @param {Object} options
+     * @param {Object} data
      * @returns {MerkleBlock}
      */
     static fromOptions(data) {
@@ -309,7 +309,6 @@ class MerkleBlock extends AbstractBlock {
     }
     /**
      * Serialize the merkleblock.
-     * @param {String?} enc - Encoding, can be `'hex'` or null.
      * @returns {Buffer|String}
      */
     toRaw() {
@@ -469,7 +468,7 @@ class MerkleBlock extends AbstractBlock {
      * it through a filter first. This will build the partial
      * merkle tree.
      * @param {Block} block
-     * @param {Bloom} filter
+     * @param {BloomFilter} filter
      * @returns {MerkleBlock}
      */
     static fromBlock(block, filter) {

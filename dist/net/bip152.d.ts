@@ -278,9 +278,10 @@ export class TXResponse {
     /**
      * Instantiate response from block.
      * @param {Block} block
+     * @param {TXRequest} req
      * @returns {TXResponse}
      */
-    static fromBlock(block: Block, req: any): TXResponse;
+    static fromBlock(block: Block, req: TXRequest): TXResponse;
     /**
      * Create a tx response.
      * @constructor
@@ -314,6 +315,7 @@ export class TXResponse {
      * Inject properties from block.
      * @private
      * @param {Block} block
+     * @param {TXRequest} req
      * @returns {TXResponse}
      */
     private fromBlock;

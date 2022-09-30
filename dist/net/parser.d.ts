@@ -21,7 +21,6 @@ declare class Parser {
     /**
      * Emit an error.
      * @private
-     * @param {...String} msg
      */
     private error;
     /**
@@ -31,9 +30,9 @@ declare class Parser {
     feed(data: Buffer): void;
     /**
      * Parse a fully-buffered chunk.
-     * @param {Buffer} chunk
+     * @param {Buffer} data
      */
-    parse(data: any): void;
+    parse(data: Buffer): void;
     /**
      * Parse buffered packet header.
      * @param {Buffer} data - Header.

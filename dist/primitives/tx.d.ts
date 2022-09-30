@@ -389,9 +389,10 @@ declare class TX {
     /**
      * Get all input address hashes.
      * @param {CoinView|null} view
+     * @param {String?} enc - Encoding, can be `'hex'` or null.
      * @returns {Hash[]} hashes
      */
-    getInputHashes(view: CoinView | null, enc: any): Hash[];
+    getInputHashes(view: CoinView | null, enc: string | null): Hash[];
     /**
      * Get all output address hashes.
      * @returns {Hash[]} hashes
@@ -400,9 +401,10 @@ declare class TX {
     /**
      * Get all address hashes.
      * @param {CoinView|null} view
+     * @param {String?} enc - Encoding, can be `'hex'` or null.
      * @returns {Hash[]} hashes
      */
-    getHashes(view: CoinView | null, enc: any): Hash[];
+    getHashes(view: CoinView | null, enc: string | null): Hash[];
     /**
      * Test whether the transaction has
      * all coins available.
@@ -512,7 +514,6 @@ declare class TX {
      * script standardness (including the redeem script).
      * @see AreInputsStandard()
      * @param {CoinView} view
-     * @param {VerifyFlags?} flags
      * @returns {Boolean}
      */
     hasStandardInputs(view: CoinView): boolean;

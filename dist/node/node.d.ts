@@ -11,9 +11,12 @@ declare class Node {
     /**
      * Create a node.
      * @constructor
+     * @param {String} module
+     * @param {String} config
+     * @param {String} file
      * @param {Object} options
      */
-    constructor(module: any, config: any, file: any, options: any);
+    constructor(module: string, config: string, file: string, options: any);
     config: any;
     network: Network;
     memory: any;
@@ -33,11 +36,11 @@ declare class Node {
     http: any;
     txindex: any;
     addrindex: any;
-    filterindex: any;
+    filterIndexers: Map<any, any>;
     /**
      * Initialize node.
      * @private
-     * @param {Object} options
+     * @param {String} file
      */
     private _init;
     /**
@@ -47,10 +50,10 @@ declare class Node {
     ensure(): Promise<any>;
     /**
      * Create a file path using `prefix`.
-     * @param {String} file
+     * @param {String} name
      * @returns {String}
      */
-    location(name: any): string;
+    location(name: string): string;
     /**
      * Open node. Bind all events.
      * @private

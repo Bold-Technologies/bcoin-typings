@@ -8,7 +8,7 @@ const assert = require('bsert');
 const { Client } = require('bcurl');
 /**
  * Node Client
- * @extends {bcurl.Client}
+ * @extends {Client}
  */
 class NodeClient extends Client {
     /**
@@ -178,7 +178,7 @@ class NodeClient extends Client {
     }
     /**
      * Get chain entry.
-     * @param {Hash} hash
+     * @param {Hash} block
      * @returns {Promise}
      */
     getEntry(block) {
@@ -204,7 +204,7 @@ class NodeClient extends Client {
     }
     /**
      * Set bloom filter.
-     * @param {Bloom} filter
+     * @param {BloomFilter} filter
      * @returns {Promise}
      */
     setFilter(filter) {
@@ -213,7 +213,7 @@ class NodeClient extends Client {
     }
     /**
      * Add data to filter.
-     * @param {Buffer} data
+     * @param {Buffer} chunks
      * @returns {Promise}
      */
     addFilter(chunks) {
@@ -250,6 +250,13 @@ class NodeClient extends Client {
             start = 0;
         assert(typeof start === 'number' || typeof start === 'string');
         return this.call('rescan', start);
+    }
+    /**
+     * Abort scanning blockchain
+     * @returns {Promise}
+     */
+    abortRescan() {
+        return this.call('abortrescan');
     }
 }
 /*

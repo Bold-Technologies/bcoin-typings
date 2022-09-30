@@ -53,7 +53,6 @@ class ChainState {
     }
     /**
      * Instantiate chain state from serialized data.
-     * @param {Hash} hash
      * @param {Buffer} data
      * @returns {ChainState}
      */
@@ -155,7 +154,6 @@ class BlockMeta {
     }
     /**
      * Instantiate block meta from serialized data.
-     * @param {Hash} hash
      * @param {Buffer} data
      * @returns {BlockMeta}
      */

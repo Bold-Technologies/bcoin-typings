@@ -11,6 +11,7 @@ export namespace services {
     const GETUTXO: number;
     const BLOOM: number;
     const WITNESS: number;
+    const NODE_COMPACT_FILTERS: number;
 }
 /**
  * *
@@ -30,4 +31,12 @@ export var MAX_INV: number;
 export var MAX_REQUEST: number;
 export var MAX_BLOCK_REQUEST: number;
 export var MAX_TX_REQUEST: number;
+export namespace FILTERS {
+    const BASIC: number;
+}
+export var filtersByVal: {
+    0: string;
+};
+export var MAX_CFILTERS: number;
+export var MAX_CFHEADERS: number;
 //# sourceMappingURL=common.d.ts.map

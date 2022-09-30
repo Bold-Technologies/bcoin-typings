@@ -57,7 +57,6 @@ class Network {
     }
     /**
      * Get a deployment by bit index.
-     * @param {Number} bit
      * @returns {Object}
      */
     init() {
@@ -197,7 +196,7 @@ class Network {
     }
     /**
      * Get a network by its WIF prefix.
-     * @param {Number} value
+     * @param {Number} prefix
      * @param {Network?} network
      * @returns {Network}
      */
@@ -206,7 +205,7 @@ class Network {
     }
     /**
      * Get a network by its xpubkey prefix.
-     * @param {Number} value
+     * @param {Number} prefix
      * @param {Network?} network
      * @returns {Network}
      */
@@ -215,7 +214,7 @@ class Network {
     }
     /**
      * Get a network by its xprivkey prefix.
-     * @param {Number} value
+     * @param {Number} prefix
      * @param {Network?} network
      * @returns {Network}
      */
@@ -242,7 +241,7 @@ class Network {
     }
     /**
      * Get a network by its base58 address prefix.
-     * @param {Number} value
+     * @param {Number} prefix
      * @param {Network?} network
      * @returns {Network}
      */

@@ -17,11 +17,11 @@ declare class Account {
     static fromOptions(wdb: WalletDB, options: any): Account;
     /**
      * Instantiate a account from serialized data.
-     * @param {WalletDB} data
+     * @param {WalletDB} wdb
      * @param {Buffer} data
      * @returns {Account}
      */
-    static fromRaw(wdb: any, data: WalletDB): Account;
+    static fromRaw(wdb: WalletDB, data: Buffer): Account;
     /**
      * Test an object to see if it is a Account.
      * @param {Object} obj
@@ -31,10 +31,11 @@ declare class Account {
     /**
      * Create an account.
      * @constructor
+     * @param {WalletDB} wdb
      * @param {Object} options
      */
-    constructor(wdb: any, options: any);
-    wdb: any;
+    constructor(wdb: WalletDB, options: any);
+    wdb: WalletDB;
     network: any;
     wid: number;
     id: any;
@@ -85,10 +86,11 @@ declare class Account {
     /**
      * Add a public account key to the account (multisig).
      * Saves the key in the wallet database.
+     * @param {Batch} b
      * @param {HDPublicKey} key
      * @returns {Promise}
      */
-    addSharedKey(b: any, key: typeof import("../hd/public")): Promise<any>;
+    addSharedKey(b: Batch, key: typeof import("../hd/public")): Promise<any>;
     /**
      * Ensure accounts are not sharing keys.
      * @private
@@ -98,10 +100,11 @@ declare class Account {
     /**
      * Remove a public account key from the account (multisig).
      * Remove the key from the wallet database.
+     * @param {Batch} b
      * @param {HDPublicKey} key
      * @returns {Promise}
      */
-    removeSharedKey(b: any, key: typeof import("../hd/public")): Promise<any>;
+    removeSharedKey(b: Batch, key: typeof import("../hd/public")): Promise<any>;
     /**
      * Create a new receiving address (increments receiveDepth).
      * @returns {Promise} - Returns {@link WalletKey}
@@ -119,31 +122,35 @@ declare class Account {
     createNested(b: any): Promise<any>;
     /**
      * Create a new address (increments depth).
-     * @param {Boolean} change
+     * @param {Batch} b
+     * @param {Number} branch
      * @returns {Promise} - Returns {@link WalletKey}.
      */
-    createKey(b: any, branch: any): Promise<any>;
+    createKey(b: Batch, branch: number): Promise<any>;
     receive: WalletKey;
     change: WalletKey;
     nested: WalletKey;
     /**
      * Derive a receiving address at `index`. Do not increment depth.
      * @param {Number} index
+     * @param {HDPrivateKey} master
      * @returns {WalletKey}
      */
-    deriveReceive(index: number, master: any): WalletKey;
+    deriveReceive(index: number, master: HDPrivateKey): WalletKey;
     /**
      * Derive a change address at `index`. Do not increment depth.
      * @param {Number} index
+     * @param {HDPrivateKey} master
      * @returns {WalletKey}
      */
-    deriveChange(index: number, master: any): WalletKey;
+    deriveChange(index: number, master: HDPrivateKey): WalletKey;
     /**
      * Derive a nested address at `index`. Do not increment depth.
      * @param {Number} index
+     * @param {HDPrivateKey} master
      * @returns {WalletKey}
      */
-    deriveNested(index: number, master: any): WalletKey;
+    deriveNested(index: number, master: HDPrivateKey): WalletKey;
     /**
      * Derive an address from `path` object.
      * @param {Path} path
@@ -155,9 +162,10 @@ declare class Account {
      * Derive an address at `index`. Do not increment depth.
      * @param {Number} branch
      * @param {Number} index
+     * @param {HDPrivateKey} master
      * @returns {WalletKey}
      */
-    deriveKey(branch: number, index: number, master: any): WalletKey;
+    deriveKey(branch: number, index: number, master: HDPrivateKey): WalletKey;
     /**
      * Save the account to the database. Necessary
      * when address depth and keys change.
@@ -166,16 +174,18 @@ declare class Account {
     save(b: any): Promise<any>;
     /**
      * Save addresses to path map.
-     * @param {WalletKey[]} rings
+     * @param {Batch} b
+     * @param {WalletKey[]} ring
      * @returns {Promise}
      */
-    saveKey(b: any, ring: any): Promise<any>;
+    saveKey(b: Batch, ring: WalletKey[]): Promise<any>;
     /**
      * Save paths to path map.
-     * @param {Path[]} rings
+     * @param {Batch} b
+     * @param {Path[]} path
      * @returns {Promise}
      */
-    savePath(b: any, path: any): Promise<any>;
+    savePath(b: Batch, path: Path[]): Promise<any>;
     /**
      * Initialize address depths (including lookahead).
      * @returns {Promise}
@@ -183,18 +193,20 @@ declare class Account {
     initDepth(b: any): Promise<any>;
     /**
      * Allocate new lookahead addresses if necessary.
-     * @param {Number} receiveDepth
-     * @param {Number} changeDepth
-     * @param {Number} nestedDepth
+     * @param {Batch} b
+     * @param {Number} receive
+     * @param {Number} change
+     * @param {Number} nested
      * @returns {Promise} - Returns {@link WalletKey}.
      */
-    syncDepth(b: any, receive: any, change: any, nested: any): Promise<any>;
+    syncDepth(b: Batch, receive: number, change: number, nested: number): Promise<any>;
     /**
      * Allocate new lookahead addresses.
+     * @param {Batch} b
      * @param {Number} lookahead
      * @returns {Promise}
      */
-    setLookahead(b: any, lookahead: number): Promise<any>;
+    setLookahead(b: Batch, lookahead: number): Promise<any>;
     /**
      * Get current receive key.
      * @returns {WalletKey}

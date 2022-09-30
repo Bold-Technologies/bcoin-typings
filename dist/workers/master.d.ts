@@ -40,8 +40,7 @@ declare class Master {
     send(packet: Packet): boolean;
     /**
      * Emit an event on the worker side.
-     * @param {String} event
-     * @param {...Object} arg
+     * @param {...Object} items
      * @returns {Boolean}
      */
     sendEvent(...items: any[]): boolean;
@@ -51,10 +50,8 @@ declare class Master {
     destroy(): void;
     /**
      * Write a message to stdout in the master process.
-     * @param {Object|String} obj
-     * @param {...String} args
      */
-    log(...args: string[]): void;
+    log(...args: any[]): void;
     /**
      * Listen for messages from master process (only if worker).
      */
@@ -62,7 +59,7 @@ declare class Master {
     /**
      * Handle packet.
      * @private
-     * @param {Packet}
+     * @param {Packet} packet
      */
     private handlePacket;
 }

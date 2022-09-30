@@ -42,7 +42,7 @@ class Script {
     /**
      * Create a script.
      * @constructor
-     * @param {Buffer|Array|Object} code
+     * @param {Buffer|Array|Object} options
      */
     constructor(options) {
         this.raw = EMPTY_BUFFER;
@@ -312,7 +312,6 @@ class Script {
     }
     /**
      * Encode the script to a Buffer. See {@link Script#encode}.
-     * @param {String} enc - Encoding, either `'hex'` or `null`.
      * @returns {Buffer|String} Serialized script.
      */
     toRaw() {
@@ -1899,7 +1898,7 @@ class Script {
     }
     /**
      * Test the script against a bloom filter.
-     * @param {Bloom} filter
+     * @param {BloomFilter} filter
      * @returns {Boolean}
      */
     test(filter) {
@@ -2339,7 +2338,7 @@ class Script {
     /**
      * Inject properties from bitcoind test string.
      * @private
-     * @param {String} items - Script string.
+     * @param {String} code - Script string.
      * @throws Parse error.
      */
     fromString(code) {
@@ -2384,7 +2383,7 @@ class Script {
     /**
      * Parse a bitcoind test script
      * string into a script object.
-     * @param {String} items - Script string.
+     * @param {String} code - Script string.
      * @returns {Script}
      * @throws Parse error.
      */
@@ -2548,7 +2547,7 @@ class Script {
     /**
      * Inject properties from serialized data.
      * @private
-     * @param {Buffer}
+     * @param {Buffer} data
      */
     fromRaw(data) {
         const br = bio.read(data);
@@ -2560,7 +2559,6 @@ class Script {
     /**
      * Create a script from buffer reader.
      * @param {BufferReader} br
-     * @param {String?} enc - Either `"hex"` or `null`.
      * @returns {Script}
      */
     static fromReader(br) {
@@ -2635,6 +2633,7 @@ function sortKeys(keys) {
  * Test whether the data element is a valid key if VERIFY_STRICTENC is enabled.
  * @param {Buffer} key
  * @param {VerifyFlags?} flags
+ * @param {Number} version
  * @returns {Boolean}
  * @throws {ScriptError}
  */

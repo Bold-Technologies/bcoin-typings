@@ -42,11 +42,11 @@ declare class FullNode extends Node {
     /**
      * Rescan for any missed transactions.
      * @param {Number|Hash} start - Start block.
-     * @param {Bloom} filter
+     * @param {BloomFilter} filter
      * @param {Function} iter - Iterator.
      * @returns {Promise}
      */
-    scan(start: number | Hash, filter: Bloom, iter: Function): Promise<any>;
+    scan(start: number | Hash, filter: BloomFilter, iter: Function): Promise<any>;
     /**
      * Broadcast a transaction (note that this will _not_ be verified
      * by the mempool - use with care, lest you get banned from
@@ -156,9 +156,10 @@ declare class FullNode extends Node {
     /**
      * Retrieve compact filter by hash.
      * @param {Hash | Number} hash
+     * @param {Number} filterType
      * @returns {Promise} - Returns {@link Buffer}.
      */
-    getBlockFilter(hash: Hash | number): Promise<any>;
+    getBlockFilter(hash: Hash | number, filterType: number): Promise<any>;
 }
 import Node = require("./node");
 import Chain = require("../blockchain/chain");

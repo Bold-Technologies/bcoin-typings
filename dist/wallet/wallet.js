@@ -29,6 +29,7 @@ const consensus = require('../protocol/consensus');
 const { Mnemonic } = HD;
 const { inspectSymbol } = require('../utils');
 const { BufferSet } = require('buffer-map');
+const { CoinSelector } = require('./coinselector');
 /**
  * Wallet
  * @alias module:wallet.Wallet
@@ -38,6 +39,7 @@ class Wallet extends EventEmitter {
     /**
      * Create a wallet.
      * @constructor
+     * @param {WalletDB} wdb
      * @param {Object} options
      */
     constructor(wdb, options) {
@@ -437,7 +439,6 @@ class Wallet extends EventEmitter {
      * Generate the wallet api key if none was passed in.
      * It is represented as HASH256(m/44'->private|nonce).
      * @private
-     * @param {HDPrivateKey} master
      * @param {Number} nonce
      * @returns {Buffer}
      */
@@ -453,6 +454,7 @@ class Wallet extends EventEmitter {
     /**
      * Create an account. Requires passphrase if master key is encrypted.
      * @param {Object} options - See {@link Account} options.
+     * @param {Buffer|String} passphrase
      * @returns {Promise} - Returns {@link Account}.
      */
     async createAccount(options, passphrase) {
@@ -467,6 +469,7 @@ class Wallet extends EventEmitter {
     /**
      * Create an account without a lock.
      * @param {Object} options - See {@link Account} options.
+     * @param {Buffer|String} passphrase
      * @returns {Promise} - Returns {@link Account}.
      */
     async _createAccount(options, passphrase) {
@@ -517,6 +520,7 @@ class Wallet extends EventEmitter {
     /**
      * Ensure an account. Requires passphrase if master key is encrypted.
      * @param {Object} options - See {@link Account} options.
+     * @param {Buffer|String} passphrase
      * @returns {Promise} - Returns {@link Account}.
      */
     async ensureAccount(options, passphrase) {
@@ -676,6 +680,7 @@ class Wallet extends EventEmitter {
     /**
      * Save the wallet to the database. Necessary
      * when address depth and keys change.
+     * @param {Batch} b
      * @returns {Promise}
      */
     save(b) {
@@ -816,8 +821,7 @@ class Wallet extends EventEmitter {
      * Import a keyring (will not exist on derivation chain).
      * Rescanning must be invoked manually.
      * @param {(String|Number)?} acct
-     * @param {WalletKey} ring
-     * @param {(String|Buffer)?} passphrase
+     * @param {Address|Hash} address
      * @returns {Promise}
      */
     async importAddress(acct, address) {
@@ -833,8 +837,7 @@ class Wallet extends EventEmitter {
      * Import a keyring (will not exist on derivation chain) without a lock.
      * @private
      * @param {(String|Number)?} acct
-     * @param {WalletKey} ring
-     * @param {(String|Buffer)?} passphrase
+     * @param {Address|Hash} address
      * @returns {Promise}
      */
     async _importAddress(acct, address) {
@@ -873,6 +876,7 @@ class Wallet extends EventEmitter {
      * @param {SatoshiAmount?} options.hardFee - Use a hard fee rather than
      * calculating one.
      * @param {Number|Boolean} options.subtractFee - Whether to subtract the
+     * @param {Boolean?} force - Bypass the lock.
      * fee from existing outputs rather than adding more inputs.
      */
     async fund(mtx, options, force) {
@@ -905,7 +909,7 @@ class Wallet extends EventEmitter {
             coins = await this.getSmartCoins(options.account);
         }
         else {
-            coins = await this.getCoins(options.account);
+            coins = await this.getUnspentCoins(options.account);
             coins = this.txdb.filterLocked(coins);
         }
         await mtx.fund(coins, {
@@ -919,9 +923,10 @@ class Wallet extends EventEmitter {
             height: this.wdb.state.height,
             rate: rate,
             maxFee: options.maxFee,
+            useSelectEstimate: options.useSelectEstimate,
             getAccount: this.getAccountByAddress.bind(this)
         });
-        assert(mtx.getFee() <= MTX.Selector.MAX_FEE, 'TX exceeds MAX_FEE.');
+        assert(mtx.getFee() <= CoinSelector.MAX_FEE, 'TX exceeds MAX_FEE.');
     }
     /**
      * Get account by address.
@@ -944,6 +949,7 @@ class Wallet extends EventEmitter {
      * @param {Boolean} options.sort - Sort inputs and outputs (BIP69).
      * @param {Boolean} options.template - Build scripts for inputs.
      * @param {Number} options.locktime - TX locktime
+     * @param {Boolean?} force - Bypass the lock.
      * @returns {Promise} - Returns {@link MTX}.
      */
     async createTX(options, force) {
@@ -990,6 +996,7 @@ class Wallet extends EventEmitter {
      * coins from being double spent.
      * @param {Object} options - See {@link Wallet#fund options}.
      * @param {Object[]} options.outputs - See {@link MTX#addOutput}.
+     * @param {(String|Buffer)?} passphrase
      * @returns {Promise} - Returns {@link TX}.
      */
     async send(options, passphrase) {
@@ -1006,6 +1013,7 @@ class Wallet extends EventEmitter {
      * @private
      * @param {Object} options - See {@link Wallet#fund options}.
      * @param {Object[]} options.outputs - See {@link MTX#addOutput}.
+     * @param {(String|Buffer)?} passphrase
      * @returns {Promise} - Returns {@link TX}.
      */
     async _send(options, passphrase) {
@@ -1050,8 +1058,8 @@ class Wallet extends EventEmitter {
             throw new Error('Not all coins available.');
         const oldFee = tx.getFee(view);
         let fee = tx.getMinFee(null, rate);
-        if (fee > MTX.Selector.MAX_FEE)
-            fee = MTX.Selector.MAX_FEE;
+        if (fee > CoinSelector.MAX_FEE)
+            fee = CoinSelector.MAX_FEE;
         if (oldFee >= fee)
             throw new Error('Fee is not increasing.');
         const mtx = MTX.fromTX(tx);
@@ -1115,7 +1123,6 @@ class Wallet extends EventEmitter {
     /**
      * Derive necessary addresses for signing a transaction.
      * @param {MTX} mtx
-     * @param {Number?} index - Input index.
      * @returns {Promise} - Returns {@link WalletKey}[].
      */
     async deriveInputs(mtx) {
@@ -1134,7 +1141,7 @@ class Wallet extends EventEmitter {
     }
     /**
      * Retrieve a single keyring by address.
-     * @param {Address|Hash} hash
+     * @param {Address|Hash} address
      * @returns {Promise}
      */
     async getKey(address) {
@@ -1150,7 +1157,7 @@ class Wallet extends EventEmitter {
     /**
      * Retrieve a single keyring by address
      * (with the private key reference).
-     * @param {Address|Hash} hash
+     * @param {Address|Hash} address
      * @param {(Buffer|String)?} passphrase
      * @returns {Promise}
      */
@@ -1203,7 +1210,7 @@ class Wallet extends EventEmitter {
     }
     /**
      * Increase lookahead for account.
-     * @param {(Number|String)?} account
+     * @param {(Number|String)?} acct
      * @param {Number} lookahead
      * @returns {Promise}
      */
@@ -1219,7 +1226,7 @@ class Wallet extends EventEmitter {
     /**
      * Increase lookahead for account (without a lock).
      * @private
-     * @param {(Number|String)?} account
+     * @param {(Number|String)?} acct
      * @param {Number} lookahead
      * @returns {Promise}
      */
@@ -1299,8 +1306,8 @@ class Wallet extends EventEmitter {
     /**
      * Build input scripts and sign inputs for a transaction. Only attempts
      * to build/sign inputs that are redeemable by this wallet.
-     * @param {MTX} tx
-     * @param {Object|String|Buffer} options - Options or passphrase.
+     * @param {MTX} mtx
+     * @param {(String|Buffer)?} passphrase
      * @returns {Promise} - Returns Number (total number
      * of inputs scripts built and signed).
      */
@@ -1417,6 +1424,7 @@ class Wallet extends EventEmitter {
     /**
      * Add a transaction to the wallets TX history.
      * @param {TX} tx
+     * @param {BlockMeta} block
      * @returns {Promise}
      */
     async add(tx, block) {
@@ -1433,6 +1441,7 @@ class Wallet extends EventEmitter {
      * Potentially resolves orphans.
      * @private
      * @param {TX} tx
+     * @param {BlockMeta} block
      * @returns {Promise}
      */
     async _add(tx, block) {
@@ -1568,7 +1577,7 @@ class Wallet extends EventEmitter {
     }
     /**
      * Get all available coins.
-     * @param {(String|Number)?} account
+     * @param {(String|Number)?} acct
      * @returns {Promise} - Returns {@link Coin}[].
      */
     async getCoins(acct) {
@@ -1576,8 +1585,17 @@ class Wallet extends EventEmitter {
         return this.txdb.getCoins(account);
     }
     /**
-     * Get all available credits.
+     * Get all available unspent coins.
      * @param {(String|Number)?} account
+     * @returns {Promise} - Returns {@link Coin}[].
+     */
+    async getUnspentCoins(acct) {
+        const account = await this.ensureIndex(acct);
+        return this.txdb.getUnspentCoins(account);
+    }
+    /**
+     * Get all available credits.
+     * @param {(String|Number)?} acct
      * @returns {Promise} - Returns {@link Credit}[].
      */
     async getCredits(acct) {
@@ -1585,17 +1603,24 @@ class Wallet extends EventEmitter {
         return this.txdb.getCredits(account);
     }
     /**
-     * Get "smart" coins.
+     * Get all available unspent credits.
      * @param {(String|Number)?} account
+     * @returns {Promise} - Returns {@link Credit}[].
+     */
+    async getUnspentCredits(acct) {
+        const account = await this.ensureIndex(acct);
+        return this.txdb.getUnspentCredits(account);
+    }
+    /**
+     * Get "smart" coins.
+     * @param {(String|Number)?} acct
      * @returns {Promise} - Returns {@link Coin}[].
      */
     async getSmartCoins(acct) {
-        const credits = await this.getCredits(acct);
+        const credits = await this.getUnspentCredits(acct);
         const coins = [];
         for (const credit of credits) {
             const coin = credit.coin;
-            if (credit.spent)
-                continue;
             if (this.txdb.isLocked(coin))
                 continue;
             // Always use confirmed coins.
@@ -1784,6 +1809,7 @@ class Wallet extends EventEmitter {
      * serialization.
      * @param {Boolean?} unsafe - Whether to include
      * the master key in the JSON.
+     * @param {Balance} balance
      * @returns {Object}
      */
     toJSON(unsafe, balance) {
@@ -1843,6 +1869,7 @@ class Wallet extends EventEmitter {
     }
     /**
      * Instantiate a wallet from serialized data.
+     * @param {WalletDB} wdb
      * @param {Buffer} data
      * @returns {Wallet}
      */

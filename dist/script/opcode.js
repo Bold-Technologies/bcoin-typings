@@ -387,7 +387,7 @@ class Opcode {
     }
     /**
      * Instantiate an opcode from a ScriptNum.
-     * @param {ScriptNumber} num
+     * @param {ScriptNum} num
      * @returns {Opcode}
      */
     static fromNum(num) {

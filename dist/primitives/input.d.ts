@@ -36,16 +36,16 @@ declare class Input {
     static fromRaw(data: Buffer, enc: string | null): Input;
     /**
      * Instantiate input from outpoint.
-     * @param {Outpoint}
+     * @param {Outpoint} outpoint
      * @returns {Input}
      */
-    static fromOutpoint(outpoint: any): Input;
+    static fromOutpoint(outpoint: Outpoint): Input;
     /**
      * Instantiate input from coin.
-     * @param {Coin}
+     * @param {Coin} coin
      * @returns {Input}
      */
-    static fromCoin(coin: any): Input;
+    static fromCoin(coin: Coin): Input;
     /**
      * Instantiate input from tx.
      * @param {TX} tx
@@ -104,7 +104,7 @@ declare class Input {
      * Get the redeem script. Will attempt to resolve nested
      * redeem scripts if witnessscripthash is behind a scripthash.
      * @param {Coin?} coin
-     * @returns {Script?} Redeem script.
+     * @returns {Script|null} Redeem script.
      */
     getRedeem(coin: Coin): Script | null;
     /**
@@ -118,9 +118,9 @@ declare class Input {
      * based on the input script and/or witness if coin
      * is not available.
      * @param {Coin?} coin
-     * @returns {Address?} addr
+     * @returns {Address|null} addr
      */
-    getAddress(coin: Coin): Address;
+    getAddress(coin: Coin): Address | null;
     /**
      * Get the address hash.
      * @param {Coin?} coin
@@ -178,7 +178,6 @@ declare class Input {
     getSize(): number;
     /**
      * Serialize the input.
-     * @param {String?} enc - Encoding, can be `'hex'` or null.
      * @returns {Buffer|String}
      */
     toRaw(): Buffer | string;

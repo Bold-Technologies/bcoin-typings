@@ -88,10 +88,10 @@ declare class MasterKey {
     private stop;
     /**
      * Derive an aes key based on params.
-     * @param {String|Buffer} passphrase
+     * @param {String|Buffer} passwd
      * @returns {Promise}
      */
-    derive(passwd: any): Promise<any>;
+    derive(passwd: string | Buffer): Promise<any>;
     /**
      * Encrypt data with in-memory aes key.
      * @param {Buffer} data
@@ -126,26 +126,30 @@ declare class MasterKey {
     /**
      * Decrypt the key permanently.
      * @param {Buffer|String} passphrase - Zero this yourself.
+     * @param {Boolean?} clean
      * @returns {Promise}
      */
-    decrypt(passphrase: Buffer | string, clean: any): Promise<any>;
+    decrypt(passphrase: Buffer | string, clean: boolean | null): Promise<any>;
     /**
      * Decrypt the key permanently without a lock.
      * @private
      * @param {Buffer|String} passphrase - Zero this yourself.
+     * @param {Boolean?} clean
      * @returns {Promise}
      */
     private _decrypt;
     /**
      * Encrypt the key permanently.
      * @param {Buffer|String} passphrase - Zero this yourself.
+     * @param {Boolean?} clean
      * @returns {Promise}
      */
-    encrypt(passphrase: Buffer | string, clean: any): Promise<any>;
+    encrypt(passphrase: Buffer | string, clean: boolean | null): Promise<any>;
     /**
      * Encrypt the key permanently without a lock.
      * @private
      * @param {Buffer|String} passphrase - Zero this yourself.
+     * @param {Boolean?} clean
      * @returns {Promise}
      */
     private _encrypt;
@@ -184,7 +188,7 @@ declare class MasterKey {
     /**
      * Inject properties from serialized data.
      * @private
-     * @param {Buffer} raw
+     * @param {BufferReader} br
      */
     private fromReader;
     /**

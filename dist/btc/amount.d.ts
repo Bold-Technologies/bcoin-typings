@@ -55,10 +55,11 @@ declare class Amount {
      * Safely convert satoshis to a BTC string.
      * This function explicitly avoids any
      * floating point arithmetic.
-     * @param {SatoshiAmount} value - Satoshis.
+     * @param {SatoshiAmount|String} value - Satoshis.
+     * @param {Boolean} num
      * @returns {String} BTC string.
      */
-    static btc(value: SatoshiAmount, num: any): string;
+    static btc(value: SatoshiAmount | string, num: boolean): string;
     /**
      * Safely convert a BTC string to satoshis.
      * @param {String} str - BTC

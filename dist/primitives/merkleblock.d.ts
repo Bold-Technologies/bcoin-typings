@@ -8,7 +8,7 @@ export = MerkleBlock;
 declare class MerkleBlock extends AbstractBlock {
     /**
      * Instantiate merkle block from options object.
-     * @param {Object} options
+     * @param {Object} data
      * @returns {MerkleBlock}
      */
     static fromOptions(data: any): MerkleBlock;
@@ -49,10 +49,10 @@ declare class MerkleBlock extends AbstractBlock {
      * it through a filter first. This will build the partial
      * merkle tree.
      * @param {Block} block
-     * @param {Bloom} filter
+     * @param {BloomFilter} filter
      * @returns {MerkleBlock}
      */
-    static fromBlock(block: Block, filter: Bloom): MerkleBlock;
+    static fromBlock(block: Block, filter: BloomFilter): MerkleBlock;
     /**
      * Create a merkleblock from an array of txids.
      * This will build the partial merkle tree.
@@ -163,7 +163,6 @@ declare class MerkleBlock extends AbstractBlock {
     toExtendedWriter(bw: BufferWriter): BufferWriter;
     /**
      * Serialize the merkleblock.
-     * @param {String?} enc - Encoding, can be `'hex'` or null.
      * @returns {Buffer|String}
      */
     toRaw(): Buffer | string;

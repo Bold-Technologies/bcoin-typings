@@ -26,8 +26,8 @@ class InvItem {
         this.hash = hash;
     }
     /**
-     * Write inv item to buffer writer.
-     * @param {BufferWriter} bw
+     * get size of inv item
+     * @return {Number}
      */
     getSize() {
         return 36;

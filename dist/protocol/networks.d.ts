@@ -54,10 +54,10 @@ export namespace testnet {
     }
     const genesisBlock: string;
     namespace pow {
-        export const limit: any;
+        export const limit: import("../../../bcrypto/lib/native/bn") | import("../../../bcrypto/lib/js/bn");
         const bits_1: number;
         export { bits_1 as bits };
-        export const chainwork: any;
+        export const chainwork: import("../../../bcrypto/lib/native/bn") | import("../../../bcrypto/lib/js/bn");
         export const targetTimespan: number;
         export const targetSpacing: number;
         export const retargetInterval: number;
@@ -214,11 +214,11 @@ export namespace regtest {
     const genesisBlock_1: string;
     export { genesisBlock_1 as genesisBlock };
     export namespace pow_1 {
-        const limit_1: any;
+        const limit_1: import("../../../bcrypto/lib/native/bn") | import("../../../bcrypto/lib/js/bn");
         export { limit_1 as limit };
         const bits_3: number;
         export { bits_3 as bits };
-        const chainwork_1: any;
+        const chainwork_1: import("../../../bcrypto/lib/native/bn") | import("../../../bcrypto/lib/js/bn");
         export { chainwork_1 as chainwork };
         const targetTimespan_1: number;
         export { targetTimespan_1 as targetTimespan };
@@ -429,11 +429,11 @@ export namespace simnet {
     const genesisBlock_2: string;
     export { genesisBlock_2 as genesisBlock };
     export namespace pow_2 {
-        const limit_2: any;
+        const limit_2: import("../../../bcrypto/lib/native/bn") | import("../../../bcrypto/lib/js/bn");
         export { limit_2 as limit };
         const bits_5: number;
         export { bits_5 as bits };
-        const chainwork_2: any;
+        const chainwork_2: import("../../../bcrypto/lib/native/bn") | import("../../../bcrypto/lib/js/bn");
         export { chainwork_2 as chainwork };
         const targetTimespan_2: number;
         export { targetTimespan_2 as targetTimespan };

@@ -1,7 +1,7 @@
 export = NodeClient;
 /**
  * Node Client
- * @extends {bcurl.Client}
+ * @extends {Client}
  */
 declare class NodeClient {
     /**
@@ -120,10 +120,10 @@ declare class NodeClient {
     getTip(): Promise<any>;
     /**
      * Get chain entry.
-     * @param {Hash} hash
+     * @param {Hash} block
      * @returns {Promise}
      */
-    getEntry(block: any): Promise<any>;
+    getEntry(block: Hash): Promise<any>;
     /**
      * Get hashes.
      * @param {Number} [start=-1]
@@ -139,16 +139,16 @@ declare class NodeClient {
     send(tx: TX): Promise<any>;
     /**
      * Set bloom filter.
-     * @param {Bloom} filter
+     * @param {BloomFilter} filter
      * @returns {Promise}
      */
-    setFilter(filter: Bloom): Promise<any>;
+    setFilter(filter: BloomFilter): Promise<any>;
     /**
      * Add data to filter.
-     * @param {Buffer} data
+     * @param {Buffer} chunks
      * @returns {Promise}
      */
-    addFilter(chunks: any): Promise<any>;
+    addFilter(chunks: Buffer): Promise<any>;
     /**
      * Reset filter.
      * @returns {Promise}
@@ -166,5 +166,10 @@ declare class NodeClient {
      * @returns {Promise}
      */
     rescan(start: number | Hash): Promise<any>;
+    /**
+     * Abort scanning blockchain
+     * @returns {Promise}
+     */
+    abortRescan(): Promise<any>;
 }
 //# sourceMappingURL=node.d.ts.map

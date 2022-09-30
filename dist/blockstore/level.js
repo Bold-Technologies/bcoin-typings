@@ -85,10 +85,11 @@ class LevelBlockStore extends AbstractBlockStore {
      * This method stores serialized block filter data in LevelDB.
      * @param {Buffer} hash - The block hash
      * @param {Buffer} data - The serialized block filter data.
+     * @param {Number} filterType - The filter type
      * @returns {Promise}
      */
-    async writeFilter(hash, data) {
-        return this.db.put(layout.b.encode(types.FILTER, hash), data);
+    async writeFilter(hash, data, filterType) {
+        return this.db.put(layout.b.encode(filterType, hash), data);
     }
     /**
      * This method will retrieve merkle block data.
@@ -109,18 +110,20 @@ class LevelBlockStore extends AbstractBlockStore {
     /**
      * This method will retrieve serialized block filter data.
      * @param {Buffer} hash - The block hash
+     * @param {Number} filterType - The filter type
      * @returns {Promise}
      */
-    async readFilter(hash) {
-        return this.db.get(layout.b.encode(types.FILTER, hash));
+    async readFilter(hash, filterType) {
+        return this.db.get(layout.b.encode(filterType, hash));
     }
     /**
      * This method will retrieve block filter header only.
      * @param {Buffer} hash - The block hash
+     * @param {Number} filterType- The filter type
      * @returns {Promise}
      */
-    async readFilterHeader(hash) {
-        const data = await this.db.get(layout.b.encode(types.FILTER, hash));
+    async readFilterHeader(hash, filterType) {
+        const data = await this.db.get(layout.b.encode(filterType, hash));
         if (!data)
             return null;
         return data.slice(0, 32);
@@ -173,12 +176,13 @@ class LevelBlockStore extends AbstractBlockStore {
     /**
      * This will free resources for storing the serialized block filter data.
      * @param {Buffer} hash - The block hash
+     * @param {Number} filterType - The filter type
      * @returns {Promise}
      */
-    async pruneFilter(hash) {
-        if (!await this.hasFilter(hash))
+    async pruneFilter(hash, filterType) {
+        if (!await this.hasFilter(hash, filterType))
             return false;
-        await this.db.del(layout.b.encode(types.FILTER, hash));
+        await this.db.del(layout.b.encode(filterType, hash));
         return true;
     }
     /**
@@ -216,10 +220,11 @@ class LevelBlockStore extends AbstractBlockStore {
      * This will check if a block filter has been stored
      * and is available.
      * @param {Buffer} hash - The block hash
+     * @param {Number} filterType - The filter type
      * @returns {Promise}
      */
-    async hasFilter(hash) {
-        return this.db.has(layout.b.encode(types.FILTER, hash));
+    async hasFilter(hash, filterType) {
+        return this.db.has(layout.b.encode(filterType, hash));
     }
     /**
      * This will check if a block has been stored and is available.

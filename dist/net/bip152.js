@@ -644,6 +644,7 @@ class TXResponse {
      * Inject properties from block.
      * @private
      * @param {Block} block
+     * @param {TXRequest} req
      * @returns {TXResponse}
      */
     fromBlock(block, req) {
@@ -658,6 +659,7 @@ class TXResponse {
     /**
      * Instantiate response from block.
      * @param {Block} block
+     * @param {TXRequest} req
      * @returns {TXResponse}
      */
     static fromBlock(block, req) {

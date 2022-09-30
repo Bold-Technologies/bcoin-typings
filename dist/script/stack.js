@@ -151,7 +151,7 @@ class Stack {
     /**
      * Set stack item at index.
      * @param {Number} index
-     * @param {Buffer} value
+     * @param {Buffer} item
      * @returns {Buffer}
      */
     set(index, item) {

@@ -1,1 +1,1 @@
-{"version":3,"file":"consensus.d.ts","sourceRoot":"","sources":["../../lib/protocol/consensus.js"],"names":[],"mappings":";;;;;;;;;;;;;;;;;;;;;;;;;;AAmPsB,iDAsBrB;AASmB,2CA2BnB;AASmB,gCALT,IAAI,yBAoBd;AAQmB,0DAHP,aAAa,CAsBzB;AASgB,8DAMhB"}
+{"version":3,"file":"consensus.d.ts","sourceRoot":"","sources":["../../lib/protocol/consensus.js"],"names":[],"mappings":";;;;;;;;;;;;;;;;;;;;;;;;;;AAmPsB,8CAHT,EAAE,CAyBd;AASmB,+BAJT,EAAE,UA+BZ;AASmB,gCALT,IAAI,yBAoBd;AAQmB,0DAHP,aAAa,CAsBzB;AASgB,8DAMhB"}

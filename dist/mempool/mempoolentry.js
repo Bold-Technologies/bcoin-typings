@@ -80,6 +80,7 @@ class MempoolEntry {
      * Inject properties from transaction.
      * @private
      * @param {TX} tx
+     * @param {CoinView} view
      * @param {Number} height
      */
     fromTX(tx, view, height) {
@@ -115,6 +116,7 @@ class MempoolEntry {
     /**
      * Create a mempool entry from a TX.
      * @param {TX} tx
+     * @param {CoinView} view
      * @param {Number} height - Entry height.
      * @returns {MempoolEntry}
      */

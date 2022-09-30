@@ -8,12 +8,13 @@ declare class TXDB {
      * Create a TXDB.
      * @constructor
      * @param {WalletDB} wdb
+     * @param {Number} wid
      */
-    constructor(wdb: WalletDB, wid: any);
+    constructor(wdb: WalletDB, wid: number);
     wdb: WalletDB;
     db: any;
     logger: any;
-    wid: any;
+    wid: number;
     bucket: any;
     wallet: any;
     locked: any;
@@ -44,52 +45,72 @@ declare class TXDB {
     hasPath(output: Output): Promise<any>;
     /**
      * Save credit.
+     * @param {Batch} b
      * @param {Credit} credit
      * @param {Path} path
      */
-    saveCredit(b: any, credit: Credit, path: Path): Promise<any>;
+    saveCredit(b: Batch, credit: Credit, path: Path): Promise<any>;
+    /**
+     * Save unspent credit.
+     * @param {Credit} credit
+     * @param {Path} path
+     */
+    saveUnspentCredit(b: any, credit: Credit, path: Path): void;
     /**
      * Remove credit.
+     * @param {Batch} b
      * @param {Credit} credit
      * @param {Path} path
      */
-    removeCredit(b: any, credit: Credit, path: Path): Promise<any>;
+    removeCredit(b: Batch, credit: Credit, path: Path): Promise<any>;
+    /**
+     * Remove spent credit.
+     * @param {Credit} credit
+     * @param {Path} path
+     */
+    removeUnspentCredit(b: any, credit: Credit, path: Path): void;
     /**
      * Spend credit.
+     * @param {Batch} b
      * @param {Credit} credit
      * @param {TX} tx
      * @param {Number} index
      */
-    spendCredit(b: any, credit: Credit, tx: TX, index: number): void;
+    spendCredit(b: Batch, credit: Credit, tx: TX, index: number): void;
     /**
      * Unspend credit.
+     * @param {Batch} b
      * @param {TX} tx
      * @param {Number} index
      */
-    unspendCredit(b: any, tx: TX, index: number): void;
+    unspendCredit(b: Batch, tx: TX, index: number): void;
     /**
      * Write input record.
+     * @param {Batch} b
      * @param {TX} tx
      * @param {Number} index
      */
-    writeInput(b: any, tx: TX, index: number): Promise<any>;
+    writeInput(b: Batch, tx: TX, index: number): Promise<any>;
     /**
      * Remove input record.
+     * @param {Batch} b
      * @param {TX} tx
      * @param {Number} index
      */
-    removeInput(b: any, tx: TX, index: number): Promise<any>;
+    removeInput(b: Batch, tx: TX, index: number): Promise<any>;
     /**
      * Update wallet balance.
+     * @param {Batch} b
      * @param {BalanceDelta} state
      */
-    updateBalance(b: any, state: BalanceDelta): Promise<any>;
+    updateBalance(b: Batch, state: BalanceDelta): Promise<any>;
     /**
      * Update account balance.
+     * @param {Batch} b
      * @param {Number} acct
      * @param {Balance} delta
      */
-    updateAccountBalance(b: any, acct: number, delta: Balance): Promise<any>;
+    updateAccountBalance(b: Batch, acct: number, delta: Balance): Promise<any>;
     /**
      * Test a whether a coin has been spent.
      * @param {Hash} hash
@@ -106,42 +127,48 @@ declare class TXDB {
     isSpent(hash: Hash, index: number): Promise<any>;
     /**
      * Append to global map.
+     * @param {Batch} b
      * @param {Number} height
      * @returns {Promise}
      */
-    addBlockMap(b: any, height: number): Promise<any>;
+    addBlockMap(b: Batch, height: number): Promise<any>;
     /**
      * Remove from global map.
+     * @param {Batch} b
      * @param {Number} height
      * @returns {Promise}
      */
-    removeBlockMap(b: any, height: number): Promise<any>;
+    removeBlockMap(b: Batch, height: number): Promise<any>;
     /**
      * Append to global map.
+     * @param {Batch} b
      * @param {Hash} hash
      * @returns {Promise}
      */
-    addTXMap(b: any, hash: Hash): Promise<any>;
+    addTXMap(b: Batch, hash: Hash): Promise<any>;
     /**
      * Remove from global map.
+     * @param {Batch} b
      * @param {Hash} hash
      * @returns {Promise}
      */
-    removeTXMap(b: any, hash: Hash): Promise<any>;
+    removeTXMap(b: Batch, hash: Hash): Promise<any>;
     /**
      * Append to global map.
+     * @param {Batch} b
      * @param {Hash} hash
      * @param {Number} index
      * @returns {Promise}
      */
-    addOutpointMap(b: any, hash: Hash, index: number): Promise<any>;
+    addOutpointMap(b: Batch, hash: Hash, index: number): Promise<any>;
     /**
      * Remove from global map.
+     * @param {Batch} b
      * @param {Hash} hash
      * @param {Number} index
      * @returns {Promise}
      */
-    removeOutpointMap(b: any, hash: Hash, index: number): Promise<any>;
+    removeOutpointMap(b: Batch, hash: Hash, index: number): Promise<any>;
     /**
      * List block records.
      * @returns {Promise}
@@ -155,29 +182,33 @@ declare class TXDB {
     getBlock(height: number): Promise<any>;
     /**
      * Append to the global block record.
+     * @param {Batch} b
      * @param {Hash} hash
      * @param {BlockMeta} block
      * @returns {Promise}
      */
-    addBlock(b: any, hash: Hash, block: BlockMeta): Promise<any>;
+    addBlock(b: Batch, hash: Hash, block: BlockMeta): Promise<any>;
     /**
      * Remove from the global block record.
+     * @param {Batch} b
      * @param {Hash} hash
      * @param {Number} height
      * @returns {Promise}
      */
-    removeBlock(b: any, hash: Hash, height: number): Promise<any>;
+    removeBlock(b: Batch, hash: Hash, height: number): Promise<any>;
     /**
      * Remove from the global block record.
+     * @param {Batch} b
      * @param {Hash} hash
      * @param {Number} height
      * @returns {Promise}
      */
-    spliceBlock(b: any, hash: Hash, height: number): Promise<any>;
+    spliceBlock(b: Batch, hash: Hash, height: number): Promise<any>;
     /**
      * Add transaction without a batch.
      * @private
      * @param {TX} tx
+     * @param {BlockMeta} block
      * @returns {Promise}
      */
     private add;
@@ -209,6 +240,7 @@ declare class TXDB {
      * database. Disconnect inputs.
      * @private
      * @param {TXRecord} wtx
+     * @param {BlockMeta} block
      * @returns {Promise}
      */
     private erase;
@@ -236,9 +268,10 @@ declare class TXDB {
     /**
      * Unconfirm a transaction. Necessary after a reorg.
      * @param {TXRecord} wtx
+     * @param {BlockMeta} block
      * @returns {Promise}
      */
-    disconnect(wtx: typeof records.TXRecord, block: any): Promise<any>;
+    disconnect(wtx: typeof records.TXRecord, block: BlockMeta): Promise<any>;
     /**
      * Remove spenders that have not been confirmed. We do this in the
      * odd case of stuck transactions or when a coin is double-spent
@@ -246,8 +279,7 @@ declare class TXDB {
      * of that coin that are _not_ confirmed will be removed from
      * the database.
      * @private
-     * @param {Hash} hash
-     * @param {TX} ref - Reference tx, the tx that double-spent.
+     * @param {TXRecord} wtx - Reference tx, the tx that double-spent.
      * @returns {Promise} - Returns Boolean.
      */
     private removeConflict;
@@ -256,6 +288,7 @@ declare class TXDB {
      * double spenders, and verify inputs.
      * @private
      * @param {TX} tx
+     * @param {Boolean} conf
      * @returns {Promise}
      */
     private removeConflicts;
@@ -291,10 +324,10 @@ declare class TXDB {
     /**
      * Filter array of coins or outpoints
      * for only unlocked ones.
-     * @param {Coin[]|Outpoint[]}
+     * @param {Coin[]|Outpoint[]} coins
      * @returns {Array}
      */
-    filterLocked(coins: any): any[];
+    filterLocked(coins: Coin[] | Outpoint[]): any[];
     /**
      * Return an array of all locked outpoints.
      * @returns {Outpoint[]}
@@ -484,6 +517,24 @@ declare class TXDB {
      */
     getAccountCoins(acct: number): Promise<any>;
     /**
+     * Get unspent coins.
+     * @param {Number} acct
+     * @returns {Promise} - Returns {@link Coin}[].
+     */
+    getUnspentCoins(acct: number): Promise<any>;
+    /**
+     * Get unspent credits.
+     * @param {Number} acct
+     * @returns {Promise} - Returns {@link Credit}[].
+     */
+    getUnspentCredits(acct: number): Promise<any>;
+    /**
+     * Get unspent credits by account.
+     * @param {Number} acct
+     * @returns {Promise} - Returns {@link Credit}[].
+     */
+    getUnspentAccountCredits(acct: number): Promise<any>;
+    /**
      * Get historical coins for a transaction.
      * @param {TX} tx
      * @returns {Promise} - Returns {@link TX}.
@@ -561,24 +612,26 @@ declare class TXDB {
     hasSpentCoin(spent: Outpoint): Promise<any>;
     /**
      * Update spent coin height in storage.
+     * @param {Batch} b
      * @param {TX} tx - Sending transaction.
      * @param {Number} index
      * @param {Number} height
      * @returns {Promise}
      */
-    updateSpentCoin(b: any, tx: TX, index: number, height: number): Promise<any>;
+    updateSpentCoin(b: Batch, tx: TX, index: number, height: number): Promise<any>;
     /**
      * Test whether the database has a transaction.
      * @param {Hash} hash
+     * @param {Number} index
      * @returns {Promise} - Returns Boolean.
      */
-    hasCoin(hash: Hash, index: any): Promise<any>;
+    hasCoin(hash: Hash, index: number): Promise<any>;
     /**
      * Calculate balance.
-     * @param {Number?} account
+     * @param {Number?} acct
      * @returns {Promise} - Returns {@link Balance}.
      */
-    getBalance(acct: any): Promise<any>;
+    getBalance(acct: number | null): Promise<any>;
     /**
      * Calculate balance.
      * @returns {Promise} - Returns {@link Balance}.
@@ -621,9 +674,10 @@ declare class Credit {
      * Instantiate credit from transaction.
      * @param {TX} tx
      * @param {Number} index
+     * @param {Number} height
      * @returns {Credit}
      */
-    static fromTX(tx: TX, index: number, height: any): Credit;
+    static fromTX(tx: TX, index: number, height: number): Credit;
     /**
      * Create a credit.
      * @constructor
@@ -655,6 +709,7 @@ declare class Credit {
      * @private
      * @param {TX} tx
      * @param {Number} index
+     * @param {Number} height
      * @returns {Credit}
      */
     private fromTX;
@@ -683,13 +738,13 @@ declare class Balance {
      * Instantiate balance from serialized data.
      * @param {Number} acct
      * @param {Buffer} data
-     * @returns {TXDBState}
+     * @returns {Balance}
      */
-    static fromRaw(acct: number, data: Buffer): TXDBState;
+    static fromRaw(acct: number, data: Buffer): Balance;
     /**
      * Create a balance.
      * @constructor
-     * @param {Number} account
+     * @param {Number} acct
      */
     constructor(acct?: number);
     account: number;
@@ -711,7 +766,7 @@ declare class Balance {
      * Inject properties from serialized data.
      * @private
      * @param {Buffer} data
-     * @returns {TXDBState}
+     * @returns {Balance}
      */
     private fromRaw;
     /**

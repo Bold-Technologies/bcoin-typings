@@ -62,7 +62,7 @@ class Headers extends AbstractBlock {
     /**
      * Inject properties from buffer reader.
      * @private
-     * @param {Buffer} data
+     * @param {BufferReader} br
      */
     fromReader(br) {
         this.readHead(br);

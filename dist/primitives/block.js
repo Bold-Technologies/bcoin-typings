@@ -21,6 +21,7 @@ const { encoding } = bio;
 const { inspectSymbol } = require('../utils');
 const { opcodes } = require('../script/common');
 const BasicFilter = require('../golomb/basicFilter');
+const { filters } = require('../blockstore/common');
 /**
  * Block
  * Represents a full block.
@@ -508,7 +509,7 @@ class Block extends AbstractBlock {
     /**
      * Inject properties from serialized data.
      * @private
-     * @param {Buffer} data
+     * @param {BufferReader} br
      */
     fromReader(br) {
         br.start();
@@ -537,12 +538,11 @@ class Block extends AbstractBlock {
     }
     /**
      * Instantiate a block from a serialized Buffer.
-     * @param {Buffer} data
-     * @param {String?} enc - Encoding, can be `'hex'` or null.
+     * @param {BufferReader} br
      * @returns {Block}
      */
-    static fromReader(data) {
-        return new this().fromReader(data);
+    static fromReader(br) {
+        return new this().fromReader(br);
     }
     /**
      * Instantiate a block from a serialized Buffer.
@@ -557,7 +557,7 @@ class Block extends AbstractBlock {
     }
     /**
      * Convert the Block to a MerkleBlock.
-     * @param {Bloom} filter - Bloom filter for transactions
+     * @param {BloomFilter} filter - Bloom filter for transactions
      * to match. The merkle block will contain only the
      * matched transactions.
      * @returns {MerkleBlock}
@@ -568,8 +568,7 @@ class Block extends AbstractBlock {
     /**
      * Serialze block with or without witness data.
      * @private
-     * @param {Boolean} witness
-     * @param {BufferWriter?} writer
+     * @param {BufferWriter} bw
      * @returns {Buffer}
      */
     writeNormal(bw) {
@@ -582,8 +581,7 @@ class Block extends AbstractBlock {
     /**
      * Serialze block with or without witness data.
      * @private
-     * @param {Boolean} witness
-     * @param {BufferWriter?} writer
+     * @param {BufferWriter} bw
      * @returns {Buffer}
      */
     writeWitness(bw) {
@@ -594,10 +592,8 @@ class Block extends AbstractBlock {
         return bw;
     }
     /**
-     * Serialze block with or without witness data.
+     * Serialize block with or without witness data.
      * @private
-     * @param {Boolean} witness
-     * @param {BufferWriter?} writer
      * @returns {Buffer}
      */
     frameNormal() {
@@ -610,7 +606,6 @@ class Block extends AbstractBlock {
     /**
      * Serialze block without witness data.
      * @private
-     * @param {BufferWriter?} writer
      * @returns {Buffer}
      */
     frameWitness() {
@@ -663,13 +658,12 @@ class Block extends AbstractBlock {
     static isBlock(obj) {
         return obj instanceof Block;
     }
-    /*
-     * Get block filter (BIP 158)
-     * @see https://github.com/bitcoin/bips/blob/master/bip-0158.mediawiki
+    /**
+     * Get basic block filter
      * @param {CoinView} view
-     * @returns {Object} See {@link Golomb}
+     * @returns {Object}
      */
-    toFilter(view) {
+    toBasicFilter(view) {
         const hash = this.hash();
         const key = hash.slice(0, 16);
         const items = new BufferSet();
@@ -694,6 +688,21 @@ class Block extends AbstractBlock {
             }
         }
         return new BasicFilter().fromItems(key, items);
+    }
+    /**
+     * Get block filter (BIP 158)
+     * @see https://github.com/bitcoin/bips/blob/master/bip-0158.mediawiki
+     * @param {CoinView} view
+     * @param {Number} filterType
+     * @returns {Object} See {@link Golomb}
+     */
+    toFilter(view, filterType) {
+        switch (filterType) {
+            case filters.BASIC:
+                return this.toBasicFilter(view);
+            default:
+                return null;
+        }
     }
 }
 /*

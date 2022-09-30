@@ -33,6 +33,7 @@ class Address {
      * Create an address.
      * @constructor
      * @param {Object?} options
+     * @param {Network} network
      */
     constructor(options, network) {
         this.type = Address.types.PUBKEYHASH;
@@ -45,6 +46,7 @@ class Address {
      * Inject properties from options object.
      * @private
      * @param {Object} options
+     * @param {Network} network
      */
     fromOptions(options, network) {
         if (typeof options === 'string')
@@ -56,6 +58,7 @@ class Address {
     /**
      * Insantiate address from options.
      * @param {Object} options
+     * @param {Network} network
      * @returns {Address}
      */
     static fromOptions(options, network) {
@@ -146,7 +149,7 @@ class Address {
     }
     /**
      * Compile the address object to its raw serialization.
-     * @param {{NetworkType|Network)?} network
+     * @param {NetworkType|Network?} network
      * @returns {Buffer}
      * @throws Error on bad hash/prefix.
      */
@@ -166,7 +169,7 @@ class Address {
     }
     /**
      * Compile the address object to a base58 address.
-     * @param {{NetworkType|Network)?} network
+     * @param {NetworkType|Network?} network
      * @returns {AddressString}
      * @throws Error on bad hash/prefix.
      */
@@ -175,7 +178,7 @@ class Address {
     }
     /**
      * Compile the address object to a bech32 address.
-     * @param {{NetworkType|Network)?} network
+     * @param {NetworkType|Network?} network
      * @returns {String}
      * @throws Error on bad hash/prefix.
      */
@@ -190,7 +193,7 @@ class Address {
     }
     /**
      * Compile the address object to a bech32m address.
-     * @param {{NetworkType|Network)?} network
+     * @param {NetworkType|Network?} network
      * @returns {String}
      * @throws Error on bad hash/prefix.
      */
@@ -268,6 +271,7 @@ class Address {
      * Decode base58.
      * @private
      * @param {Buffer} data
+     * @param {Network} network
      * @throws Parse error
      */
     fromRaw(data, network) {
@@ -284,6 +288,7 @@ class Address {
     /**
      * Create an address object from a serialized address.
      * @param {Buffer} data
+     * @param {Network} network
      * @returns {Address}
      * @throws Parse error.
      */
@@ -460,7 +465,7 @@ class Address {
      * Create an Address from a witness.
      * Attempt to extract address
      * properties from a witness.
-     * @param {Witness}
+     * @param {Witness} witness
      * @returns {Address|null}
      */
     static fromWitness(witness) {
@@ -470,7 +475,7 @@ class Address {
      * Create an Address from an input script.
      * Attempt to extract address
      * properties from an input script.
-     * @param {Script}
+     * @param {Script} script
      * @returns {Address|null}
      */
     static fromInputScript(script) {
@@ -481,7 +486,7 @@ class Address {
      * Parse an output script and extract address
      * properties. Converts pubkey and multisig
      * scripts to pubkeyhash and scripthash addresses.
-     * @param {Script}
+     * @param {Script} script
      * @returns {Address|null}
      */
     static fromScript(script) {

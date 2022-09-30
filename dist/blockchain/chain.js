@@ -724,7 +724,6 @@ class Chain extends AsyncEmitter {
      * (necessary because we cannot validate the inputs
      * in alternate chains when they come in).
      * @param {ChainEntry} entry
-     * @param {Number} flags
      * @returns {Promise}
      */
     async reconnect(entry) {
@@ -864,6 +863,7 @@ class Chain extends AsyncEmitter {
      * Reset the chain to the desired block without a lock.
      * @private
      * @param {Hash|Number} block
+     * @param {Boolean} silent
      * @returns {Promise}
      */
     async _reset(block, silent) {
@@ -956,7 +956,8 @@ class Chain extends AsyncEmitter {
     /**
      * Scan the blockchain for transactions containing specified address hashes.
      * @param {Hash} start - Block hash to start at.
-     * @param {Bloom} filter - Bloom filter containing tx and address hashes.
+     * @param {BloomFilter} filter - Bloom filter containing tx
+     * and address hashes.
      * @param {Function} iter - Iterator.
      * @returns {Promise}
      */
@@ -967,6 +968,14 @@ class Chain extends AsyncEmitter {
         }
         finally {
             unlock();
+        }
+    }
+    /**
+     * Stop rescanning Blockchain if the rescanning already triggered.
+     */
+    async abortRescan() {
+        if (!this.db.abortRescan) {
+            this.db.abortRescan = true;
         }
     }
     /**
@@ -1446,7 +1455,7 @@ class Chain extends AsyncEmitter {
     }
     /**
      * Retrieve a block from the database (not filled with coins).
-     * @param {Hash} hash
+     * @param {Hash} block
      * @returns {Promise} - Returns {@link Block}.
      */
     getRawBlock(block) {
@@ -1454,7 +1463,7 @@ class Chain extends AsyncEmitter {
     }
     /**
      * Get a historical block coin viewpoint.
-     * @param {Block} hash
+     * @param {Block} block
      * @returns {Promise} - Returns {@link CoinView}.
      */
     getBlockView(block) {
@@ -1727,7 +1736,7 @@ class Chain extends AsyncEmitter {
      * await chain.isActive(tip, deployments.segwit);
      * @see https://github.com/bitcoin/bips/blob/master/bip-0009.mediawiki
      * @param {ChainEntry} prev - Previous chain entry.
-     * @param {String} id - Deployment id.
+     * @param {String} deployment - Deployment id.
      * @returns {Promise} - Returns Number.
      */
     async isActive(prev, deployment) {
@@ -1740,7 +1749,7 @@ class Chain extends AsyncEmitter {
      * await chain.getState(tip, deployments.segwit);
      * @see https://github.com/bitcoin/bips/blob/master/bip-0009.mediawiki
      * @param {ChainEntry} prev - Previous chain entry.
-     * @param {String} id - Deployment id.
+     * @param {String} deployment - Deployment id.
      * @returns {Promise} - Returns Number.
      */
     async getState(prev, deployment) {

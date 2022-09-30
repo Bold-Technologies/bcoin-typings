@@ -79,7 +79,11 @@ exports.services = {
     /**
      * Whether the peer supports segregated witness.
      */
-    WITNESS: 1 << 3
+    WITNESS: 1 << 3,
+    /**
+     * Whether the peer supports compact blocks.
+     */
+    NODE_COMPACT_FILTERS: 1 << 6
 };
 /**
  * Bcoin's services (we support everything).
@@ -169,4 +173,15 @@ exports.MAX_BLOCK_REQUEST = 50000 + 1000;
  * @default
  */
 exports.MAX_TX_REQUEST = 10000;
+/**
+ * Compact filter types.
+ */
+exports.FILTERS = {
+    BASIC: 0
+};
+exports.filtersByVal = {
+    0: 'BASIC'
+};
+exports.MAX_CFILTERS = 1000;
+exports.MAX_CFHEADERS = 2000;
 //# sourceMappingURL=common.js.map

@@ -48,9 +48,10 @@ declare class Coin extends Output {
      * Instantiate a coin from a TX
      * @param {TX} tx
      * @param {Number} index - Output index.
+     * @param {Number} height
      * @returns {Coin}
      */
-    static fromTX(tx: TX, index: number, height: any): Coin;
+    static fromTX(tx: TX, index: number, height: number): Coin;
     /**
      * Test an object to see if it is a Coin.
      * @param {Object} obj
@@ -143,8 +144,10 @@ declare class Coin extends Output {
      * Inject properties from TX.
      * @param {TX} tx
      * @param {Number} index
+     * @param {Number} height
+     * @returns {Coin}
      */
-    fromTX(tx: TX, index: number, height: any): Coin;
+    fromTX(tx: TX, index: number, height: number): Coin;
 }
 import Output = require("./output");
 import Network = require("../protocol/network");

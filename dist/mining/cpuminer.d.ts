@@ -147,7 +147,6 @@ declare class CPUJob {
     nonce2: number;
     /**
      * Get the raw block header.
-     * @param {Number} nonce
      * @returns {Buffer}
      */
     getHeader(): Buffer;

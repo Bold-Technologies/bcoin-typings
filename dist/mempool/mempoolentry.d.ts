@@ -19,10 +19,11 @@ declare class MempoolEntry {
     /**
      * Create a mempool entry from a TX.
      * @param {TX} tx
+     * @param {CoinView} view
      * @param {Number} height - Entry height.
      * @returns {MempoolEntry}
      */
-    static fromTX(tx: TX, view: any, height: number): MempoolEntry;
+    static fromTX(tx: TX, view: CoinView, height: number): MempoolEntry;
     /**
      * Instantiate entry from serialized data.
      * @param {Buffer} data
@@ -69,6 +70,7 @@ declare class MempoolEntry {
      * Inject properties from transaction.
      * @private
      * @param {TX} tx
+     * @param {CoinView} view
      * @param {Number} height
      */
     private fromTX;

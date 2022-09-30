@@ -164,6 +164,15 @@ class HTTP extends Server {
             res.json(200, { success: true });
             await this.wdb.rescan(height);
         });
+        // Abort rescan
+        this.post('/abortrescan', (req, res) => {
+            if (!req.admin) {
+                res.json(403);
+                return;
+            }
+            this.wdb.abortRescan();
+            res.json(200, { success: true });
+        });
         // Resend
         this.post('/resend', async (req, res) => {
             if (!req.admin) {
@@ -347,6 +356,7 @@ class HTTP extends Server {
                 subtractFee: valid.bool('subtractFee'),
                 subtractIndex: valid.i32('subtractIndex'),
                 depth: valid.u32(['confirmations', 'depth']),
+                useSelectEstimate: valid.bool('useSelectEstimate'),
                 outputs: []
             };
             for (const output of outputs) {
@@ -385,6 +395,7 @@ class HTTP extends Server {
                 subtractIndex: valid.i32('subtractIndex'),
                 depth: valid.u32(['confirmations', 'depth']),
                 template: valid.bool('template', sign),
+                useSelectEstimate: valid.bool('useSelectEstimate'),
                 outputs: []
             };
             for (const output of outputs) {

@@ -85,9 +85,10 @@ declare class FileBlockStore extends AbstractBlockStore {
      * This method stores serialized block filter data in files.
      * @param {Buffer} hash - The block hash
      * @param {Buffer} data - The serialized block filter data.
+     * @param {Number} filterType - The filter type.
      * @returns {Promise}
      */
-    writeFilter(hash: Buffer, data: Buffer): Promise<any>;
+    writeFilter(hash: Buffer, data: Buffer, filterType: number): Promise<any>;
     /**
      * This method stores block data in files with by appending
      * data to the last written file and updating indexes to point
@@ -124,15 +125,17 @@ declare class FileBlockStore extends AbstractBlockStore {
     /**
      * This method will retrieve serialized block filter data.
      * @param {Buffer} hash - The block hash
+     * @param {Number} filterType - The filter type
      * @returns {Promise}
      */
-    readFilter(hash: Buffer): Promise<any>;
+    readFilter(hash: Buffer, filterType: number): Promise<any>;
     /**
      * This method will retrieve block filter header only.
      * @param {Buffer} hash - The block hash
+     * @param {String} filterType - The filter name
      * @returns {Promise}
      */
-    readFilterHeader(hash: Buffer): Promise<any>;
+    readFilterHeader(hash: Buffer, filterType: string): Promise<any>;
     /**
      * This methods reads data from disk by retrieving the index of
      * the data and reading from the corresponding file and location.
@@ -165,15 +168,17 @@ declare class FileBlockStore extends AbstractBlockStore {
     /**
      * This will free resources for storing the serialized block filter data.
      * @param {Buffer} hash - The block hash
+     * @param {String} filterType - The filter type
      * @returns {Promise}
      */
-    pruneFilter(hash: Buffer): Promise<any>;
+    pruneFilter(hash: Buffer, filterType: string): Promise<any>;
     /**
      * This will free resources for storing the block data. The block
      * data may not be deleted from disk immediately, the index for the
      * block is removed and will not be able to be read. The underlying
      * file is unlinked when all blocks in a file have been pruned.
      * @private
+     * @param {Number} type
      * @param {Buffer} hash - The block hash
      * @returns {Promise}
      */
@@ -196,9 +201,10 @@ declare class FileBlockStore extends AbstractBlockStore {
      * This will check if a block filter has been stored
      * and is available.
      * @param {Buffer} hash - The block hash
+     * @param {Number} filterType - The filter type
      * @returns {Promise}
      */
-    hasFilter(hash: Buffer): Promise<any>;
+    hasFilter(hash: Buffer, filterType: number): Promise<any>;
     /**
      * This will check if a block has been stored and is available.
      * @param {Buffer} hash - The block hash

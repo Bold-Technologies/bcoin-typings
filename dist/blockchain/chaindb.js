@@ -41,6 +41,7 @@ class ChainDB {
         this.current = null;
         this.cacheHash = new LRU(this.options.entryCache, null, BufferMap);
         this.cacheHeight = new LRU(this.options.entryCache);
+        this.abortRescan = false;
     }
     /**
      * Open and wait for the database to load.
@@ -49,7 +50,7 @@ class ChainDB {
     async open() {
         this.logger.info('Opening ChainDB...');
         await this.db.open();
-        await this.db.verify(layout.V.encode(), 'chain', 6);
+        await this.db.verify(layout.V.encode(), 'chain', 7);
         const state = await this.getState();
         if (state) {
             // Verify options have not changed.
@@ -752,7 +753,7 @@ class ChainDB {
     }
     /**
      * Retrieve a block from the database (not filled with coins).
-     * @param {Hash} hash
+     * @param {Hash} block
      * @returns {Promise} - Returns {@link Block}.
      */
     async getRawBlock(block) {
@@ -765,7 +766,7 @@ class ChainDB {
     }
     /**
      * Get a historical block coin viewpoint.
-     * @param {Block} hash
+     * @param {Block} block
      * @returns {Promise} - Returns {@link CoinView}.
      */
     async getBlockView(block) {
@@ -787,7 +788,8 @@ class ChainDB {
     /**
      * Scan the blockchain for transactions containing specified address hashes.
      * @param {Hash} start - Block hash to start at.
-     * @param {Bloom} filter - Bloom filter containing tx and address hashes.
+     * @param {BloomFilter} filter - Bloom filter containing tx
+     * and address hashes.
      * @param {Function} iter - Iterator.
      * @returns {Promise}
      */
@@ -804,7 +806,13 @@ class ChainDB {
         if (!await this.isMainChain(entry))
             throw new Error('Cannot rescan an alternate chain.');
         let total = 0;
+        this.abortRescan = false;
         while (entry) {
+            if (this.abortRescan) {
+                this.logger.warning('Aborting rescan at height %d after %d blocks.', entry.height, total);
+                this.abortRescan = false;
+                return;
+            }
             const block = await this.getBlock(entry.hash);
             const txs = [];
             total += 1;

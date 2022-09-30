@@ -39,7 +39,6 @@ class BlockRecord {
     }
     /**
      * Instantiate block record from serialized data.
-     * @param {Hash} hash
      * @param {Buffer} data
      * @returns {BlockRecord}
      */
@@ -88,7 +87,6 @@ class FileRecord {
     }
     /**
      * Instantiate file record from serialized data.
-     * @param {Hash} hash
      * @param {Buffer} data
      * @returns {ChainState}
      */

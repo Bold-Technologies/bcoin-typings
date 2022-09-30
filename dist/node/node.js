@@ -24,6 +24,9 @@ class Node extends EventEmitter {
     /**
      * Create a node.
      * @constructor
+     * @param {String} module
+     * @param {String} config
+     * @param {String} file
      * @param {Object} options
      */
     constructor(module, config, file, options) {
@@ -55,13 +58,13 @@ class Node extends EventEmitter {
         this.http = null;
         this.txindex = null;
         this.addrindex = null;
-        this.filterindex = null;
+        this.filterIndexers = new Map();
         this._init(file);
     }
     /**
      * Initialize node.
      * @private
-     * @param {Object} options
+     * @param {String} file
      */
     _init(file) {
         const config = this.config;
@@ -119,7 +122,7 @@ class Node extends EventEmitter {
     }
     /**
      * Create a file path using `prefix`.
-     * @param {String} file
+     * @param {String} name
      * @returns {String}
      */
     location(name) {

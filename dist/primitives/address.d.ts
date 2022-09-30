@@ -11,9 +11,10 @@ declare class Address {
     /**
      * Insantiate address from options.
      * @param {Object} options
+     * @param {Network} network
      * @returns {Address}
      */
-    static fromOptions(options: any, network: any): Address;
+    static fromOptions(options: any, network: Network): Address;
     /**
      * Instantiate address from string.
      * @param {String} addr
@@ -24,10 +25,11 @@ declare class Address {
     /**
      * Create an address object from a serialized address.
      * @param {Buffer} data
+     * @param {Network} network
      * @returns {Address}
      * @throws Parse error.
      */
-    static fromRaw(data: Buffer, network: any): Address;
+    static fromRaw(data: Buffer, network: Network): Address;
     /**
      * Create an address object from a base58 address.
      * @param {AddressString} data
@@ -56,27 +58,27 @@ declare class Address {
      * Create an Address from a witness.
      * Attempt to extract address
      * properties from a witness.
-     * @param {Witness}
+     * @param {Witness} witness
      * @returns {Address|null}
      */
-    static fromWitness(witness: any): Address | null;
+    static fromWitness(witness: Witness): Address | null;
     /**
      * Create an Address from an input script.
      * Attempt to extract address
      * properties from an input script.
-     * @param {Script}
+     * @param {Script} script
      * @returns {Address|null}
      */
-    static fromInputScript(script: any): Address | null;
+    static fromInputScript(script: Script): Address | null;
     /**
      * Create an Address from an output script.
      * Parse an output script and extract address
      * properties. Converts pubkey and multisig
      * scripts to pubkeyhash and scripthash addresses.
-     * @param {Script}
+     * @param {Script} script
      * @returns {Address|null}
      */
-    static fromScript(script: any): Address | null;
+    static fromScript(script: Script): Address | null;
     /**
      * Create a naked address from hash/type/version.
      * @param {Hash} hash
@@ -135,8 +137,9 @@ declare class Address {
      * Create an address.
      * @constructor
      * @param {Object?} options
+     * @param {Network} network
      */
-    constructor(options: any | null, network: any);
+    constructor(options: any | null, network: Network);
     type: number;
     version: number;
     hash: any;
@@ -144,6 +147,7 @@ declare class Address {
      * Inject properties from options object.
      * @private
      * @param {Object} options
+     * @param {Network} network
      */
     private fromOptions;
     /**
@@ -190,32 +194,32 @@ declare class Address {
     getSize(): number;
     /**
      * Compile the address object to its raw serialization.
-     * @param {{NetworkType|Network)?} network
+     * @param {NetworkType|Network?} network
      * @returns {Buffer}
      * @throws Error on bad hash/prefix.
      */
-    toRaw(network: any): Buffer;
+    toRaw(network: NetworkType | (Network | null)): Buffer;
     /**
      * Compile the address object to a base58 address.
-     * @param {{NetworkType|Network)?} network
+     * @param {NetworkType|Network?} network
      * @returns {AddressString}
      * @throws Error on bad hash/prefix.
      */
-    toBase58(network: any): AddressString;
+    toBase58(network: NetworkType | (Network | null)): AddressString;
     /**
      * Compile the address object to a bech32 address.
-     * @param {{NetworkType|Network)?} network
+     * @param {NetworkType|Network?} network
      * @returns {String}
      * @throws Error on bad hash/prefix.
      */
-    toBech32(network: any): string;
+    toBech32(network: NetworkType | (Network | null)): string;
     /**
      * Compile the address object to a bech32m address.
-     * @param {{NetworkType|Network)?} network
+     * @param {NetworkType|Network?} network
      * @returns {String}
      * @throws Error on bad hash/prefix.
      */
-    toBech32m(network: any): string;
+    toBech32m(network: NetworkType | (Network | null)): string;
     /**
      * Inject properties from string.
      * @private
@@ -234,6 +238,7 @@ declare class Address {
      * Decode base58.
      * @private
      * @param {Buffer} data
+     * @param {Network} network
      * @throws Parse error
      */
     private fromRaw;

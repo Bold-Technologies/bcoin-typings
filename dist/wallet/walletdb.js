@@ -151,7 +151,7 @@ class WalletDB extends EventEmitter {
     async open() {
         this.logger.info('Opening WalletDB...');
         await this.db.open();
-        await this.db.verify(layout.V.encode(), 'wallet', 7);
+        await this.db.verify(layout.V.encode(), 'wallet', 8);
         await this.verifyNetwork();
         this.depth = await this.getDepth();
         if (this.options.wipeNoReally)
@@ -373,6 +373,12 @@ class WalletDB extends EventEmitter {
         return this.scan(height);
     }
     /**
+     * Abort Rescanning.
+     */
+    abortRescan() {
+        return this.client.abortRescan();
+    }
+    /**
      * Broadcast a transaction via chain server.
      * @param {TX} tx
      * @returns {Promise}
@@ -479,7 +485,7 @@ class WalletDB extends EventEmitter {
     /**
      * Test the bloom filter against a tx or address hash.
      * @private
-     * @param {Hash} hash
+     * @param {Hash} data
      * @returns {Boolean}
      */
     testFilter(data) {
@@ -513,7 +519,7 @@ class WalletDB extends EventEmitter {
     }
     /**
      * Register an object with the walletdb.
-     * @param {Object} object
+     * @param {Object} wallet
      */
     register(wallet) {
         assert(!this.wallets.has(wallet.wid));
@@ -521,7 +527,7 @@ class WalletDB extends EventEmitter {
     }
     /**
      * Unregister a object with the walletdb.
-     * @param {Object} object
+     * @param {Object} wallet
      * @returns {Boolean}
      */
     unregister(wallet) {
@@ -605,6 +611,7 @@ class WalletDB extends EventEmitter {
     }
     /**
      * Save a wallet to the database.
+     * @param {Batch} b
      * @param {Wallet} wallet
      */
     save(b, wallet) {
@@ -661,6 +668,7 @@ class WalletDB extends EventEmitter {
     }
     /**
      * Rename an account.
+     * @param {Batch} b
      * @param {Account} account
      * @param {String} name
      */
@@ -908,6 +916,7 @@ class WalletDB extends EventEmitter {
     }
     /**
      * Save an account to the database.
+     * @param {Batch} b
      * @param {Account} account
      * @returns {Promise}
      */
@@ -925,7 +934,7 @@ class WalletDB extends EventEmitter {
     /**
      * Test for the existence of an account.
      * @param {Number} wid
-     * @param {String|Number} acct
+     * @param {String|Number} index
      * @returns {Promise} - Returns Boolean.
      */
     async hasAccount(wid, index) {
@@ -933,7 +942,8 @@ class WalletDB extends EventEmitter {
     }
     /**
      * Save an address to the path map.
-     * @param {Wallet} wallet
+     * @param {Batch} b
+     * @param {Wallet} wid
      * @param {WalletKey} ring
      * @returns {Promise}
      */
@@ -948,7 +958,8 @@ class WalletDB extends EventEmitter {
      *   - `P[wid][address-hash] -> path data`
      *   - `r[wid][account-index][address-hash] -> dummy`
      *
-     * @param {Wallet} wallet
+     * @param {Batch} b
+     * @param {Wallet} wid
      * @param {Path} path
      * @returns {Promise}
      */
@@ -1081,6 +1092,7 @@ class WalletDB extends EventEmitter {
     }
     /**
      * Encrypt all imported keys for a wallet.
+     * @param {Batch} b
      * @param {Number} wid
      * @param {Buffer} key
      * @returns {Promise}
@@ -1105,6 +1117,7 @@ class WalletDB extends EventEmitter {
     }
     /**
      * Decrypt all imported keys for a wallet.
+     * @param {Batch} b
      * @param {Number} wid
      * @param {Buffer} key
      * @returns {Promise}
@@ -1173,7 +1186,7 @@ class WalletDB extends EventEmitter {
     }
     /**
      * Get all wallet ids by output addresses and outpoints.
-     * @param {Hash[]} hashes
+     * @param {TX} tx
      * @returns {Promise}
      */
     async getWalletsByTX(tx) {
@@ -1287,7 +1300,8 @@ class WalletDB extends EventEmitter {
     }
     /**
      * Add wid to a wallet map.
-     * @param {Wallet} wallet
+     * @param {Batch} b
+     * @param {Wallet} wid
      * @param {Buffer} key
      * @param {Number} wid
      */
@@ -1309,7 +1323,8 @@ class WalletDB extends EventEmitter {
     }
     /**
      * Remove wid from a wallet map.
-     * @param {Wallet} wallet
+     * @param {Batch} b
+     * @param {Wallet} wid
      * @param {Buffer} key
      * @param {Number} wid
      */
@@ -1327,7 +1342,7 @@ class WalletDB extends EventEmitter {
     }
     /**
      * Get a wallet map.
-     * @param {Buffer} key
+     * @param {Buffer} hash
      * @returns {Promise}
      */
     async getPathMap(hash) {
@@ -1335,8 +1350,9 @@ class WalletDB extends EventEmitter {
     }
     /**
      * Add wid to a wallet map.
-     * @param {Wallet} wallet
-     * @param {Buffer} key
+     * @param {Batch} b
+     * @param {Wallet} wid
+     * @param {Buffer} hash
      * @param {Number} wid
      */
     async addPathMap(b, hash, wid) {
@@ -1345,8 +1361,9 @@ class WalletDB extends EventEmitter {
     }
     /**
      * Remove wid from a wallet map.
-     * @param {Wallet} wallet
-     * @param {Buffer} key
+     * @param {Batch} b
+     * @param {Wallet} wid
+     * @param {Buffer} hash
      * @param {Number} wid
      */
     async removePathMap(b, hash, wid) {
@@ -1354,7 +1371,7 @@ class WalletDB extends EventEmitter {
     }
     /**
      * Get a wallet map.
-     * @param {Buffer} key
+     * @param {Buffer} height
      * @returns {Promise}
      */
     async getBlockMap(height) {
@@ -1362,8 +1379,9 @@ class WalletDB extends EventEmitter {
     }
     /**
      * Add wid to a wallet map.
-     * @param {Wallet} wallet
-     * @param {Buffer} key
+     * @param {Batch} b
+     * @param {Wallet} wid
+     * @param {Buffer} height
      * @param {Number} wid
      */
     async addBlockMap(b, height, wid) {
@@ -1371,8 +1389,9 @@ class WalletDB extends EventEmitter {
     }
     /**
      * Remove wid from a wallet map.
-     * @param {Wallet} wallet
-     * @param {Buffer} key
+     * @param {Batch} b
+     * @param {Wallet} wid
+     * @param {Buffer} height
      * @param {Number} wid
      */
     async removeBlockMap(b, height, wid) {
@@ -1380,7 +1399,7 @@ class WalletDB extends EventEmitter {
     }
     /**
      * Get a wallet map.
-     * @param {Buffer} key
+     * @param {Buffer} hash
      * @returns {Promise}
      */
     async getTXMap(hash) {
@@ -1388,8 +1407,9 @@ class WalletDB extends EventEmitter {
     }
     /**
      * Add wid to a wallet map.
-     * @param {Wallet} wallet
-     * @param {Buffer} key
+     * @param {Batch} b
+     * @param {Wallet} wid
+     * @param {Buffer} hash
      * @param {Number} wid
      */
     async addTXMap(b, hash, wid) {
@@ -1397,8 +1417,9 @@ class WalletDB extends EventEmitter {
     }
     /**
      * Remove wid from a wallet map.
-     * @param {Wallet} wallet
-     * @param {Buffer} key
+     * @param {Batch} b
+     * @param {Wallet} wid
+     * @param {Buffer} hash
      * @param {Number} wid
      */
     async removeTXMap(b, hash, wid) {
@@ -1406,7 +1427,8 @@ class WalletDB extends EventEmitter {
     }
     /**
      * Get a wallet map.
-     * @param {Buffer} key
+     * @param {Buffer} hash
+     * @param {Number} index
      * @returns {Promise}
      */
     async getOutpointMap(hash, index) {
@@ -1414,8 +1436,10 @@ class WalletDB extends EventEmitter {
     }
     /**
      * Add wid to a wallet map.
-     * @param {Wallet} wallet
-     * @param {Buffer} key
+     * @param {Batch} b
+     * @param {Wallet} wid
+     * @param {Buffer} hash
+     * @param {Number} index
      * @param {Number} wid
      */
     async addOutpointMap(b, hash, index, wid) {
@@ -1424,8 +1448,10 @@ class WalletDB extends EventEmitter {
     }
     /**
      * Remove wid from a wallet map.
-     * @param {Wallet} wallet
-     * @param {Buffer} key
+     * @param {Batch} b
+     * @param {Wallet} wid
+     * @param {Buffer} hash
+     * @param {Number} index
      * @param {Number} wid
      */
     async removeOutpointMap(b, hash, index, wid) {
@@ -1433,7 +1459,7 @@ class WalletDB extends EventEmitter {
     }
     /**
      * Get a wallet block meta.
-     * @param {Hash} hash
+     * @param {Hash|Number} height
      * @returns {Promise}
      */
     async getBlock(height) {
@@ -1447,7 +1473,6 @@ class WalletDB extends EventEmitter {
     }
     /**
      * Get wallet tip.
-     * @param {Hash} hash
      * @returns {Promise}
      */
     async getTip() {
@@ -1501,6 +1526,7 @@ class WalletDB extends EventEmitter {
     /**
      * Add a block's transactions and write the new best hash.
      * @param {ChainEntry} entry
+     * @param {TX[]} txs
      * @returns {Promise}
      */
     async addBlock(entry, txs) {

@@ -64,7 +64,7 @@ class CoinView {
     }
     /**
      * Remove coins from the collection.
-     * @param {Coins} coins
+     * @param {Coins} hash
      * @returns {Coins|null}
      */
     remove(hash) {

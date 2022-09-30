@@ -96,10 +96,10 @@ declare class Stack {
     /**
      * Set stack item at index.
      * @param {Number} index
-     * @param {Buffer} value
+     * @param {Buffer} item
      * @returns {Buffer}
      */
-    set(index: number, item: any): Buffer;
+    set(index: number, item: Buffer): Buffer;
     /**
      * Push item onto stack.
      * @see Array#push

@@ -13,10 +13,12 @@ declare class TXMeta {
     static fromOptions(options: any): TXMeta;
     /**
      * Instantiate TXMeta from options.
-     * @param {Object} options
+     * @param {TX} tx
+     * @param {ChainEntry} entry
+     * @param {Number} index
      * @returns {TXMeta}
      */
-    static fromTX(tx: any, entry: any, index: any): TXMeta;
+    static fromTX(tx: TX, entry: ChainEntry, index: number): TXMeta;
     /**
      * Instantiate a transaction from a
      * jsonified transaction object.
@@ -59,7 +61,10 @@ declare class TXMeta {
     /**
      * Inject properties from options object.
      * @private
-     * @param {Object} options
+     * @param {TX} tx
+     * @param {ChainEntry} entry
+     * @param {Number} index
+     * @returns TXMeta
      */
     private fromTX;
     /**
@@ -77,9 +82,10 @@ declare class TXMeta {
      * for JSON serialization.
      * @param {Network} network
      * @param {CoinView} view
+     * @param {Number} chainHeight
      * @returns {Object}
      */
-    getJSON(network: Network, view: CoinView, chainHeight: any): any;
+    getJSON(network: Network, view: CoinView, chainHeight: number): any;
     /**
      * Inject properties from a json object.
      * @private

@@ -143,7 +143,6 @@ declare class Output {
     toWriter(bw: BufferWriter): BufferWriter;
     /**
      * Serialize the output.
-     * @param {String?} enc - Encoding, can be `'hex'` or null.
      * @returns {Buffer|String}
      */
     toRaw(): Buffer | string;

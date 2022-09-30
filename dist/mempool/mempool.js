@@ -644,7 +644,7 @@ class Mempool extends EventEmitter {
     /**
      * Verify a transaction with mempool standards.
      * @method
-     * @param {TX} tx
+     * @param {MempoolEntry} entry
      * @param {CoinView} view
      * @returns {Promise}
      */
@@ -1167,7 +1167,7 @@ class Mempool extends EventEmitter {
     }
     /**
      * Remove a transaction from the mempool.
-     * @param {Hash} tx
+     * @param {Hash} hash
      * @returns {Boolean}
      */
     removeOrphan(hash) {
@@ -1432,7 +1432,7 @@ class MempoolOptions {
     /**
      * Create mempool options.
      * @constructor
-     * @param {Object}
+     * @param {Object} options
      */
     constructor(options) {
         this.network = Network.primary;

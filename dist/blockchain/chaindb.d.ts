@@ -20,6 +20,7 @@ declare class ChainDB {
     current: any;
     cacheHash: any;
     cacheHeight: any;
+    abortRescan: boolean;
     /**
      * Open and wait for the database to load.
      * @returns {Promise}
@@ -278,24 +279,25 @@ declare class ChainDB {
     getBlock(hash: Hash): Promise<any>;
     /**
      * Retrieve a block from the database (not filled with coins).
-     * @param {Hash} hash
+     * @param {Hash} block
      * @returns {Promise} - Returns {@link Block}.
      */
-    getRawBlock(block: any): Promise<any>;
+    getRawBlock(block: Hash): Promise<any>;
     /**
      * Get a historical block coin viewpoint.
-     * @param {Block} hash
+     * @param {Block} block
      * @returns {Promise} - Returns {@link CoinView}.
      */
-    getBlockView(block: any): Promise<any>;
+    getBlockView(block: Block): Promise<any>;
     /**
      * Scan the blockchain for transactions containing specified address hashes.
      * @param {Hash} start - Block hash to start at.
-     * @param {Bloom} filter - Bloom filter containing tx and address hashes.
+     * @param {BloomFilter} filter - Bloom filter containing tx
+     * and address hashes.
      * @param {Function} iter - Iterator.
      * @returns {Promise}
      */
-    scan(start: Hash, filter: Bloom, iter: Function): Promise<any>;
+    scan(start: Hash, filter: BloomFilter, iter: Function): Promise<any>;
     /**
      * Save an entry to the database and optionally
      * connect it as the tip. Note that this method

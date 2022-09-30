@@ -90,7 +90,7 @@ class Indexer extends EventEmitter {
         this.closing = false;
         await this.ensure();
         await this.db.open();
-        await this.db.verify(layout.V.encode(), 'index', 0);
+        await this.db.verify(layout.V.encode(), 'index', 1);
         await this.verifyNetwork();
         // Initialize the indexed height.
         const data = await this.db.get(layout.R.encode());
@@ -123,7 +123,7 @@ class Indexer extends EventEmitter {
             return;
         if (this.options.memory)
             return;
-        await fs.mkdirp(this.options.prefix);
+        await fs.mkdirp(this.options.location);
     }
     /**
      * Verify network of index.
@@ -190,7 +190,7 @@ class Indexer extends EventEmitter {
     }
     /**
      * Get a index block meta.
-     * @param {Hash} hash
+     * @param {Number} height
      * @returns {Promise}
      */
     async getBlockMeta(height) {
@@ -427,7 +427,7 @@ class Indexer extends EventEmitter {
     }
     /**
      * Update the current height to tip.
-     * @param {BlockMeta} tip
+     * @param {BlockMeta} meta
      * @returns {Promise}
      */
     async _setTip(meta) {

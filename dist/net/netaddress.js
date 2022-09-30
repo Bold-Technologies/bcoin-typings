@@ -15,7 +15,7 @@ const { inspectSymbol } = require('../utils');
  * Net Address
  * Represents a network address.
  * @alias module:net.NetAddress
- * @property {Host} host
+ * @property {String} host
  * @property {Number} port
  * @property {Number} services
  * @property {Number} time
@@ -232,6 +232,7 @@ class NetAddress {
      * Inject properties from socket.
      * @private
      * @param {net.Socket} socket
+     * @param {Network} network
      */
     fromSocket(socket, network) {
         const host = socket.remoteAddress;
@@ -243,7 +244,8 @@ class NetAddress {
     /**
      * Instantiate a network address
      * from a socket.
-     * @param {net.Socket} socket
+     * @param {net.Socket} hostname
+     * @param {Network} network
      * @returns {NetAddress}
      */
     static fromSocket(hostname, network) {

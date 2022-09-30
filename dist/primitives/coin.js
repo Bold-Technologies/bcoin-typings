@@ -482,6 +482,8 @@ class Coin extends Output {
      * Inject properties from TX.
      * @param {TX} tx
      * @param {Number} index
+     * @param {Number} height
+     * @returns {Coin}
      */
     fromTX(tx, index, height) {
         assert(typeof index === 'number');
@@ -500,6 +502,7 @@ class Coin extends Output {
      * Instantiate a coin from a TX
      * @param {TX} tx
      * @param {Number} index - Output index.
+     * @param {Number} height
      * @returns {Coin}
      */
     static fromTX(tx, index, height) {

@@ -20,11 +20,10 @@ declare class Block extends AbstractBlock {
     static fromJSON(json: any): Block;
     /**
      * Instantiate a block from a serialized Buffer.
-     * @param {Buffer} data
-     * @param {String?} enc - Encoding, can be `'hex'` or null.
+     * @param {BufferReader} br
      * @returns {Block}
      */
-    static fromReader(data: Buffer): Block;
+    static fromReader(br: BufferReader): Block;
     /**
      * Instantiate a block from a serialized Buffer.
      * @param {Buffer} data
@@ -229,7 +228,7 @@ declare class Block extends AbstractBlock {
     /**
      * Inject properties from serialized data.
      * @private
-     * @param {Buffer} data
+     * @param {BufferReader} br
      */
     private fromReader;
     /**
@@ -240,40 +239,35 @@ declare class Block extends AbstractBlock {
     private fromRaw;
     /**
      * Convert the Block to a MerkleBlock.
-     * @param {Bloom} filter - Bloom filter for transactions
+     * @param {BloomFilter} filter - Bloom filter for transactions
      * to match. The merkle block will contain only the
      * matched transactions.
      * @returns {MerkleBlock}
      */
-    toMerkle(filter: Bloom): MerkleBlock;
+    toMerkle(filter: BloomFilter): MerkleBlock;
     /**
      * Serialze block with or without witness data.
      * @private
-     * @param {Boolean} witness
-     * @param {BufferWriter?} writer
+     * @param {BufferWriter} bw
      * @returns {Buffer}
      */
     private writeNormal;
     /**
      * Serialze block with or without witness data.
      * @private
-     * @param {Boolean} witness
-     * @param {BufferWriter?} writer
+     * @param {BufferWriter} bw
      * @returns {Buffer}
      */
     private writeWitness;
     /**
-     * Serialze block with or without witness data.
+     * Serialize block with or without witness data.
      * @private
-     * @param {Boolean} witness
-     * @param {BufferWriter?} writer
      * @returns {Buffer}
      */
     private frameNormal;
     /**
      * Serialze block without witness data.
      * @private
-     * @param {BufferWriter?} writer
      * @returns {Buffer}
      */
     private frameWitness;
@@ -292,7 +286,20 @@ declare class Block extends AbstractBlock {
      * @returns {RawBlock}
      */
     getWitnessSizes(): RawBlock;
-    toFilter(view: any): import("../golomb/golomb");
+    /**
+     * Get basic block filter
+     * @param {CoinView} view
+     * @returns {Object}
+     */
+    toBasicFilter(view: CoinView): any;
+    /**
+     * Get block filter (BIP 158)
+     * @see https://github.com/bitcoin/bips/blob/master/bip-0158.mediawiki
+     * @param {CoinView} view
+     * @param {Number} filterType
+     * @returns {Object} See {@link Golomb}
+     */
+    toFilter(view: CoinView, filterType: number): any;
 }
 import AbstractBlock = require("./abstractblock");
 import Network = require("../protocol/network");

@@ -25,6 +25,7 @@ class Account {
     /**
      * Create an account.
      * @constructor
+     * @param {WalletDB} wdb
      * @param {Object} options
      */
     constructor(wdb, options) {
@@ -213,6 +214,7 @@ class Account {
     /**
      * Add a public account key to the account (multisig).
      * Saves the key in the wallet database.
+     * @param {Batch} b
      * @param {HDPublicKey} key
      * @returns {Promise}
      */
@@ -241,6 +243,7 @@ class Account {
     /**
      * Remove a public account key from the account (multisig).
      * Remove the key from the wallet database.
+     * @param {Batch} b
      * @param {HDPublicKey} key
      * @returns {Promise}
      */
@@ -274,7 +277,8 @@ class Account {
     }
     /**
      * Create a new address (increments depth).
-     * @param {Boolean} change
+     * @param {Batch} b
+     * @param {Number} branch
      * @returns {Promise} - Returns {@link WalletKey}.
      */
     async createKey(b, branch) {
@@ -310,6 +314,7 @@ class Account {
     /**
      * Derive a receiving address at `index`. Do not increment depth.
      * @param {Number} index
+     * @param {HDPrivateKey} master
      * @returns {WalletKey}
      */
     deriveReceive(index, master) {
@@ -318,6 +323,7 @@ class Account {
     /**
      * Derive a change address at `index`. Do not increment depth.
      * @param {Number} index
+     * @param {HDPrivateKey} master
      * @returns {WalletKey}
      */
     deriveChange(index, master) {
@@ -326,6 +332,7 @@ class Account {
     /**
      * Derive a nested address at `index`. Do not increment depth.
      * @param {Number} index
+     * @param {HDPrivateKey} master
      * @returns {WalletKey}
      */
     deriveNested(index, master) {
@@ -366,6 +373,7 @@ class Account {
      * Derive an address at `index`. Do not increment depth.
      * @param {Number} branch
      * @param {Number} index
+     * @param {HDPrivateKey} master
      * @returns {WalletKey}
      */
     deriveKey(branch, index, master) {
@@ -405,7 +413,8 @@ class Account {
     }
     /**
      * Save addresses to path map.
-     * @param {WalletKey[]} rings
+     * @param {Batch} b
+     * @param {WalletKey[]} ring
      * @returns {Promise}
      */
     saveKey(b, ring) {
@@ -413,7 +422,8 @@ class Account {
     }
     /**
      * Save paths to path map.
-     * @param {Path[]} rings
+     * @param {Batch} b
+     * @param {Path[]} path
      * @returns {Promise}
      */
     savePath(b, path) {
@@ -448,9 +458,10 @@ class Account {
     }
     /**
      * Allocate new lookahead addresses if necessary.
-     * @param {Number} receiveDepth
-     * @param {Number} changeDepth
-     * @param {Number} nestedDepth
+     * @param {Batch} b
+     * @param {Number} receive
+     * @param {Number} change
+     * @param {Number} nested
      * @returns {Promise} - Returns {@link WalletKey}.
      */
     async syncDepth(b, receive, change, nested) {
@@ -495,6 +506,7 @@ class Account {
     }
     /**
      * Allocate new lookahead addresses.
+     * @param {Batch} b
      * @param {Number} lookahead
      * @returns {Promise}
      */
@@ -723,7 +735,7 @@ class Account {
     }
     /**
      * Instantiate a account from serialized data.
-     * @param {WalletDB} data
+     * @param {WalletDB} wdb
      * @param {Buffer} data
      * @returns {Account}
      */
