@@ -245,7 +245,7 @@ function skipOutput(br) {
  * Compress value using an exponent. Takes advantage of
  * the fact that many bitcoin values are divisible by 10.
  * @see https://github.com/btcsuite/btcd/blob/master/blockchain/compress.go
- * @param {Amount} value
+ * @param {SatoshiAmount} value
  * @returns {Number}
  */
 
@@ -271,7 +271,7 @@ function compressValue(value) {
 /**
  * Decompress value.
  * @param {Number} value - Compressed value.
- * @returns {Amount} value
+ * @returns {SatoshiAmount} value
  */
 
 function decompressValue(value) {
