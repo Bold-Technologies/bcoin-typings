@@ -1,0 +1,15 @@
+{
+  "include": ["lib"],
+  "exclude": ["node_modules", "dist", "test", "docs", "browser", "bench"],
+  "compilerOptions": {
+    "composite": true,
+    "allowJs": true,
+    "declaration": true,
+    "emitDeclarationOnly": false,
+    "declarationMap": true,
+    "rootDir": "lib",
+    "outDir": "dist",
+    "sourceMap": true,
+    "target": "es2022",
+  }
+}
