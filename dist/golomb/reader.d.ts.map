@@ -1,0 +1,1 @@
+{"version":3,"file":"reader.d.ts","sourceRoot":"","sources":["../../lib/golomb/reader.js"],"names":[],"mappings":";AAWA;;;GAGG;AAEH;IACE;;;;OAIG;IAEH,uBAIC;IAHC,YAAkB;IAClB,YAAY;IACZ,eAAe;IAGjB;;;OAGG;IAEH,WAHa,MAAM,CAmBlB;IAED;;;OAGG;IAEH,YAHa,MAAM,CAiClB;IAED;;;OAGG;IAEH,sBAHa,MAAM,CAsBlB;IAED;;;OAGG;IAEH,wBAHa,MAAM,CAiBlB;CACF"}
