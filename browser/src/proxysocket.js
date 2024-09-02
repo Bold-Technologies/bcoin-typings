@@ -8,13 +8,12 @@
 
 const assert = require('assert');
 const EventEmitter = require('events');
-const bsock = require('bsock');
 
 class ProxySocket extends EventEmitter {
   constructor(uri) {
     super();
 
-    this.socket = bsock.socket();
+    this.socket = null;
     this.socket.reconnection = false;
     this.socket.connect(uri);
 

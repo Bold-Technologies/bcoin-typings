@@ -3,7 +3,6 @@
 const assert = require('assert');
 const net = require('net');
 const EventEmitter = require('events');
-const bsock = require('bsock');
 const IP = require('binet');
 
 class WSProxy extends EventEmitter {
@@ -15,7 +14,7 @@ class WSProxy extends EventEmitter {
 
     this.options = options;
     this.ports = new Set();
-    this.io = bsock.server();
+    this.io = null;
     this.sockets = new WeakMap();
 
     if (options.ports) {
